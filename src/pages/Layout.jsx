@@ -14,19 +14,19 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
-import NotificationBell from "./components/notifications/NotificationBell";
-import NotificationPrompt from './components/notifications/NotificationPrompt';
-import NotificationWelcomePrompt from './components/notifications/NotificationWelcomePrompt';
+import NotificationBell from "@/components/notifications/NotificationBell";
+import NotificationPrompt from '@/components/notifications/NotificationPrompt';
+import NotificationWelcomePrompt from '@/components/notifications/NotificationWelcomePrompt';
 import { cn } from "@/lib/utils";
-import { LanguageProvider, useTranslation } from './components/i18n/LanguageContext';
+import { LanguageProvider, useTranslation } from '@/components/i18n/LanguageContext';
 import ChatLauncher from "@/components/chat/ChatLauncher";
-import ResponsiveStyles from "./components/common/ResponsiveStyles";
-import GlobalStyles from './components/common/GlobalStyles';
-import ErrorBoundary from './components/common/ErrorBoundary';
+import ResponsiveStyles from "@/components/common/ResponsiveStyles";
+import GlobalStyles from '@/components/common/GlobalStyles';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { Toaster } from "sonner";
-import { AppProvider, useAppContext } from './components/context/AppContext';
-import { FCMProvider } from './components/notifications/FCMProvider';
-import GoogleAnalytics from './components/analytics/GoogleAnalytics';
+import { AppProvider, useAppContext } from '@/components/context/AppContext';
+import { FCMProvider } from '@/components/notifications/FCMProvider';
+import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 
 const queryClient = new QueryClient({
   defaultOptions: {
