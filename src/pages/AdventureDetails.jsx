@@ -22,6 +22,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { showSuccess, showError } from '../components/utils/notifications';
 import { trackAdventureView, trackEvent } from '../components/analytics/GoogleAnalytics';
+import { createNotification } from '@/components/notifications/notificationHelpers';
 
 export default function AdventureDetails() {
   const navigate = useNavigate();
@@ -104,9 +105,42 @@ export default function AdventureDetails() {
 
       return { id: bookingId, ...bookingData };
     },
-    onSuccess: (booking) => {
+    onSuccess: async (booking) => {
       showSuccess('Adventure booking created!', 'Check your messages for confirmation');
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
+
+      //  Send notification to user (booking confirmation)
+      try {
+        await createNotification({
+          recipient_email: currentUser.email,
+          recipient_type: 'user',
+          type: 'booking_confirmed',
+          title: '🎊 Adventure Booking Confirmed',
+          message: `Your booking for "${adventure.title}" has been confirmed! Get ready for an amazing experience.`,
+          link: `/MyOffers`,
+          related_booking_id: booking.id,
+        });
+      } catch (error) {
+        console.error('Failed to send user notification:', error);
+      }
+
+      //  Send notification to host (new booking alert)
+      if (adventure.host_email) {
+        try {
+          await createNotification({
+            recipient_email: adventure.host_email,
+            recipient_type: 'host',
+            type: 'adventure_booking',
+            title: '🎉 New Adventure Booking',
+            message: `${currentUser.email} booked your adventure: "${adventure.title}"`,
+            link: `/HostAdventures`,
+            related_booking_id: booking.id,
+          });
+        } catch (error) {
+          console.error('Failed to send host notification:', error);
+        }
+      }
+
       // Navigate to messages or booking confirmation
       navigate(createPageUrl(`Messages?conversation_id=${booking.id}`));
     },

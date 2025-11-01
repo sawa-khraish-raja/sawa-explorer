@@ -536,6 +536,8 @@ function PagesContent() {
         <Route path='/SmartCampaigns' element={<SmartCampaigns />} />
 
         <Route path='/SmartGrowthPlan' element={<SmartGrowthPlan />} />
+
+        <Route path='/DevTools' element={<DevTools />} />
       </Routes>
     </Layout>
   );

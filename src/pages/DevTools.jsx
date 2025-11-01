@@ -3,10 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Database, CheckCircle, XCircle } from 'lucide-react';
-import { seedAllData, seedCities, seedAdventures, seedServices } from '@/utils/seedDatabase';
+import { seedAllData, seedCities, seedAdventures, seedServices, seedNotifications, clearAdventures, seedBookingsAndOffers } from '@/utils/seedDatabase';
 import { getAllDocuments } from '@/utils/firestore';
+import { useAppContext } from '@/components/context/AppContext';
 
 export default function DevTools() {
+  const { user } = useAppContext();
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
   const [stats, setStats] = useState(null);
@@ -29,10 +31,16 @@ export default function DevTools() {
     setLoading(true);
     setStatus(null);
     try {
+      console.log('🔍 Seeding cities - User:', user);
+      console.log('🔍 User email:', user?.email);
+      console.log('🔍 User ID:', user?.id);
       await seedCities();
       setStatus({ type: 'success', message: 'Cities seeded successfully!' });
       loadStats();
     } catch (error) {
+      console.error('❌ Seed cities error:', error);
+      console.error('❌ Error code:', error.code);
+      console.error('❌ Error message:', error.message);
       setStatus({ type: 'error', message: error.message });
     } finally {
       setLoading(false);
@@ -67,6 +75,70 @@ export default function DevTools() {
     }
   };
 
+  const handleSeedNotifications = async () => {
+    setLoading(true);
+    setStatus(null);
+    try {
+      if (!user?.id || !user?.email) {
+        setStatus({ type: 'error', message: 'Please login first to seed notifications!' });
+        setLoading(false);
+        return;
+      }
+      console.log('🔔 Seeding notifications for user:', { id: user.id, email: user.email });
+      const notificationIds = await seedNotifications(user.id, user.email);
+      console.log('🔔 Seeded notification IDs:', notificationIds);
+      setStatus({ type: 'success', message: `Sample notifications seeded successfully! (${notificationIds?.length || 0} created)` });
+      loadStats();
+    } catch (error) {
+      console.error('❌ Seed notifications error:', error);
+      setStatus({ type: 'error', message: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClearAndReseedAdventures = async () => {
+    setLoading(true);
+    setStatus(null);
+    try {
+      // First, clear existing adventures
+      const deletedCount = await clearAdventures();
+      console.log(`🗑️ Deleted ${deletedCount} old adventures`);
+
+      // Then seed new ones
+      await seedAdventures();
+      setStatus({ type: 'success', message: `Cleared ${deletedCount} old adventures and seeded 5 new ones!` });
+      loadStats();
+    } catch (error) {
+      console.error('❌ Clear & reseed error:', error);
+      setStatus({ type: 'error', message: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSeedBookingsAndOffers = async () => {
+    setLoading(true);
+    setStatus(null);
+    try {
+      if (!user?.id || !user?.email) {
+        setStatus({ type: 'error', message: 'Please login first to seed bookings and offers!' });
+        setLoading(false);
+        return;
+      }
+      console.log('📦 Seeding booking and offer for user:', { id: user.id, email: user.email });
+      const result = await seedBookingsAndOffers(user.id, user.email);
+      console.log('📦 Seeded booking and offer:', result);
+      setStatus({ type: 'success', message: 'Sample booking with pending offer created! Check MyOffers page.' });
+      loadStats();
+    } catch (error) {
+      console.error('❌ Seed bookings/offers error:', error);
+      setStatus({ type: 'error', message: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const loadStats = async () => {
     try {
       const [
@@ -75,6 +147,7 @@ export default function DevTools() {
         services,
         users,
         bookings,
+        offers,
         reviews,
         chats,
         notifications,
@@ -85,6 +158,7 @@ export default function DevTools() {
         getAllDocuments('services').catch(() => []),
         getAllDocuments('users').catch(() => []),
         getAllDocuments('bookings').catch(() => []),
+        getAllDocuments('offers').catch(() => []),
         getAllDocuments('reviews').catch(() => []),
         getAllDocuments('chats').catch(() => []),
         getAllDocuments('notifications').catch(() => []),
@@ -97,6 +171,7 @@ export default function DevTools() {
         services: services.length,
         users: users.length,
         bookings: bookings.length,
+        offers: offers.length,
         reviews: reviews.length,
         chats: chats.length,
         notifications: notifications.length,
@@ -117,6 +192,20 @@ export default function DevTools() {
         <div className='mb-8'>
           <h1 className='text-3xl font-bold mb-2'>🛠️ Developer Tools</h1>
           <p className='text-gray-600'>Seed your database with sample data</p>
+
+          {/* Auth Status Debug */}
+          <div className='mt-4 p-4 bg-blue-50 rounded-lg'>
+            <p className='text-sm font-semibold mb-2'>🔐 Authentication Status:</p>
+            {user ? (
+              <div className='text-sm text-green-700'>
+                ✅ Logged in as: <strong>{user.email}</strong> (ID: {user.id})
+              </div>
+            ) : (
+              <div className='text-sm text-red-700'>
+                ❌ Not logged in - Please login to seed data!
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Firestore Rules Warning */}
@@ -189,6 +278,10 @@ export default function DevTools() {
                   <div className='text-2xl font-bold text-pink-600'>{stats.bookings}</div>
                   <div className='text-sm text-gray-600'>Bookings</div>
                 </div>
+                <div className='text-center p-4 bg-amber-50 rounded-lg'>
+                  <div className='text-2xl font-bold text-amber-600'>{stats.offers || 0}</div>
+                  <div className='text-sm text-gray-600'>Offers</div>
+                </div>
                 <div className='text-center p-4 bg-yellow-50 rounded-lg'>
                   <div className='text-2xl font-bold text-yellow-600'>{stats.reviews}</div>
                   <div className='text-sm text-gray-600'>Reviews</div>
@@ -236,7 +329,7 @@ export default function DevTools() {
         </Card>
 
         {/* Individual Seed Buttons */}
-        <div className='grid md:grid-cols-3 gap-4'>
+        <div className='grid md:grid-cols-2 lg:grid-cols-4 gap-4'>
           <Card>
             <CardHeader>
               <CardTitle className='text-lg'>📍 Cities</CardTitle>
@@ -254,10 +347,14 @@ export default function DevTools() {
               <CardTitle className='text-lg'>🎒 Adventures</CardTitle>
               <CardDescription>5 sample adventures</CardDescription>
             </CardHeader>
-            <CardContent>
-              <Button onClick={handleSeedAdventures} disabled={loading} className='w-full'>
+            <CardContent className='space-y-2'>
+              <Button onClick={handleSeedAdventures} disabled={loading} className='w-full' variant='outline'>
                 Seed Adventures
               </Button>
+              <Button onClick={handleClearAndReseedAdventures} disabled={loading} className='w-full bg-purple-600 hover:bg-purple-700'>
+                🗑️ Clear & Re-seed Adventures
+              </Button>
+              <p className='text-xs text-gray-500 mt-2'>Use "Clear & Re-seed" if you have old data without dates</p>
             </CardContent>
           </Card>
 
@@ -270,6 +367,37 @@ export default function DevTools() {
               <Button onClick={handleSeedServices} disabled={loading} className='w-full'>
                 Seed Services
               </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className='text-lg'>🔔 Notifications</CardTitle>
+              <CardDescription>3 sample notifications</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={handleSeedNotifications} disabled={loading || !user} className='w-full'>
+                Seed Notifications
+              </Button>
+              {!user && (
+                <p className='text-xs text-orange-600 mt-2'>Login required</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className='text-lg'>📋 Bookings & Offers</CardTitle>
+              <CardDescription>1 booking with pending offer</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={handleSeedBookingsAndOffers} disabled={loading || !user} className='w-full bg-orange-600 hover:bg-orange-700'>
+                Seed Booking & Offer
+              </Button>
+              {!user && (
+                <p className='text-xs text-orange-600 mt-2'>Login required</p>
+              )}
+              <p className='text-xs text-gray-500 mt-2'>Creates a service booking with a pending offer to test accepting offers</p>
             </CardContent>
           </Card>
         </div>

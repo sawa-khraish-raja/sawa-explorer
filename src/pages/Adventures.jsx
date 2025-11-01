@@ -44,12 +44,21 @@ export default function Adventures() {
   const { data: adventures = [], isLoading: adventuresLoading } = useQuery({
     queryKey: ['adventures'],
     queryFn: async () => {
+      console.log('🔍 Fetching adventures from Firestore...');
       // Get all active adventures from Firestore
-      const allAdventures = await queryDocuments('adventures', [['is_active', '==', true]], {
-        orderBy: { field: 'created_at', direction: 'desc' },
+      // Note: Removed orderBy to avoid needing composite index for development
+      // Can add back later once index is created
+      const allAdventures = await queryDocuments('adventures', [['is_active', '==', true]]);
+
+      // Sort in JavaScript instead
+      const sorted = allAdventures.sort((a, b) => {
+        const dateA = a.created_at?.toDate?.() || new Date(a.created_at);
+        const dateB = b.created_at?.toDate?.() || new Date(b.created_at);
+        return dateB - dateA; // desc order
       });
 
-      return allAdventures;
+      console.log('🔍 Found adventures:', sorted.length, sorted);
+      return sorted;
     },
     staleTime: 600000,
     cacheTime: 900000,
@@ -327,7 +336,7 @@ export default function Adventures() {
                         <div className='flex items-center gap-2'>
                           <Calendar className='w-4 h-4 text-[#9933CC]' />
                           <span className='text-sm text-gray-600'>
-                            {format(new Date(adventure.date), 'MMM d, yyyy')}
+                            {adventure.date ? format(new Date(adventure.date), 'MMM d, yyyy') : 'Date TBA'}
                           </span>
                         </div>
                         <div className='text-right'>

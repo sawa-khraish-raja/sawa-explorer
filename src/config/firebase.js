@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getAnalytics } from 'firebase/analytics';
+import { getMessaging } from 'firebase/messaging';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -21,8 +22,12 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
 const databaseId = import.meta.env.VITE_FIRESTORE_DATABASE_ID || 'test';
-
 export const db = getFirestore(app, databaseId);
+
+export const messaging =
+  typeof window !== 'undefined'
+    ? getMessaging(app)
+    : null;
 
 // Initialize Firebase Analytics (only in browser environment)
 export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;

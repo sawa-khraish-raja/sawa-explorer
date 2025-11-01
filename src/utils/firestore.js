@@ -399,6 +399,8 @@ export const sendMessage = async (chatId, messageData) => {
  * Get user notifications
  */
 export const getUserNotifications = async (userId, unreadOnly = false, userEmail = null) => {
+  console.log('🔔 getUserNotifications called with:', { userId, unreadOnly, userEmail });
+
   const criteria = {};
   if (userId) {
     criteria.user_id = userId;
@@ -410,15 +412,19 @@ export const getUserNotifications = async (userId, unreadOnly = false, userEmail
   let results = [];
 
   if (criteria.user_id) {
-    results = await notificationEntity.filter(criteria, '-created_date');
+    console.log('🔔 Filtering by user_id:', criteria);
+    results = await notificationEntity.filter(criteria);
+    console.log('🔔 Found by user_id:', results.length);
   }
 
   if ((!results.length || !criteria.user_id) && userEmail) {
+    console.log('🔔 Filtering by email:', userEmail);
     const emailCriteria = { recipient_email: userEmail };
     if (unreadOnly) {
       emailCriteria.read = false;
     }
-    const emailResults = await notificationEntity.filter(emailCriteria, '-created_date');
+    const emailResults = await notificationEntity.filter(emailCriteria);
+    console.log('🔔 Found by email:', emailResults.length);
 
     const existingIds = new Set(results.map((item) => item.id));
     emailResults.forEach((item) => {
@@ -428,7 +434,26 @@ export const getUserNotifications = async (userId, unreadOnly = false, userEmail
     });
   }
 
-  return results;
+  console.log('🔔 Total notifications before sort:', results.length);
+  return results.sort((a, b) => {
+    const getTime = (entry) => {
+      const timestamps = [
+        entry.created_date,
+        entry.created_at,
+        entry.updated_at,
+      ].filter(Boolean);
+      if (timestamps.length === 0) {
+        return 0;
+      }
+      const value = timestamps[0];
+      if (value?.seconds) {
+        return value.toMillis ? value.toMillis() : value.seconds * 1000;
+      }
+      return new Date(value).getTime();
+    };
+
+    return getTime(b) - getTime(a);
+  });
 };
 
 /**
@@ -460,6 +485,34 @@ export const markAllNotificationsAsRead = async (userId, userEmail = null) => {
     })
   );
   return await Promise.all(updates);
+};
+
+/**
+ * Save or update a device token used for push notifications
+ */
+export const saveDeviceToken = async (userId, userEmail, token, platform = 'web') => {
+  if (!token) return null;
+
+  try {
+    const tokenRef = doc(db, 'device_tokens', token);
+    await setDoc(
+      tokenRef,
+      {
+        user_id: userId || null,
+        user_email: userEmail || null,
+        token,
+        platform,
+        language: typeof navigator !== 'undefined' ? navigator.language : 'en',
+        updated_at: serverTimestamp(),
+        created_at: serverTimestamp(),
+      },
+      { merge: true }
+    );
+    return token;
+  } catch (error) {
+    console.error('Error saving device token:', error);
+    return null;
+  }
 };
 
 // ========== FAVORITES HELPERS ==========

@@ -1,12 +1,12 @@
-import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { createNotification as createFirestoreNotification } from '@/utils/firestore';
 
 /**
- *  FIXED: Create notification with proper title and message
+ *  Create notification using Firestore
  */
 export async function createNotification({
   recipient_email,
-  recipient_type = 'traveler',
+  recipient_type = 'user',
   type,
   title,
   message,
@@ -34,8 +34,8 @@ export async function createNotification({
       return null;
     }
 
-    //  Create notification using service role (bypass RLS)
-    const notification = await base44.asServiceRole.entities.Notification.create({
+    //  Create notification in Firestore
+    const notificationId = await createFirestoreNotification({
       recipient_email,
       recipient_type,
       type,
@@ -48,8 +48,29 @@ export async function createNotification({
       read: false,
     });
 
-    console.log(' Notification created:', notification.id);
-    return notification;
+    console.log(' Notification created:', notificationId);
+
+    // Optional: Send push notification
+    try {
+      await fetch('/api/notifications/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          recipientEmail: recipient_email,
+          title,
+          body: message,
+          data: {
+            link: link || '/MyOffers',
+          },
+        }),
+      });
+    } catch (pushError) {
+      console.warn(' Failed to dispatch push notification:', pushError);
+    }
+
+    return { id: notificationId };
   } catch (error) {
     console.error(' Error creating notification:', error);
     return null;

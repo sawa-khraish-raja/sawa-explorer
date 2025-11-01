@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { updateDocument, getDocument, queryDocuments, getAllDocuments } from '@/utils/firestore';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -109,9 +109,11 @@ export default function MyOffers() {
     queryKey: ['travelerBookings', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
-      const allBookings = await base44.entities.Booking.filter({
-        traveler_email: user.email,
-      });
+      console.log('🔍 Fetching bookings for:', user.email);
+      const allBookings = await queryDocuments('bookings', [
+        ['traveler_email', '==', user.email],
+      ]);
+      console.log('📦 Found bookings:', allBookings.length, allBookings);
       return allBookings.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
     enabled: !!user?.email,
@@ -123,10 +125,11 @@ export default function MyOffers() {
     queryKey: ['travelerAdventureBookings', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
-      const allAdventures = await base44.entities.Booking.filter({
-        traveler_email: user.email,
-        adventure_id: { $exists: true },
-      });
+      const allBookings = await queryDocuments('bookings', [
+        ['traveler_email', '==', user.email],
+      ]);
+      // Filter for adventure bookings (has adventure_id)
+      const allAdventures = allBookings.filter(b => b.adventure_id);
       return allAdventures.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
     enabled: !!user?.email,
@@ -141,10 +144,18 @@ export default function MyOffers() {
     queryFn: async () => {
       if (!user?.email) return [];
       const serviceBookingIds = serviceBookings.map((b) => b.id);
-      if (serviceBookingIds.length === 0) return [];
+      console.log('🔍 Service booking IDs:', serviceBookingIds);
+      if (serviceBookingIds.length === 0) {
+        console.log('⚠️ No service bookings found - cannot fetch offers');
+        return [];
+      }
 
-      const offers = await base44.entities.Offer.list('-created_date');
-      return offers.filter((o) => serviceBookingIds.includes(o.booking_id));
+      console.log('🔍 Fetching all offers...');
+      const offers = await getAllDocuments('offers');
+      console.log('📋 All offers:', offers.length, offers);
+      const filteredOffers = offers.filter((o) => serviceBookingIds.includes(o.booking_id));
+      console.log('✅ Filtered offers for my bookings:', filteredOffers.length, filteredOffers);
+      return filteredOffers.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
     enabled: !!user?.email && serviceBookings.length > 0,
     staleTime: 3 * 60 * 1000,
@@ -154,7 +165,7 @@ export default function MyOffers() {
   const { data: allHosts = [] } = useQuery({
     queryKey: ['allHosts'],
     queryFn: async () => {
-      const users = await base44.entities.User.list();
+      const users = await getAllDocuments('users');
       return users.filter((u) => u.host_approved);
     },
     staleTime: 15 * 60 * 1000,
@@ -165,10 +176,10 @@ export default function MyOffers() {
     queryKey: ['myAdventureConversations', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
-      const allConvos = await base44.entities.Conversation.filter({
-        traveler_email: user.email,
-        conversation_type: 'adventure',
-      });
+      const allConvos = await queryDocuments('chats', [
+        ['traveler_email', '==', user.email],
+        ['conversation_type', '==', 'adventure'],
+      ]);
       return allConvos;
     },
     enabled: !!user?.email,
@@ -258,7 +269,7 @@ export default function MyOffers() {
     }
   }, [user, isLoadingUser, navigate, t]);
 
-  // Simplified accept offer flow
+  // Simplified accept offer flow (using Firestore)
   const acceptOfferMutation = useMutation({
     mutationFn: async (offerId) => {
       console.log('🚀 Starting accept offer for:', offerId);
@@ -270,19 +281,27 @@ export default function MyOffers() {
 
       console.log('📦 Found offer:', offer);
 
-      // Step 1: Call confirmBooking function
-      const response = await base44.functions.invoke('confirmBooking', {
-        booking_id: offer.booking_id,
-        offer_id: offerId,
+      // Update booking to confirmed status
+      await updateDocument('bookings', offer.booking_id, {
+        status: 'confirmed',
+        confirmed_at: new Date().toISOString(),
+        updated_date: new Date().toISOString(),
       });
 
-      console.log('📡 confirmBooking response:', response.data);
+      // Update offer to accepted status
+      await updateDocument('offers', offerId, {
+        status: 'accepted',
+        accepted_at: new Date().toISOString(),
+        updated_date: new Date().toISOString(),
+      });
 
-      if (!response.data.ok) {
-        throw new Error(response.data.error || 'Failed to confirm booking');
-      }
+      console.log('✅ Booking and offer confirmed successfully');
 
-      return response.data;
+      return {
+        ok: true,
+        booking_id: offer.booking_id,
+        offer_id: offerId,
+      };
     },
     onSuccess: (data) => {
       console.log(' Offer accepted successfully:', data);
@@ -308,13 +327,15 @@ export default function MyOffers() {
     },
   });
 
-  // Simplified decline offer flow
+  // Simplified decline offer flow (using Firestore)
   const declineOfferMutation = useMutation({
     mutationFn: async (offerId) => {
       console.log('🚫 Declining offer:', offerId);
 
-      await base44.entities.Offer.update(offerId, {
+      await updateDocument('offers', offerId, {
         status: 'declined',
+        declined_at: new Date().toISOString(),
+        updated_date: new Date().toISOString(),
       });
 
       return offerId;
@@ -336,20 +357,37 @@ export default function MyOffers() {
     }
   };
 
-  //  UPDATED: Cancel Booking Mutation - Direct cancellation
+  //  UPDATED: Cancel Booking Mutation - Direct cancellation (using Firestore)
   const cancelBookingMutation = useMutation({
     mutationFn: async ({ bookingId, reason, reasonCategory }) => {
-      const response = await base44.functions.invoke('cancelBooking', {
-        booking_id: bookingId,
-        reason,
-        reason_category: reasonCategory,
-      });
+      // Get the current booking to check status and calculate refund
+      const booking = await getDocument('bookings', bookingId);
 
-      if (!response.data.ok) {
-        throw new Error(response.data.error || 'Failed to cancel booking');
+      if (!booking) {
+        throw new Error('Booking not found');
       }
 
-      return response.data;
+      if (booking.status === 'cancelled') {
+        throw new Error('Booking is already cancelled');
+      }
+
+      // Update booking with cancellation details
+      await updateDocument('bookings', bookingId, {
+        status: 'cancelled',
+        cancellation_reason: reason,
+        cancellation_category: reasonCategory,
+        cancelled_at: new Date().toISOString(),
+        updated_date: new Date().toISOString(),
+      });
+
+      // Calculate refund amount (simplified - you may want more complex logic)
+      const refundAmount = booking.traveler_total_price || 0;
+
+      return {
+        ok: true,
+        refundAmount,
+        booking_id: bookingId,
+      };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({
@@ -401,6 +439,7 @@ export default function MyOffers() {
 
   // Separate pending offers for services
   const pendingOffers = allOffers.filter((o) => o.status === 'pending');
+  console.log('🔔 Pending offers:', pendingOffers.length, pendingOffers);
 
   const getHost = (hostEmail) => {
     const host = allHosts.find((h) => h.email === hostEmail);

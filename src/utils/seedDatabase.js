@@ -86,52 +86,68 @@ const cities = [
 ];
 
 // Sample Adventures/Experiences Data (will be enriched with city_id after cities are created)
-const getAdventures = (cityIds, cityMap) => [
-  {
-    title: 'Old Damascus Walking Tour',
-    city_id: cityIds[0],
-    city_name: 'Damascus',
-    host_id: 'demo-host-1',
-    host_name: 'Ahmad Al-Hassan',
-    description:
-      'Explore the historic streets of Old Damascus with a local guide. Walk through ancient souks, visit the Umayyad Mosque, and discover hidden gems of this ancient city.',
-    short_description: 'Explore the historic streets of Old Damascus with a local guide.',
-    duration: '3 hours',
-    price: 45,
-    currency: 'USD',
-    max_guests: 8,
-    min_guests: 1,
-    category: 'Walking Tour',
-    tags: ['cultural', 'historical', 'architecture'],
-    images: [
-      'https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=800',
-      'https://images.unsplash.com/photo-1578895101408-1a36b834405b?w=800',
-    ],
-    meeting_point: 'Umayyad Mosque Main Entrance',
-    what_included: ['Professional guide', 'Traditional tea', 'Entrance fees'],
-    what_to_bring: ['Comfortable walking shoes', 'Water bottle', 'Camera'],
-    languages: ['English', 'Arabic'],
-    cancellation_policy: 'Free cancellation up to 24 hours before',
-    is_active: true,
-    rating: 4.8,
-    total_reviews: 24,
-    total_bookings: 156,
-  },
-  {
-    title: 'Bosphorus Sunset Cruise',
-    city_id: cityIds[1],
-    city_name: 'Istanbul',
-    host_id: 'demo-host-2',
-    host_name: 'Ayşe Yılmaz',
-    description:
-      'Sail along the Bosphorus and watch the sunset between two continents. Experience Istanbul from the water with stunning views of palaces, mosques, and the city skyline.',
-    short_description: 'Sunset cruise between Europe and Asia.',
-    duration: '2 hours',
-    price: 60,
-    currency: 'USD',
-    max_guests: 20,
-    min_guests: 2,
-    category: 'Boat Tour',
+const getAdventures = (cityIds, cityMap) => {
+  // Helper to get a future date
+  const getFutureDate = (daysFromNow) => {
+    const date = new Date();
+    date.setDate(date.getDate() + daysFromNow);
+    return date.toISOString();
+  };
+
+  return [
+    {
+      title: 'Old Damascus Walking Tour',
+      city_id: cityIds[0],
+      city_name: 'Damascus',
+      host_id: 'demo-host-1',
+      host_name: 'Ahmad Al-Hassan',
+      host_email: 'ahmad@example.com',
+      description:
+        'Explore the historic streets of Old Damascus with a local guide. Walk through ancient souks, visit the Umayyad Mosque, and discover hidden gems of this ancient city.',
+      short_description: 'Explore the historic streets of Old Damascus with a local guide.',
+      date: getFutureDate(7), // 7 days from now
+      duration: '3 hours',
+      price: 45,
+      currency: 'USD',
+      max_guests: 8,
+      min_guests: 1,
+      current_participants: 0,
+      category: 'Walking Tour',
+      tags: ['cultural', 'historical', 'architecture'],
+      images: [
+        'https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=800',
+        'https://images.unsplash.com/photo-1578895101408-1a36b834405b?w=800',
+      ],
+      meeting_point: 'Umayyad Mosque Main Entrance',
+      what_included: ['Professional guide', 'Traditional tea', 'Entrance fees'],
+      what_to_bring: ['Comfortable walking shoes', 'Water bottle', 'Camera'],
+      languages: ['English', 'Arabic'],
+      cancellation_policy: 'Free cancellation up to 24 hours before',
+      is_active: true,
+      approval_status: 'approved',
+      status: 'upcoming',
+      rating: 4.8,
+      total_reviews: 24,
+      total_bookings: 156,
+    },
+    {
+      title: 'Bosphorus Sunset Cruise',
+      city_id: cityIds[1],
+      city_name: 'Istanbul',
+      host_id: 'demo-host-2',
+      host_name: 'Ayşe Yılmaz',
+      host_email: 'ayse@example.com',
+      description:
+        'Sail along the Bosphorus and watch the sunset between two continents. Experience Istanbul from the water with stunning views of palaces, mosques, and the city skyline.',
+      short_description: 'Sunset cruise between Europe and Asia.',
+      date: getFutureDate(10), // 10 days from now
+      duration: '2 hours',
+      price: 60,
+      currency: 'USD',
+      max_guests: 20,
+      min_guests: 2,
+      current_participants: 3,
+      category: 'Boat Tour',
     tags: ['romantic', 'scenic', 'photography'],
     images: [
       'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=800',
@@ -143,6 +159,8 @@ const getAdventures = (cityIds, cityMap) => [
     languages: ['English', 'Turkish'],
     cancellation_policy: 'Free cancellation up to 48 hours before',
     is_active: true,
+    approval_status: 'approved',
+    status: 'upcoming',
     rating: 4.9,
     total_reviews: 87,
     total_bookings: 342,
@@ -153,14 +171,17 @@ const getAdventures = (cityIds, cityMap) => [
     city_name: 'Cairo',
     host_id: 'demo-host-3',
     host_name: 'Mohammed Ibrahim',
+    host_email: 'mohammed@example.com',
     description:
       'Visit the iconic Pyramids of Giza and the Great Sphinx. Learn about ancient Egyptian civilization from an expert Egyptologist guide.',
     short_description: 'Discover the wonders of ancient Egypt.',
+    date: getFutureDate(14), // 14 days from now
     duration: '4 hours',
     price: 80,
     currency: 'USD',
     max_guests: 15,
     min_guests: 1,
+    current_participants: 5,
     category: 'Historical Tour',
     tags: ['historical', 'archaeology', 'iconic'],
     images: [
@@ -173,6 +194,8 @@ const getAdventures = (cityIds, cityMap) => [
     languages: ['English', 'Arabic', 'French'],
     cancellation_policy: 'Free cancellation up to 24 hours before',
     is_active: true,
+    approval_status: 'approved',
+    status: 'upcoming',
     rating: 4.7,
     total_reviews: 134,
     total_bookings: 523,
@@ -183,14 +206,17 @@ const getAdventures = (cityIds, cityMap) => [
     city_name: 'Amman',
     host_id: 'demo-host-4',
     host_name: 'Omar Al-Rashid',
+    host_email: 'omar@example.com',
     description:
       'Full day excursion to the ancient city of Petra. Walk through the Siq, marvel at the Treasury, and explore this UNESCO World Heritage site.',
     short_description: 'Journey to the ancient Rose City of Petra.',
+    date: getFutureDate(21), // 21 days from now
     duration: 'Full day',
     price: 120,
     currency: 'USD',
     max_guests: 12,
     min_guests: 2,
+    current_participants: 7,
     category: 'Day Trip',
     tags: ['adventure', 'historical', 'unesco'],
     images: [
@@ -203,6 +229,8 @@ const getAdventures = (cityIds, cityMap) => [
     languages: ['English', 'Arabic'],
     cancellation_policy: 'Free cancellation up to 72 hours before',
     is_active: true,
+    approval_status: 'approved',
+    status: 'upcoming',
     rating: 5.0,
     total_reviews: 67,
     total_bookings: 198,
@@ -213,14 +241,17 @@ const getAdventures = (cityIds, cityMap) => [
     city_name: 'Tunis',
     host_id: 'demo-host-5',
     host_name: 'Fatima Ben Ali',
+    host_email: 'fatima@example.com',
     description:
       'Taste authentic Tunisian cuisine in the historic Medina. Sample traditional dishes, visit local markets, and learn about Tunisian food culture.',
     short_description: 'Culinary journey through the historic Medina.',
+    date: getFutureDate(5), // 5 days from now
     duration: '3 hours',
     price: 50,
     currency: 'USD',
     max_guests: 10,
     min_guests: 1,
+    current_participants: 2,
     category: 'Food Tour',
     tags: ['food', 'cultural', 'local experience'],
     images: [
@@ -233,11 +264,14 @@ const getAdventures = (cityIds, cityMap) => [
     languages: ['English', 'French', 'Arabic'],
     cancellation_policy: 'Free cancellation up to 24 hours before',
     is_active: true,
+    approval_status: 'approved',
+    status: 'upcoming',
     rating: 4.6,
     total_reviews: 43,
     total_bookings: 112,
   },
-];
+  ];
+};
 
 // Sample Services Data
 const services = [
@@ -397,4 +431,131 @@ export const seedServices = async () => {
   }
   console.log(` Created ${serviceIds.length} services`);
   return serviceIds;
+};
+
+/**
+ * Clear all adventures from the database
+ */
+export const clearAdventures = async () => {
+  console.log('🗑️ Clearing all adventures...');
+  const { getAllDocuments, deleteDocument } = await import('./firestore');
+  const existingAdventures = await getAllDocuments('adventures');
+
+  for (const adventure of existingAdventures) {
+    await deleteDocument('adventures', adventure.id);
+  }
+
+  console.log(`✅ Cleared ${existingAdventures.length} adventures`);
+  return existingAdventures.length;
+};
+
+/**
+ * Seed sample bookings and offers for testing
+ */
+export const seedBookingsAndOffers = async (userId, userEmail) => {
+  console.log('📦 Seeding sample bookings and offers...');
+
+  // First, create a service booking
+  const booking = {
+    traveler_email: userEmail,
+    traveler_id: userId,
+    city_id: 'sample-city-id',
+    city_name: 'Damascus',
+    start_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+    end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days from now
+    number_of_adults: 2,
+    number_of_children: 0,
+    selected_services: ['service-1', 'service-2'],
+    notes: 'Looking forward to exploring Damascus!',
+    status: 'pending',
+    created_date: new Date().toISOString(),
+    updated_date: new Date().toISOString(),
+  };
+
+  const bookingId = await addDocument('bookings', booking);
+  console.log(`✅ Created booking: ${bookingId}`);
+
+  // Now create a pending offer for this booking
+  const offer = {
+    booking_id: bookingId,
+    host_id: 'demo-host-1',
+    host_email: 'ahmad@example.com',
+    price: 250,
+    price_total: 250,
+    price_breakdown: {
+      base_price: 200,
+      sawa_fee: 30,
+      sawa_percent: 15,
+      office_fee: 20,
+      office_percent: 10,
+      total: 250,
+    },
+    status: 'pending',
+    inclusions: 'Airport pickup, City tour guide, Traditional lunch, Hotel recommendations',
+    message: 'I would be happy to show you the beautiful city of Damascus! I have 10 years of experience and great reviews.',
+    expiry_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days from now
+    created_date: new Date().toISOString(),
+    updated_date: new Date().toISOString(),
+  };
+
+  const offerId = await addDocument('offers', offer);
+  console.log(`✅ Created offer: ${offerId}`);
+
+  return { bookingId, offerId };
+};
+
+/**
+ * Seed sample notifications for testing
+ */
+export const seedNotifications = async (userId, userEmail) => {
+  console.log('🔔 Seeding sample notifications...');
+
+  const sampleNotifications = [
+    {
+      user_id: userId,
+      recipient_email: userEmail,
+      recipient_type: 'user',
+      type: 'booking_confirmed',
+      title: 'Booking Confirmed!',
+      message: 'Your booking for "Old Damascus Walking Tour" has been confirmed.',
+      link: '/bookings',
+      read: false,
+      created_date: new Date().toISOString(),
+      updated_date: new Date().toISOString(),
+    },
+    {
+      user_id: userId,
+      recipient_email: userEmail,
+      recipient_type: 'user',
+      type: 'new_message',
+      title: 'New Message',
+      message: 'You have a new message from your host.',
+      link: '/messages',
+      read: false,
+      created_date: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+      updated_date: new Date(Date.now() - 3600000).toISOString(),
+    },
+    {
+      user_id: userId,
+      recipient_email: userEmail,
+      recipient_type: 'user',
+      type: 'review_request',
+      title: 'Review Your Experience',
+      message: 'How was your recent adventure? Share your experience with others!',
+      link: '/reviews/new',
+      read: true,
+      created_date: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+      updated_date: new Date(Date.now() - 86400000).toISOString(),
+      read_at: new Date(Date.now() - 43200000).toISOString(), // Read 12 hours ago
+    },
+  ];
+
+  const notificationIds = [];
+  for (const notification of sampleNotifications) {
+    const id = await addDocument('notifications', notification);
+    notificationIds.push(id);
+  }
+
+  console.log(` Created ${notificationIds.length} sample notifications`);
+  return notificationIds;
 };
