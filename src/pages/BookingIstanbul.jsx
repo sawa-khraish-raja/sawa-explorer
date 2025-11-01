@@ -9,7 +9,14 @@ export default function BookingIstanbul() {
     best_time_to_visit: 'April to May, September to November',
     languages: ['Turkish', 'English'],
     currency: 'Turkish Lira',
-    highlights: ['Hagia Sophia', 'Blue Mosque', 'Grand Bazaar', 'Bosphorus Cruise', 'Turkish Cuisine', 'Historic Peninsula']
+    highlights: [
+      'Hagia Sophia',
+      'Blue Mosque',
+      'Grand Bazaar',
+      'Bosphorus Cruise',
+      'Turkish Cuisine',
+      'Historic Peninsula',
+    ],
   };
 
   return <BookingPageTemplate city={istanbul} />;

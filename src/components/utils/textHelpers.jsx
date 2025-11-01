@@ -10,11 +10,11 @@
  */
 export function normalizeText(str) {
   if (!str || typeof str !== 'string') return '';
-  
+
   return str
-    .replaceAll('_', ' ')           // Remove underscores
-    .replace(/\s+/g, ' ')           // Collapse multiple spaces
-    .trim();                        // Remove leading/trailing spaces
+    .replaceAll('_', ' ') // Remove underscores
+    .replace(/\s+/g, ' ') // Collapse multiple spaces
+    .trim(); // Remove leading/trailing spaces
 }
 
 /**
@@ -24,10 +24,10 @@ export function normalizeText(str) {
  */
 export function normalizeTitleCase(str) {
   if (!str) return '';
-  
+
   return normalizeText(str)
     .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
 }
 
@@ -38,10 +38,10 @@ export function normalizeTitleCase(str) {
  */
 export function normalizeServiceName(str) {
   if (!str) return '';
-  
+
   return normalizeText(str)
     .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 }
 

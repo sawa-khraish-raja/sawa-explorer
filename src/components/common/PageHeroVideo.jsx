@@ -4,22 +4,22 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
 const variants = {
-  enter: { 
+  enter: {
     opacity: 0,
     scale: 1.01,
-    filter: 'blur(4px)'
+    filter: 'blur(4px)',
   },
-  center: { 
-    zIndex: 2, 
+  center: {
+    zIndex: 2,
     opacity: 1,
     scale: 1,
-    filter: 'blur(0px)'
+    filter: 'blur(0px)',
   },
-  exit: { 
-    zIndex: 1, 
+  exit: {
+    zIndex: 1,
     opacity: 0,
     scale: 0.99,
-    filter: 'blur(4px)'
+    filter: 'blur(4px)',
   },
 };
 
@@ -31,38 +31,41 @@ export default function PageHeroVideo({ pageType = 'home', cityName = null }) {
   const videoRefs = useRef({});
   const timerRef = useRef(null);
 
-  // ✅ OPTIMIZED: Much longer cache times - 30 min stale, 60 min cache
+  //  OPTIMIZED: Much longer cache times - 30 min stale, 60 min cache
   const { data: slides = [], isLoading } = useQuery({
     queryKey: ['heroSlides', pageType, cityName],
     queryFn: async () => {
       let allSlides;
-      
+
       if (pageType === 'city' && cityName) {
-        allSlides = await base44.entities.HeroSlide.filter({ 
+        allSlides = await base44.entities.HeroSlide.filter({
           page_type: 'city',
           city_name: cityName,
-          is_active: true 
+          is_active: true,
         });
       } else {
-        allSlides = await base44.entities.HeroSlide.filter({ 
+        allSlides = await base44.entities.HeroSlide.filter({
           page_type: pageType,
-          is_active: true 
+          is_active: true,
         });
       }
-      
-      const validSlides = allSlides.filter(s => s.video_url);
+
+      const validSlides = allSlides.filter((s) => s.video_url);
       const sortedSlides = validSlides.sort((a, b) => (a.order || 0) - (b.order || 0));
-      console.log(`✅ Loaded ${pageType}${cityName ? ` (${cityName})` : ''} hero slides:`, sortedSlides.length);
+      console.log(
+        ` Loaded ${pageType}${cityName ? ` (${cityName})` : ''} hero slides:`,
+        sortedSlides.length
+      );
       return sortedSlides;
     },
-    staleTime: 30 * 60 * 1000,  // ✅ 30 minutes - won't refetch
-    cacheTime: 60 * 60 * 1000,  // ✅ 1 hour - stays in memory
-    refetchOnMount: false,       // ✅ Don't refetch on remount
-    refetchOnWindowFocus: false, // ✅ Don't refetch on focus
-    refetchOnReconnect: false,   // ✅ Don't refetch on reconnect
+    staleTime: 30 * 60 * 1000, //  30 minutes - won't refetch
+    cacheTime: 60 * 60 * 1000, //  1 hour - stays in memory
+    refetchOnMount: false, //  Don't refetch on remount
+    refetchOnWindowFocus: false, //  Don't refetch on focus
+    refetchOnReconnect: false, //  Don't refetch on reconnect
   });
 
-  // ✅ Memoize current slide to prevent re-renders
+  //  Memoize current slide to prevent re-renders
   const currentSlide = useMemo(() => slides[page], [slides, page]);
 
   useEffect(() => {
@@ -73,7 +76,7 @@ export default function PageHeroVideo({ pageType = 'home', cityName = null }) {
     };
   }, []);
 
-  // ✅ Preload videos in background
+  //  Preload videos in background
   useEffect(() => {
     if (slides.length === 0) return;
 
@@ -85,20 +88,20 @@ export default function PageHeroVideo({ pageType = 'home', cityName = null }) {
         video.muted = true;
         video.playsInline = true;
         video.load();
-        
+
         video.onloadeddata = () => {
-          setVideosLoaded(prev => ({ ...prev, [index]: true }));
+          setVideosLoaded((prev) => ({ ...prev, [index]: true }));
         };
 
         video.oncanplaythrough = () => {
-          setVideosReady(prev => ({ ...prev, [index]: true }));
-          console.log(`✅ ${pageType}${cityName ? ` (${cityName})` : ''} video ${index} ready`);
+          setVideosReady((prev) => ({ ...prev, [index]: true }));
+          console.log(` ${pageType}${cityName ? ` (${cityName})` : ''} video ${index} ready`);
         };
       }
     });
   }, [slides, videosLoaded, pageType, cityName]);
 
-  // ✅ Auto-advance timer
+  //  Auto-advance timer
   useEffect(() => {
     if (isPaused || slides.length === 0) return;
 
@@ -127,7 +130,7 @@ export default function PageHeroVideo({ pageType = 'home', cityName = null }) {
     };
   }, [isPaused, slides, page, videosReady, currentSlide]);
 
-  // ✅ Preload next video
+  //  Preload next video
   useEffect(() => {
     if (slides.length > 1) {
       const nextIndex = (page + 1) % slides.length;
@@ -148,35 +151,35 @@ export default function PageHeroVideo({ pageType = 'home', cityName = null }) {
   const isVideoReady = videosReady[page];
 
   return (
-    <div 
-      className="absolute inset-0"
+    <div
+      className='absolute inset-0'
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* ✅ Poster Image */}
+      {/*  Poster Image */}
       {currentSlide?.poster_image && (
-        <motion.div 
-          className="absolute inset-0 z-[1]"
+        <motion.div
+          className='absolute inset-0 z-[1]'
           initial={{ opacity: 1 }}
           animate={{ opacity: isVideoReady ? 0 : 1 }}
           transition={{ duration: 1, ease: 'easeInOut' }}
         >
           <img
             src={currentSlide.poster_image}
-            alt=""
-            className="w-full h-full object-cover"
-            loading="eager"
-            fetchpriority="high"
+            alt=''
+            className='w-full h-full object-cover'
+            loading='eager'
+            fetchpriority='high'
           />
         </motion.div>
       )}
 
-      {/* ✅ Fallback gradient */}
+      {/*  Fallback gradient */}
       {!currentSlide?.poster_image && (
-        <div className="absolute inset-0 z-[1] bg-gradient-to-br from-[#330066] via-[#7B2CBF] to-[#9933CC]" />
+        <div className='absolute inset-0 z-[1] bg-gradient-to-br from-[#330066] via-[#7B2CBF] to-[#9933CC]' />
       )}
 
-      <AnimatePresence initial={false} mode="sync">
+      <AnimatePresence initial={false} mode='sync'>
         <motion.video
           key={`video-${page}`}
           ref={(el) => {
@@ -189,28 +192,28 @@ export default function PageHeroVideo({ pageType = 'home', cityName = null }) {
           }}
           src={currentSlide.video_url}
           variants={variants}
-          initial="enter"
-          animate="center"
-          exit="exit"
+          initial='enter'
+          animate='center'
+          exit='exit'
           transition={{
             opacity: { duration: 4, ease: [0.4, 0.0, 0.2, 1] },
             scale: { duration: 4, ease: [0.4, 0.0, 0.2, 1] },
-            filter: { duration: 4, ease: [0.4, 0.0, 0.2, 1] }
+            filter: { duration: 4, ease: [0.4, 0.0, 0.2, 1] },
           }}
           style={{
             willChange: 'opacity, transform',
             transform: 'translate3d(0, 0, 0)',
             backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden'
+            WebkitBackfaceVisibility: 'hidden',
           }}
-          className="absolute inset-0 w-full h-full object-cover"
+          className='absolute inset-0 w-full h-full object-cover'
           autoPlay
           loop
           muted
           playsInline
-          preload="auto"
+          preload='auto'
           onLoadedData={() => {
-            setVideosLoaded(prev => ({ ...prev, [page]: true }));
+            setVideosLoaded((prev) => ({ ...prev, [page]: true }));
           }}
           onCanPlay={() => {
             if (videoRefs.current[page]) {
@@ -218,7 +221,7 @@ export default function PageHeroVideo({ pageType = 'home', cityName = null }) {
             }
           }}
           onCanPlayThrough={() => {
-            setVideosReady(prev => ({ ...prev, [page]: true }));
+            setVideosReady((prev) => ({ ...prev, [page]: true }));
           }}
           onError={() => {
             console.warn('⚠️ Video failed:', currentSlide.video_url);
@@ -231,22 +234,23 @@ export default function PageHeroVideo({ pageType = 'home', cityName = null }) {
         />
       </AnimatePresence>
 
-      {/* ✅ Overlay Gradients */}
-      <div className="absolute inset-0 z-[10] pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#330066]/15 via-transparent to-[#9933CC]/15" />
-        <div 
-          className="absolute inset-0" 
+      {/*  Overlay Gradients */}
+      <div className='absolute inset-0 z-[10] pointer-events-none'>
+        <div className='absolute inset-0 bg-gradient-to-br from-[#330066]/15 via-transparent to-[#9933CC]/15' />
+        <div
+          className='absolute inset-0'
           style={{
-            background: 'radial-gradient(circle at center, transparent 0%, transparent 50%, rgba(0,0,0,0.3) 100%)'
-          }} 
+            background:
+              'radial-gradient(circle at center, transparent 0%, transparent 50%, rgba(0,0,0,0.3) 100%)',
+          }}
         />
-        <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
-        <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-black/20 via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-br from-[#9933CC]/5 to-[#330066]/5 mix-blend-overlay" />
+        <div className='absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-black/60 via-black/30 to-transparent' />
+        <div className='absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-black/20 via-transparent to-transparent' />
+        <div className='absolute inset-0 bg-gradient-to-br from-[#9933CC]/5 to-[#330066]/5 mix-blend-overlay' />
       </div>
 
-      {/* ✅ Bottom Fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-16 sm:h-20 bg-gradient-to-t from-white/40 to-transparent z-[11] pointer-events-none" />
+      {/*  Bottom Fade */}
+      <div className='absolute bottom-0 left-0 right-0 h-16 sm:h-20 bg-gradient-to-t from-white/40 to-transparent z-[11] pointer-events-none' />
     </div>
   );
 }

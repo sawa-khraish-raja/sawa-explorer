@@ -8,7 +8,7 @@ export const handleError = async (error, context = {}) => {
     context: JSON.stringify(context),
     timestamp: new Date().toISOString(),
     userAgent: navigator.userAgent,
-    url: window.location.href
+    url: window.location.href,
   };
 
   try {
@@ -16,7 +16,7 @@ export const handleError = async (error, context = {}) => {
       section: context.section || 'Unknown',
       message: errorData.message,
       user_email: context.userEmail || 'anonymous',
-      details: JSON.stringify(errorData)
+      details: JSON.stringify(errorData),
     });
   } catch (logError) {
     // Silent fail for error logging
@@ -40,24 +40,22 @@ export const withErrorBoundary = (Component) => {
       handleError(error, {
         section: 'ErrorBoundary',
         component: Component.name,
-        errorInfo: errorInfo.componentStack
+        errorInfo: errorInfo.componentStack,
       });
     }
 
     render() {
       if (this.state.hasError) {
         return (
-          <div className="flex flex-col items-center justify-center min-h-screen p-4">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Something went wrong
-              </h2>
-              <p className="text-gray-600 mb-4">
+          <div className='flex flex-col items-center justify-center min-h-screen p-4'>
+            <div className='text-center'>
+              <h2 className='text-2xl font-bold text-gray-900 mb-2'>Something went wrong</h2>
+              <p className='text-gray-600 mb-4'>
                 We're sorry for the inconvenience. Please try refreshing the page.
               </p>
               <button
                 onClick={() => window.location.reload()}
-                className="bg-[#9933CC] hover:bg-[#7B2CBF] text-white px-6 py-3 rounded-lg font-semibold"
+                className='bg-[#9933CC] hover:bg-[#7B2CBF] text-white px-6 py-3 rounded-lg font-semibold'
               >
                 Refresh Page
               </button>
@@ -76,7 +74,7 @@ export const logError = async (section, message, details = {}) => {
     await base44.entities.ErrorLog.create({
       section,
       message,
-      details: JSON.stringify(details)
+      details: JSON.stringify(details),
     });
   } catch (e) {
     // Silent fail
@@ -87,18 +85,16 @@ export const handleAPIError = (error, fallbackMessage = 'An error occurred') => 
   if (error.response) {
     return error.response.data?.message || fallbackMessage;
   }
-  
+
   if (error.request) {
     return 'Network error. Please check your connection.';
   }
-  
+
   return error.message || fallbackMessage;
 };
 
 export const isNetworkError = (error) => {
-  return error.message === 'Network Error' || 
-         error.message.includes('network') ||
-         !error.response;
+  return error.message === 'Network Error' || error.message.includes('network') || !error.response;
 };
 
 export const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
@@ -107,7 +103,7 @@ export const retryOperation = async (operation, maxRetries = 3, delay = 1000) =>
       return await operation();
     } catch (error) {
       if (i === maxRetries - 1) throw error;
-      await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+      await new Promise((resolve) => setTimeout(resolve, delay * (i + 1)));
     }
   }
 };

@@ -13,32 +13,38 @@ const StarRating = ({ value, onChange, label, required = false }) => {
 
   return (
     <div>
-      <Label className="text-sm font-medium mb-2 block">
-        {label} {required && <span className="text-red-500">*</span>}
+      <Label className='text-sm font-medium mb-2 block'>
+        {label} {required && <span className='text-red-500'>*</span>}
       </Label>
-      <div className="flex items-center gap-1">
+      <div className='flex items-center gap-1'>
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
-            type="button"
+            type='button'
             onClick={() => onChange(star)}
             onMouseEnter={() => setHover(star)}
             onMouseLeave={() => setHover(0)}
-            className="transition-all hover:scale-110"
+            className='transition-all hover:scale-110'
           >
             <Star
               className={cn(
-                "w-8 h-8 transition-colors",
-                (hover || value) >= star
-                  ? "fill-yellow-400 text-yellow-400"
-                  : "text-gray-300"
+                'w-8 h-8 transition-colors',
+                (hover || value) >= star ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
               )}
             />
           </button>
         ))}
         {value > 0 && (
-          <span className="ml-2 text-sm font-semibold text-gray-700">
-            {value === 5 ? "Excellent!" : value === 4 ? "Great!" : value === 3 ? "Good" : value === 2 ? "Fair" : "Poor"}
+          <span className='ml-2 text-sm font-semibold text-gray-700'>
+            {value === 5
+              ? 'Excellent!'
+              : value === 4
+                ? 'Great!'
+                : value === 3
+                  ? 'Good'
+                  : value === 2
+                    ? 'Fair'
+                    : 'Poor'}
           </span>
         )}
       </div>
@@ -46,14 +52,14 @@ const StarRating = ({ value, onChange, label, required = false }) => {
   );
 };
 
-export default function ReviewForm({ 
-  bookingId, 
+export default function ReviewForm({
+  bookingId,
   adventureId,
-  reviewedEmail, 
+  reviewedEmail,
   reviewedName,
   reviewType, // 'traveler_to_host', 'host_to_traveler', 'adventure_review'
   city,
-  onSuccess 
+  onSuccess,
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -64,7 +70,7 @@ export default function ReviewForm({
     cleanliness_rating: 0,
     location_rating: 0,
     comment: '',
-    photos: []
+    photos: [],
   });
 
   const handlePhotoUpload = async (e) => {
@@ -76,15 +82,13 @@ export default function ReviewForm({
 
     setIsSubmitting(true);
     try {
-      const uploadPromises = files.map(file => 
-        base44.integrations.Core.UploadFile({ file })
-      );
+      const uploadPromises = files.map((file) => base44.integrations.Core.UploadFile({ file }));
       const results = await Promise.all(uploadPromises);
-      const urls = results.map(r => r.file_url);
-      
-      setFormData(prev => ({
+      const urls = results.map((r) => r.file_url);
+
+      setFormData((prev) => ({
         ...prev,
-        photos: [...prev.photos, ...urls]
+        photos: [...prev.photos, ...urls],
       }));
       toast.success('Photos uploaded');
     } catch (error) {
@@ -95,9 +99,9 @@ export default function ReviewForm({
   };
 
   const removePhoto = (index) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      photos: prev.photos.filter((_, i) => i !== index)
+      photos: prev.photos.filter((_, i) => i !== index),
     }));
   };
 
@@ -132,7 +136,7 @@ export default function ReviewForm({
         comment: formData.comment.trim(),
         photos: formData.photos,
         is_verified: true,
-        status: 'published'
+        status: 'published',
       };
 
       // Add sub-ratings based on review type
@@ -154,7 +158,7 @@ export default function ReviewForm({
       // Update reviewed user's rating
       await updateUserRating(reviewedEmail);
 
-      toast.success('✅ Review submitted successfully!');
+      toast.success(' Review submitted successfully!');
       if (onSuccess) onSuccess();
     } catch (error) {
       console.error('Review submission error:', error);
@@ -169,17 +173,18 @@ export default function ReviewForm({
       // Get all reviews for this user
       const allReviews = await base44.entities.Review.filter({
         reviewed_email: email,
-        status: 'published'
+        status: 'published',
       });
 
       if (allReviews.length > 0) {
-        const avgRating = allReviews.reduce((sum, r) => sum + r.overall_rating, 0) / allReviews.length;
-        
+        const avgRating =
+          allReviews.reduce((sum, r) => sum + r.overall_rating, 0) / allReviews.length;
+
         // Update user's rating
         const users = await base44.entities.User.filter({ email });
         if (users.length > 0) {
           await base44.entities.User.update(users[0].id, {
-            rating: parseFloat(avgRating.toFixed(2))
+            rating: parseFloat(avgRating.toFixed(2)),
           });
         }
       }
@@ -191,59 +196,67 @@ export default function ReviewForm({
   const showSubRatings = reviewType === 'traveler_to_host' || reviewType === 'adventure_review';
 
   return (
-    <Card className="max-w-2xl mx-auto">
+    <Card className='max-w-2xl mx-auto'>
       <CardHeader>
         <CardTitle>Write a Review</CardTitle>
-        <CardDescription>
-          Share your experience with {reviewedName}
-        </CardDescription>
+        <CardDescription>Share your experience with {reviewedName}</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className='space-y-6'>
           {/* Overall Rating */}
           <StarRating
-            label="Overall Rating"
+            label='Overall Rating'
             value={formData.overall_rating}
-            onChange={(val) => setFormData(prev => ({ ...prev, overall_rating: val }))}
+            onChange={(val) => setFormData((prev) => ({ ...prev, overall_rating: val }))}
             required
           />
 
           {/* Sub-ratings */}
           {showSubRatings && (
-            <div className="space-y-4 pt-4 border-t">
-              <h4 className="font-semibold text-gray-900">Detailed Ratings</h4>
-              
+            <div className='space-y-4 pt-4 border-t'>
+              <h4 className='font-semibold text-gray-900'>Detailed Ratings</h4>
+
               <StarRating
-                label="Communication"
+                label='Communication'
                 value={formData.communication_rating}
-                onChange={(val) => setFormData(prev => ({ ...prev, communication_rating: val }))}
+                onChange={(val) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    communication_rating: val,
+                  }))
+                }
               />
 
               <StarRating
-                label="Value for Money"
+                label='Value for Money'
                 value={formData.value_rating}
-                onChange={(val) => setFormData(prev => ({ ...prev, value_rating: val }))}
+                onChange={(val) => setFormData((prev) => ({ ...prev, value_rating: val }))}
               />
 
               <StarRating
-                label="Accuracy"
+                label='Accuracy'
                 value={formData.accuracy_rating}
-                onChange={(val) => setFormData(prev => ({ ...prev, accuracy_rating: val }))}
+                onChange={(val) => setFormData((prev) => ({ ...prev, accuracy_rating: val }))}
               />
 
               {reviewType === 'traveler_to_host' && (
                 <StarRating
-                  label="Cleanliness"
+                  label='Cleanliness'
                   value={formData.cleanliness_rating}
-                  onChange={(val) => setFormData(prev => ({ ...prev, cleanliness_rating: val }))}
+                  onChange={(val) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      cleanliness_rating: val,
+                    }))
+                  }
                 />
               )}
 
               {reviewType === 'adventure_review' && (
                 <StarRating
-                  label="Location"
+                  label='Location'
                   value={formData.location_rating}
-                  onChange={(val) => setFormData(prev => ({ ...prev, location_rating: val }))}
+                  onChange={(val) => setFormData((prev) => ({ ...prev, location_rating: val }))}
                 />
               )}
             </div>
@@ -251,59 +264,55 @@ export default function ReviewForm({
 
           {/* Comment */}
           <div>
-            <Label htmlFor="comment">Your Review *</Label>
+            <Label htmlFor='comment'>Your Review *</Label>
             <Textarea
-              id="comment"
+              id='comment'
               value={formData.comment}
-              onChange={(e) => setFormData(prev => ({ ...prev, comment: e.target.value }))}
-              placeholder="Share details about your experience..."
+              onChange={(e) => setFormData((prev) => ({ ...prev, comment: e.target.value }))}
+              placeholder='Share details about your experience...'
               rows={5}
-              className="mt-2"
+              className='mt-2'
               required
             />
-            <p className="text-xs text-gray-500 mt-1">
-              {formData.comment.length} characters
-            </p>
+            <p className='text-xs text-gray-500 mt-1'>{formData.comment.length} characters</p>
           </div>
 
           {/* Photos */}
           <div>
             <Label>Add Photos (Optional)</Label>
-            <div className="mt-2">
+            <div className='mt-2'>
               {formData.photos.length < 5 && (
-                <label className="cursor-pointer">
+                <label className='cursor-pointer'>
                   <input
-                    type="file"
+                    type='file'
                     multiple
-                    accept="image/*"
+                    accept='image/*'
                     onChange={handlePhotoUpload}
-                    className="hidden"
+                    className='hidden'
                     disabled={isSubmitting}
                   />
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
-                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600">
-                      Click to upload photos (max 5)
-                    </p>
+                  <div className='border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors'>
+                    <Upload className='w-8 h-8 text-gray-400 mx-auto mb-2' />
+                    <p className='text-sm text-gray-600'>Click to upload photos (max 5)</p>
                   </div>
                 </label>
               )}
 
               {formData.photos.length > 0 && (
-                <div className="grid grid-cols-3 gap-3 mt-3">
+                <div className='grid grid-cols-3 gap-3 mt-3'>
                   {formData.photos.map((photo, index) => (
-                    <div key={index} className="relative group">
+                    <div key={index} className='relative group'>
                       <img
                         src={photo}
                         alt={`Review photo ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-lg"
+                        className='w-full h-32 object-cover rounded-lg'
                       />
                       <button
-                        type="button"
+                        type='button'
                         onClick={() => removePhoto(index)}
-                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className='absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity'
                       >
-                        <X className="w-4 h-4" />
+                        <X className='w-4 h-4' />
                       </button>
                     </div>
                   ))}
@@ -314,18 +323,18 @@ export default function ReviewForm({
 
           {/* Submit */}
           <Button
-            type="submit"
+            type='submit'
             disabled={isSubmitting || formData.overall_rating === 0 || !formData.comment.trim()}
-            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+            className='w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700'
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Loader2 className='w-4 h-4 mr-2 animate-spin' />
                 Submitting...
               </>
             ) : (
               <>
-                <Send className="w-4 h-4 mr-2" />
+                <Send className='w-4 h-4 mr-2' />
                 Submit Review
               </>
             )}

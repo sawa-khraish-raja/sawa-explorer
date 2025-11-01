@@ -9,7 +9,14 @@ export default function BookingCairo() {
     best_time_to_visit: 'October to April',
     languages: ['Arabic', 'English'],
     currency: 'Egyptian Pound',
-    highlights: ['Pyramids of Giza', 'Egyptian Museum', 'Khan El Khalili', 'Nile Cruise', 'Islamic Cairo', 'Ancient Wonders']
+    highlights: [
+      'Pyramids of Giza',
+      'Egyptian Museum',
+      'Khan El Khalili',
+      'Nile Cruise',
+      'Islamic Cairo',
+      'Ancient Wonders',
+    ],
   };
 
   return <BookingPageTemplate city={cairo} />;

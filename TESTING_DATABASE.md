@@ -11,20 +11,23 @@
 ## Step 2: Seed the Database
 
 ### Option A: Seed Everything at Once
+
 1. Click the **"Seed All Data"** button
 2. Wait for the success message
 3. Click **"Refresh Stats"** to see the updated counts
 
 ### Option B: Seed Individual Collections
+
 1. Click **"Seed Cities"** - adds 5 cities
 2. Click **"Seed Adventures"** - adds 5 adventures (requires cities first!)
 3. Click **"Seed Services"** - adds 5 services
 
 **Expected Results:**
-- ✅ 5 cities
-- ✅ 5 adventures
-- ✅ 5 services
-- ✅ 1+ users (from your signup)
+
+- 5 cities
+- 5 adventures
+- 5 services
+- 1+ users (from your signup)
 
 ---
 
@@ -50,6 +53,7 @@
 Open your browser console (F12) and test the helper functions:
 
 ### Test 1: Get All Cities
+
 ```javascript
 // Import the function
 const { getAllDocuments } = await import('/src/utils/firestore.js');
@@ -61,6 +65,7 @@ console.log('Cities:', cities);
 ```
 
 ### Test 2: Get All Adventures
+
 ```javascript
 const { getAllDocuments } = await import('/src/utils/firestore.js');
 
@@ -70,12 +75,13 @@ console.log('Adventures:', adventures);
 ```
 
 ### Test 3: Get Adventures by City
+
 ```javascript
 const { getAllDocuments, getAdventuresByCity } = await import('/src/utils/firestore.js');
 
 // First get a city ID
 const cities = await getAllDocuments('cities');
-const damascus = cities.find(c => c.name === 'Damascus');
+const damascus = cities.find((c) => c.name === 'Damascus');
 
 // Get adventures for that city
 const adventuresInDamascus = await getAdventuresByCity(damascus.id);
@@ -84,12 +90,13 @@ console.log('Adventures in Damascus:', adventuresInDamascus);
 ```
 
 ### Test 4: Search Adventures
+
 ```javascript
 const { searchAdventures } = await import('/src/utils/firestore.js');
 
 const results = await searchAdventures({
   category: 'Food Tour',
-  sortBy: 'rating'
+  sortBy: 'rating',
 });
 console.log('Food Tours:', results);
 // Expected: Array with 1 adventure (Medina Food Tour)
@@ -100,6 +107,7 @@ console.log('Food Tours:', results);
 ## Step 5: Test Creating Data
 
 ### Create a Booking (Example)
+
 ```javascript
 const { addDocument } = await import('/src/utils/firestore.js');
 
@@ -121,13 +129,14 @@ const bookingId = await addDocument('bookings', {
   currency: 'USD',
   status: 'pending',
   payment_status: 'pending',
-  payment_method: 'card'
+  payment_method: 'card',
 });
 
 console.log('Booking created with ID:', bookingId);
 ```
 
 ### Create a Review (Example)
+
 ```javascript
 const { createReview } = await import('/src/utils/firestore.js');
 
@@ -144,14 +153,15 @@ const reviewId = await createReview({
     accuracy: 5,
     communication: 5,
     cleanliness: 5,
-    value: 5
-  }
+    value: 5,
+  },
 });
 
 console.log('Review created with ID:', reviewId);
 ```
 
 ### Add to Favorites
+
 ```javascript
 const { addToFavorites, getAllDocuments } = await import('/src/utils/firestore.js');
 
@@ -174,6 +184,7 @@ console.log('My favorites:', favorites);
 ## Step 6: Test Security Rules
 
 ### Test Reading Public Data (Should Work)
+
 ```javascript
 const { getAllDocuments } = await import('/src/utils/firestore.js');
 
@@ -186,6 +197,7 @@ console.log('Public data loaded successfully!');
 ```
 
 ### Test Protected Data (Should Fail if Not Logged In)
+
 ```javascript
 const { getAllDocuments } = await import('/src/utils/firestore.js');
 
@@ -204,6 +216,7 @@ try {
 ## Step 7: Deploy Security Rules to Firebase
 
 ### Option A: Using Firebase Console
+
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Select **sawa-explorer** project
 3. Go to **Firestore Database** → **Rules** tab
@@ -212,6 +225,7 @@ try {
 6. Click **Publish**
 
 ### Option B: Using Firebase CLI
+
 ```bash
 # Install Firebase CLI if you haven't
 npm install -g firebase-tools
@@ -231,18 +245,24 @@ firebase deploy --only firestore:rules
 ## Common Issues & Solutions
 
 ### Issue 1: "Permission denied" errors
+
 **Solution:** Make sure you're logged in and the security rules are deployed.
 
 ### Issue 2: Adventures seeding fails
+
 **Solution:** Seed cities first! Adventures depend on city IDs.
 
 ### Issue 3: Can't see data in Firebase Console
+
 **Solution:**
+
 - Make sure you selected the **"test"** database (not "default")
 - Check the database dropdown in top-right corner
 
 ### Issue 4: Import errors in console
+
 **Solution:** Use the full path with `/src/` prefix:
+
 ```javascript
 const { getAllDocuments } = await import('/src/utils/firestore.js');
 ```

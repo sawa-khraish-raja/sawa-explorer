@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 
 export default function ProgressBar({ currentStep, totalSteps }) {
   return (
-    <div className="flex w-full h-1.5 rounded-full bg-gray-200">
+    <div className='flex w-full h-1.5 rounded-full bg-gray-200'>
       {Array.from({ length: totalSteps }).map((_, index) => (
         <div
           key={index}

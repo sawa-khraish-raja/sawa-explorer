@@ -1,5 +1,9 @@
 import React from 'react';
 import PartnerLayout from '../components/partner/PartnerLayout';
 export default function PartnerMessages() {
-  return <PartnerLayout><div>Messages Page</div></PartnerLayout>;
+  return (
+    <PartnerLayout>
+      <div>Messages Page</div>
+    </PartnerLayout>
+  );
 }

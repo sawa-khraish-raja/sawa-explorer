@@ -27,7 +27,7 @@ export default function WriteReview() {
         // Check if already reviewed
         const existingReviews = await base44.entities.Review.filter({
           booking_id: bookingId || adventureId,
-          reviewer_email: currentUser.email
+          reviewer_email: currentUser.email,
         });
 
         if (existingReviews.length > 0) {
@@ -43,22 +43,18 @@ export default function WriteReview() {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+      <div className='flex items-center justify-center min-h-screen'>
+        <Loader2 className='w-8 h-8 animate-spin text-purple-600' />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className='min-h-screen bg-gray-50 py-8'>
+      <div className='max-w-4xl mx-auto px-4'>
         {/* Back Button */}
-        <Button
-          variant="ghost"
-          onClick={() => navigate(-1)}
-          className="mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+        <Button variant='ghost' onClick={() => navigate(-1)} className='mb-6'>
+          <ArrowLeft className='w-4 h-4 mr-2' />
           Back
         </Button>
 

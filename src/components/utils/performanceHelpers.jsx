@@ -1,7 +1,7 @@
 export const lazyLoadImage = (imgElement, src) => {
   if ('IntersectionObserver' in window) {
     const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
+      entries.forEach((entry) => {
         if (entry.isIntersecting) {
           imgElement.src = src;
           imgElement.classList.add('loaded');
@@ -29,11 +29,11 @@ export const debounce = (func, wait) => {
 
 export const throttle = (func, limit) => {
   let inThrottle;
-  return function(...args) {
+  return function (...args) {
     if (!inThrottle) {
       func.apply(this, args);
       inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
+      setTimeout(() => (inThrottle = false), limit);
     }
   };
 };
@@ -68,7 +68,7 @@ export const preloadImage = (src) => {
 };
 
 export const preloadImages = async (urls) => {
-  return Promise.all(urls.map(url => preloadImage(url)));
+  return Promise.all(urls.map((url) => preloadImage(url)));
 };
 
 export const getOptimizedImageUrl = (url, width = 800) => {
@@ -99,7 +99,7 @@ export const cacheAPIResponse = (key, data, ttl = 300000) => {
   const item = {
     data,
     timestamp: Date.now(),
-    ttl
+    ttl,
   };
   try {
     localStorage.setItem(`cache_${key}`, JSON.stringify(item));
@@ -112,12 +112,12 @@ export const getCachedAPIResponse = (key) => {
   try {
     const item = JSON.parse(localStorage.getItem(`cache_${key}`));
     if (!item) return null;
-    
+
     if (Date.now() - item.timestamp > item.ttl) {
       localStorage.removeItem(`cache_${key}`);
       return null;
     }
-    
+
     return item.data;
   } catch (e) {
     return null;
@@ -127,7 +127,7 @@ export const getCachedAPIResponse = (key) => {
 export const clearExpiredCache = () => {
   try {
     const keys = Object.keys(localStorage);
-    keys.forEach(key => {
+    keys.forEach((key) => {
       if (key.startsWith('cache_')) {
         const item = JSON.parse(localStorage.getItem(key));
         if (Date.now() - item.timestamp > item.ttl) {

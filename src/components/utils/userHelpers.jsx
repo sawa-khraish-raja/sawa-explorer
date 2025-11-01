@@ -11,10 +11,10 @@
  */
 export function getFirstName(fullName, email = '') {
   if (!fullName && !email) return 'User';
-  
+
   const name = fullName || email.split('@')[0];
   const firstName = name.trim().split(/\s+/)[0]; // Get first word
-  
+
   return firstName.charAt(0).toUpperCase() + firstName.slice(1);
 }
 
@@ -27,22 +27,22 @@ export function getUserDisplayName(user) {
   if (!user) {
     return 'User';
   }
-  
-  // ✅ Try display_name first (if set, it's already first name)
+
+  //  Try display_name first (if set, it's already first name)
   if (user.display_name) {
     return user.display_name;
   }
-  
-  // ✅ Extract first name from full_name
+
+  //  Extract first name from full_name
   if (user.full_name) {
     return getFirstName(user.full_name);
   }
-  
-  // ✅ Fallback to email
+
+  //  Fallback to email
   if (user.email) {
     return getFirstName('', user.email);
   }
-  
+
   return 'User';
 }
 
@@ -55,7 +55,7 @@ export function maskEmail(email) {
   if (!email) return '';
   const [localPart, domain] = email.split('@');
   if (!domain) return email;
-  
+
   const visibleChars = Math.min(3, localPart.length);
   const masked = localPart.substring(0, visibleChars) + '***';
   return `${masked}@${domain}`;
@@ -70,7 +70,7 @@ export function maskPhone(phone) {
   if (!phone) return '';
   const cleaned = phone.replace(/\D/g, '');
   if (cleaned.length < 4) return '***';
-  
+
   const lastFour = cleaned.slice(-4);
   return `***${lastFour}`;
 }

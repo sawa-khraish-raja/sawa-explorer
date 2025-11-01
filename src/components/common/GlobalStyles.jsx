@@ -26,14 +26,14 @@ export default function GlobalStyles() {
         overscroll-behavior-y: none;
       }
 
-      /* ✅ CRITICAL: Force horizontal text for all languages */
+      /*  CRITICAL: Force horizontal text for all languages */
       * {
         writing-mode: horizontal-tb !important;
         text-orientation: mixed !important;
         direction: inherit;
       }
 
-      /* ✅ Ensure Arabic text flows correctly */
+      /*  Ensure Arabic text flows correctly */
       [dir="rtl"] {
         direction: rtl;
         text-align: right;
@@ -44,25 +44,25 @@ export default function GlobalStyles() {
         text-align: left;
       }
 
-      /* ✅ Prevent any vertical text rendering */
+      /*  Prevent any vertical text rendering */
       h1, h2, h3, h4, h5, h6, p, span, div, a, button, input, textarea {
         writing-mode: horizontal-tb !important;
         text-orientation: mixed !important;
       }
 
-      /* ✅ iOS specific fixes */
+      /*  iOS specific fixes */
       input, textarea, select {
         font-size: 16px !important;
         -webkit-appearance: none;
         border-radius: 0;
       }
 
-      /* ✅ iPhone Safe Area Support */
+      /*  iPhone Safe Area Support */
       .safe-area-top {
         padding-top: env(safe-area-inset-top);
       }
 
-      /* ✅ iOS Install Banner Animation */
+      /*  iOS Install Banner Animation */
       .animate-slide-down {
         animation: slideDown 0.5s ease-out forwards;
       }
@@ -78,13 +78,13 @@ export default function GlobalStyles() {
         }
       }
 
-      /* ✅ Prevent horizontal scroll */
+      /*  Prevent horizontal scroll */
       html, body {
         max-width: 100vw;
         overflow-x: hidden;
       }
 
-      /* ✅ Ensure proper text wrapping */
+      /*  Ensure proper text wrapping */
       p, span, div, h1, h2, h3, h4, h5, h6 {
         word-wrap: break-word;
         overflow-wrap: break-word;

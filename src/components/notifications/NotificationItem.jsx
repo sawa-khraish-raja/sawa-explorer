@@ -1,9 +1,15 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
-import { 
-  Bell, Briefcase, MessageSquare, CheckCircle, XCircle, 
-  DollarSign, Star, Trash2 
+import {
+  Bell,
+  Briefcase,
+  MessageSquare,
+  CheckCircle,
+  XCircle,
+  DollarSign,
+  Star,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -43,48 +49,46 @@ export default function NotificationItem({ notification, onClick, onDelete }) {
     <div
       onClick={onClick}
       className={cn(
-        "flex items-start gap-3 p-4 border-b border-gray-100 cursor-pointer transition-colors group",
-        notification.read 
-          ? "hover:bg-gray-50" 
-          : "bg-purple-50/50 hover:bg-purple-50"
+        'flex items-start gap-3 p-4 border-b border-gray-100 cursor-pointer transition-colors group',
+        notification.read ? 'hover:bg-gray-50' : 'bg-purple-50/50 hover:bg-purple-50'
       )}
     >
       {/* Icon */}
-      <div className={cn(
-        "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
-        colorClass
-      )}>
-        <Icon className="w-5 h-5" />
+      <div
+        className={cn(
+          'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0',
+          colorClass
+        )}
+      >
+        <Icon className='w-5 h-5' />
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-w-0">
-        <h4 className={cn(
-          "text-sm mb-1",
-          notification.read ? "font-medium text-gray-900" : "font-bold text-gray-900"
-        )}>
+      <div className='flex-1 min-w-0'>
+        <h4
+          className={cn(
+            'text-sm mb-1',
+            notification.read ? 'font-medium text-gray-900' : 'font-bold text-gray-900'
+          )}
+        >
           {notification.title}
         </h4>
-        <p className="text-sm text-gray-600 line-clamp-2 mb-1">
-          {notification.message}
-        </p>
-        <span className="text-xs text-gray-500">
+        <p className='text-sm text-gray-600 line-clamp-2 mb-1'>{notification.message}</p>
+        <span className='text-xs text-gray-500'>
           {formatDistanceToNow(new Date(notification.created_date), { addSuffix: true })}
         </span>
       </div>
 
       {/* Unread Indicator & Delete */}
-      <div className="flex items-center gap-2 flex-shrink-0">
-        {!notification.read && (
-          <div className="w-2 h-2 rounded-full bg-purple-600" />
-        )}
+      <div className='flex items-center gap-2 flex-shrink-0'>
+        {!notification.read && <div className='w-2 h-2 rounded-full bg-purple-600' />}
         <Button
-          variant="ghost"
-          size="icon"
-          className="w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 hover:text-red-600"
+          variant='ghost'
+          size='icon'
+          className='w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 hover:text-red-600'
           onClick={onDelete}
         >
-          <Trash2 className="w-4 h-4" />
+          <Trash2 className='w-4 h-4' />
         </Button>
       </div>
     </div>

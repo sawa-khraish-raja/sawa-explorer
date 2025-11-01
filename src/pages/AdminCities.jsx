@@ -11,7 +11,23 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MapPin, Plus, Edit, Trash2, Image as ImageIcon, Upload, X, Loader2, Eye, Star, Globe, Calendar, Thermometer, Users, CheckCircle } from 'lucide-react';
+import {
+  MapPin,
+  Plus,
+  Edit,
+  Trash2,
+  Image as ImageIcon,
+  Upload,
+  X,
+  Loader2,
+  Eye,
+  Star,
+  Globe,
+  Calendar,
+  Thermometer,
+  Users,
+  CheckCircle,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -34,7 +50,7 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
     average_temp: '',
     population: null,
     page_slug: '',
-    coordinates: { lat: null, lng: null }
+    coordinates: { lat: null, lng: null },
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -65,17 +81,17 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
       if (type === 'card') {
-        setFormData(prev => ({ 
-          ...prev, 
+        setFormData((prev) => ({
+          ...prev,
           card_image: file_url,
         }));
       } else if (type === 'gallery') {
-        setFormData(prev => ({ 
-          ...prev, 
-          gallery_images: [...(prev.gallery_images || []), file_url] 
+        setFormData((prev) => ({
+          ...prev,
+          gallery_images: [...(prev.gallery_images || []), file_url],
         }));
       }
-      
+
       toast.success('Image uploaded successfully!');
     } catch (error) {
       toast.error('Failed to upload image');
@@ -86,24 +102,27 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
   const handleRemoveGalleryImage = (index) => {
     const newGallery = [...(formData.gallery_images || [])];
     newGallery.splice(index, 1);
-    setFormData(prev => ({ ...prev, gallery_images: newGallery }));
+    setFormData((prev) => ({ ...prev, gallery_images: newGallery }));
   };
 
   const handleAddHighlight = () => {
     const currentHighlights = formData.highlights || [];
-    setFormData(prev => ({ ...prev, highlights: [...currentHighlights, ''] }));
+    setFormData((prev) => ({
+      ...prev,
+      highlights: [...currentHighlights, ''],
+    }));
   };
 
   const handleUpdateHighlight = (index, value) => {
     const newHighlights = [...(formData.highlights || [])];
     newHighlights[index] = value;
-    setFormData(prev => ({ ...prev, highlights: newHighlights }));
+    setFormData((prev) => ({ ...prev, highlights: newHighlights }));
   };
 
   const handleRemoveHighlight = (index) => {
     const newHighlights = [...(formData.highlights || [])];
     newHighlights.splice(index, 1);
-    setFormData(prev => ({ ...prev, highlights: newHighlights }));
+    setFormData((prev) => ({ ...prev, highlights: newHighlights }));
   };
 
   const handleSubmit = () => {
@@ -135,35 +154,40 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className='max-w-4xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>{city ? 'Edit City' : 'Add New City'}</DialogTitle>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="media">Media</TabsTrigger>
-            <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsList className='grid w-full grid-cols-3'>
+            <TabsTrigger value='general'>General</TabsTrigger>
+            <TabsTrigger value='media'>Media</TabsTrigger>
+            <TabsTrigger value='details'>Details</TabsTrigger>
           </TabsList>
 
           {/* GENERAL TAB */}
-          <TabsContent value="general" className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <TabsContent value='general' className='space-y-4'>
+            <div className='grid grid-cols-2 gap-4'>
               <div>
                 <Label>City Name *</Label>
                 <Input
                   value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="e.g., Damascus"
+                  onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+                  placeholder='e.g., Damascus'
                 />
               </div>
               <div>
                 <Label>Country *</Label>
                 <Input
                   value={formData.country}
-                  onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
-                  placeholder="e.g., Syria"
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      country: e.target.value,
+                    }))
+                  }
+                  placeholder='e.g., Syria'
                 />
               </div>
             </div>
@@ -172,8 +196,13 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
               <Label>Description</Label>
               <Textarea
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Short description of the city..."
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
+                placeholder='Short description of the city...'
                 rows={3}
               />
             </div>
@@ -182,80 +211,89 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
               <Label>Page Slug (URL)</Label>
               <Input
                 value={formData.page_slug}
-                onChange={(e) => setFormData(prev => ({ ...prev, page_slug: e.target.value }))}
-                placeholder="e.g., BookingDamascus"
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    page_slug: e.target.value,
+                  }))
+                }
+                placeholder='e.g., BookingDamascus'
               />
-              <p className="text-xs text-gray-500 mt-1">
-                This will be the URL: /BookingDamascus
-              </p>
+              <p className='text-xs text-gray-500 mt-1'>This will be the URL: /BookingDamascus</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center justify-between">
+            <div className='grid grid-cols-2 gap-4'>
+              <div className='flex items-center justify-between'>
                 <Label>Active</Label>
                 <Switch
                   checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({ ...prev, is_active: checked }))
+                  }
                 />
               </div>
-              <div className="flex items-center justify-between">
+              <div className='flex items-center justify-between'>
                 <Label>Featured</Label>
                 <Switch
                   checked={formData.is_featured}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_featured: checked }))}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({ ...prev, is_featured: checked }))
+                  }
                 />
               </div>
             </div>
           </TabsContent>
 
           {/* MEDIA TAB */}
-          <TabsContent value="media" className="space-y-6">
+          <TabsContent value='media' className='space-y-6'>
             {/* Card Image */}
             <div>
               <Label>Card Image (Homepage) *</Label>
-              <p className="text-xs text-gray-500 mb-2">
+              <p className='text-xs text-gray-500 mb-2'>
                 This image appears on the homepage city cards
               </p>
               {formData.card_image ? (
-                <div className="relative">
+                <div className='relative'>
                   <img
                     src={formData.card_image}
-                    alt="Card"
-                    className="w-full rounded-lg max-h-64 object-cover"
+                    alt='Card'
+                    className='w-full rounded-lg max-h-64 object-cover'
                   />
                   <Button
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-2 right-2"
-                    onClick={() => setFormData(prev => ({ ...prev, card_image: '' }))}
+                    variant='destructive'
+                    size='icon'
+                    className='absolute top-2 right-2'
+                    onClick={() => setFormData((prev) => ({ ...prev, card_image: '' }))}
                   >
-                    <X className="w-4 h-4" />
+                    <X className='w-4 h-4' />
                   </Button>
                 </div>
               ) : (
-                <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                  <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                <div className='border-2 border-dashed rounded-lg p-8 text-center'>
+                  <Upload className='w-8 h-8 mx-auto mb-2 text-gray-400' />
                   <Input
-                    type="file"
-                    accept="image/*"
+                    type='file'
+                    accept='image/*'
                     onChange={(e) => handleImageUpload(e, 'card')}
                     disabled={isUploadingImage}
-                    className="max-w-xs mx-auto"
+                    className='max-w-xs mx-auto'
                   />
                 </div>
               )}
             </div>
 
-            {/* ✅ Note about Hero Video */}
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className="w-5 h-5 text-white" />
+            {/*  Note about Hero Video */}
+            <div className='bg-blue-50 border-2 border-blue-200 rounded-xl p-4'>
+              <div className='flex items-start gap-3'>
+                <div className='w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0'>
+                  <CheckCircle className='w-5 h-5 text-white' />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-blue-900 mb-1">Hero Video Management</h4>
-                  <p className="text-sm text-blue-700">
-                    To add/edit hero videos for this city page, go to <strong>Hero Slides</strong> management and select <strong>City Pages</strong>, then choose <strong>{formData.name || 'this city'}</strong>.
+                  <h4 className='font-semibold text-blue-900 mb-1'>Hero Video Management</h4>
+                  <p className='text-sm text-blue-700'>
+                    To add/edit hero videos for this city page, go to <strong>Hero Slides</strong>{' '}
+                    management and select <strong>City Pages</strong>, then choose{' '}
+                    <strong>{formData.name || 'this city'}</strong>.
                   </p>
                 </div>
               </div>
@@ -264,31 +302,35 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
             {/* Gallery Images */}
             <div>
               <Label>Gallery Images</Label>
-              <div className="grid grid-cols-3 gap-4 mt-2">
+              <div className='grid grid-cols-3 gap-4 mt-2'>
                 {formData.gallery_images?.map((img, idx) => (
-                  <div key={idx} className="relative">
-                    <img src={img} alt={`Gallery ${idx + 1}`} className="w-full h-32 object-cover rounded-lg" />
+                  <div key={idx} className='relative'>
+                    <img
+                      src={img}
+                      alt={`Gallery ${idx + 1}`}
+                      className='w-full h-32 object-cover rounded-lg'
+                    />
                     <Button
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-1 right-1 h-6 w-6"
+                      variant='destructive'
+                      size='icon'
+                      className='absolute top-1 right-1 h-6 w-6'
                       onClick={() => handleRemoveGalleryImage(idx)}
                     >
-                      <X className="w-3 h-3" />
+                      <X className='w-3 h-3' />
                     </Button>
                   </div>
                 ))}
-                <div className="border-2 border-dashed rounded-lg p-4 flex items-center justify-center">
-                  <label className="cursor-pointer text-center">
-                    <Upload className="w-6 h-6 mx-auto mb-1 text-gray-400" />
+                <div className='border-2 border-dashed rounded-lg p-4 flex items-center justify-center'>
+                  <label className='cursor-pointer text-center'>
+                    <Upload className='w-6 h-6 mx-auto mb-1 text-gray-400' />
                     <Input
-                      type="file"
-                      accept="image/*"
+                      type='file'
+                      accept='image/*'
                       onChange={(e) => handleImageUpload(e, 'gallery')}
-                      className="hidden"
+                      className='hidden'
                       disabled={isUploadingImage}
                     />
-                    <span className="text-xs text-gray-500">Add Image</span>
+                    <span className='text-xs text-gray-500'>Add Image</span>
                   </label>
                 </div>
               </div>
@@ -296,71 +338,86 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
           </TabsContent>
 
           {/* DETAILS TAB */}
-          <TabsContent value="details" className="space-y-4">
+          <TabsContent value='details' className='space-y-4'>
             <div>
               <Label>Highlights</Label>
-              <div className="space-y-2 mt-2">
+              <div className='space-y-2 mt-2'>
                 {formData.highlights?.map((highlight, idx) => (
-                  <div key={idx} className="flex gap-2">
+                  <div key={idx} className='flex gap-2'>
                     <Input
                       value={highlight}
                       onChange={(e) => handleUpdateHighlight(idx, e.target.value)}
-                      placeholder="e.g., Rich history and culture"
+                      placeholder='e.g., Rich history and culture'
                     />
                     <Button
-                      variant="outline"
-                      size="icon"
+                      variant='outline'
+                      size='icon'
                       onClick={() => handleRemoveHighlight(idx)}
                     >
-                      <X className="w-4 h-4" />
+                      <X className='w-4 h-4' />
                     </Button>
                   </div>
                 ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddHighlight}
-                  className="w-full"
-                >
-                  <Plus className="w-4 h-4 mr-2" /> Add Highlight
+                <Button variant='outline' size='sm' onClick={handleAddHighlight} className='w-full'>
+                  <Plus className='w-4 h-4 mr-2' /> Add Highlight
                 </Button>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className='grid grid-cols-2 gap-4'>
               <div>
                 <Label>Timezone</Label>
                 <Input
                   value={formData.timezone}
-                  onChange={(e) => setFormData(prev => ({ ...prev, timezone: e.target.value }))}
-                  placeholder="e.g., Asia/Damascus"
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      timezone: e.target.value,
+                    }))
+                  }
+                  placeholder='e.g., Asia/Damascus'
                 />
               </div>
               <div>
                 <Label>Currency</Label>
                 <Input
                   value={formData.currency}
-                  onChange={(e) => setFormData(prev => ({ ...prev, currency: e.target.value }))}
-                  placeholder="e.g., USD"
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      currency: e.target.value,
+                    }))
+                  }
+                  placeholder='e.g., USD'
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className='grid grid-cols-2 gap-4'>
               <div>
                 <Label>Best Time to Visit</Label>
                 <Input
                   value={formData.best_time_to_visit}
-                  onChange={(e) => setFormData(prev => ({ ...prev, best_time_to_visit: e.target.value }))}
-                  placeholder="e.g., Spring and Fall"
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      best_time_to_visit: e.target.value,
+                    }))
+                  }
+                  placeholder='e.g., Spring and Fall'
                 />
               </div>
               <div>
                 <Label>Average Temperature</Label>
                 <Input
                   value={formData.average_temp}
-                  onChange={(e) => setFormData(prev => ({ ...prev, average_temp: e.target.value }))}
-                  placeholder="e.g., 20°C"
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      average_temp: e.target.value,
+                    }))
+                  }
+                  placeholder='e.g., 20°C'
                 />
               </div>
             </div>
@@ -368,46 +425,55 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
             <div>
               <Label>Population</Label>
               <Input
-                type="number"
+                type='number'
                 value={formData.population || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, population: e.target.value }))}
-                placeholder="e.g., 1800000"
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    population: e.target.value,
+                  }))
+                }
+                placeholder='e.g., 1800000'
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className='grid grid-cols-2 gap-4'>
               <div>
                 <Label>Latitude</Label>
                 <Input
-                  type="number"
-                  step="0.000001"
+                  type='number'
+                  step='0.000001'
                   value={formData.coordinates.lat || ''}
-                  onChange={(e) => setFormData(prev => ({ 
-                    ...prev, 
-                    coordinates: { ...prev.coordinates, lat: e.target.value } 
-                  }))}
-                  placeholder="e.g., 33.5138"
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      coordinates: { ...prev.coordinates, lat: e.target.value },
+                    }))
+                  }
+                  placeholder='e.g., 33.5138'
                 />
               </div>
               <div>
                 <Label>Longitude</Label>
                 <Input
-                  type="number"
-                  step="0.000001"
+                  type='number'
+                  step='0.000001'
                   value={formData.coordinates.lng || ''}
-                  onChange={(e) => setFormData(prev => ({ 
-                    ...prev, 
-                    coordinates: { ...prev.coordinates, lng: e.target.value } 
-                  }))}
-                  placeholder="e.g., 36.2765"
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      coordinates: { ...prev.coordinates, lng: e.target.value },
+                    }))
+                  }
+                  placeholder='e.g., 36.2765'
                 />
               </div>
             </div>
           </TabsContent>
         </Tabs>
 
-        <div className="flex justify-end gap-3 mt-6">
-          <Button variant="outline" onClick={onClose}>
+        <div className='flex justify-end gap-3 mt-6'>
+          <Button variant='outline' onClick={onClose}>
             Cancel
           </Button>
           <Button
@@ -415,7 +481,7 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
             disabled={createCityMutation.isPending || updateCityMutation.isPending}
           >
             {(createCityMutation.isPending || updateCityMutation.isPending) && (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className='w-4 h-4 mr-2 animate-spin' />
             )}
             {city ? 'Update City' : 'Create City'}
           </Button>
@@ -430,13 +496,22 @@ export default function AdminCities() {
   const [selectedCity, setSelectedCity] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  //  Using Firestore for cities
   const { data: cities = [], isLoading } = useQuery({
     queryKey: ['cities'],
-    queryFn: () => base44.entities.City.list('name'),
+    queryFn: async () => {
+      const { queryDocuments } = await import('@/utils/firestore');
+      return await queryDocuments('cities', [], {
+        orderBy: { field: 'name', direction: 'asc' },
+      });
+    },
   });
 
   const createCityMutation = useMutation({
-    mutationFn: (data) => base44.entities.City.create(data),
+    mutationFn: async (data) => {
+      const { addDocument } = await import('@/utils/firestore');
+      return await addDocument('cities', data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cities'] });
       toast.success('City created successfully');
@@ -450,7 +525,10 @@ export default function AdminCities() {
   });
 
   const updateCityMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.City.update(id, data),
+    mutationFn: async ({ id, data }) => {
+      const { updateDocument } = await import('@/utils/firestore');
+      return await updateDocument('cities', id, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cities'] });
       toast.success('City updated successfully');
@@ -464,7 +542,10 @@ export default function AdminCities() {
   });
 
   const deleteCityMutation = useMutation({
-    mutationFn: (id) => base44.entities.City.delete(id),
+    mutationFn: async (id) => {
+      const { deleteDocument } = await import('@/utils/firestore');
+      return await deleteDocument('cities', id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cities'] });
       toast.success('City deleted successfully');
@@ -493,100 +574,98 @@ export default function AdminCities() {
 
   if (isLoading) {
     return (
-      <AdminLayout currentPage="cities">
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+      <AdminLayout currentPage='cities'>
+        <div className='flex justify-center items-center h-64'>
+          <Loader2 className='w-8 h-8 animate-spin text-purple-600' />
         </div>
       </AdminLayout>
     );
   }
 
   return (
-    <AdminLayout currentPage="cities">
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+    <AdminLayout currentPage='cities'>
+      <div className='space-y-6'>
+        <div className='flex items-center justify-between'>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Cities Management</h1>
-            <p className="text-gray-600 mt-1">Manage cities and their information</p>
+            <h1 className='text-3xl font-bold text-gray-900'>Cities Management</h1>
+            <p className='text-gray-600 mt-1'>Manage cities and their information</p>
           </div>
-          <Button onClick={handleAddCity} className="bg-purple-600 hover:bg-purple-700">
-            <Plus className="w-4 h-4 mr-2" />
+          <Button onClick={handleAddCity} className='bg-purple-600 hover:bg-purple-700'>
+            <Plus className='w-4 h-4 mr-2' />
             Add City
           </Button>
         </div>
 
         {cities.length === 0 ? (
           <Card>
-            <CardContent className="py-16 text-center">
-              <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-700">No cities yet</h3>
-              <p className="text-gray-500 mt-2">Create your first city to get started</p>
+            <CardContent className='py-16 text-center'>
+              <MapPin className='w-16 h-16 text-gray-300 mx-auto mb-4' />
+              <h3 className='text-lg font-semibold text-gray-700'>No cities yet</h3>
+              <p className='text-gray-500 mt-2'>Create your first city to get started</p>
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
             {cities.map((city) => (
-              <Card key={city.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="relative h-48">
+              <Card key={city.id} className='overflow-hidden hover:shadow-lg transition-shadow'>
+                <div className='relative h-48'>
                   {city.card_image ? (
                     <img
                       src={city.card_image}
                       alt={city.name}
-                      className="w-full h-full object-cover"
+                      className='w-full h-full object-cover'
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500" />
+                    <div className='w-full h-full bg-gradient-to-br from-purple-500 to-pink-500' />
                   )}
-                  <div className="absolute top-2 right-2 flex gap-2">
+                  <div className='absolute top-2 right-2 flex gap-2'>
                     {city.is_featured && (
-                      <Badge className="bg-amber-500">
-                        <Star className="w-3 h-3 mr-1" /> Featured
+                      <Badge className='bg-amber-500'>
+                        <Star className='w-3 h-3 mr-1' /> Featured
                       </Badge>
                     )}
                     {city.is_active ? (
-                      <Badge className="bg-green-500">
-                        <Eye className="w-3 h-3 mr-1" /> Active
+                      <Badge className='bg-green-500'>
+                        <Eye className='w-3 h-3 mr-1' /> Active
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="bg-white">
+                      <Badge variant='outline' className='bg-white'>
                         Hidden
                       </Badge>
                     )}
                   </div>
                 </div>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-2">
+                <CardContent className='p-4'>
+                  <div className='flex items-start justify-between mb-2'>
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900">{city.name}</h3>
-                      <p className="text-sm text-gray-600">{city.country}</p>
+                      <h3 className='text-lg font-bold text-gray-900'>{city.name}</h3>
+                      <p className='text-sm text-gray-600'>{city.country}</p>
                     </div>
-                    <Badge className="bg-blue-100 text-blue-800">
-                      <ImageIcon className="w-3 h-3 mr-1" /> Image
+                    <Badge className='bg-blue-100 text-blue-800'>
+                      <ImageIcon className='w-3 h-3 mr-1' /> Image
                     </Badge>
                   </div>
 
                   {city.description && (
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                      {city.description}
-                    </p>
+                    <p className='text-sm text-gray-600 mb-4 line-clamp-2'>{city.description}</p>
                   )}
 
-                  <div className="flex gap-2">
+                  <div className='flex gap-2'>
                     <Button
-                      variant="outline"
-                      size="sm"
+                      variant='outline'
+                      size='sm'
                       onClick={() => handleEditCity(city)}
-                      className="flex-1"
+                      className='flex-1'
                     >
-                      <Edit className="w-3 h-3 mr-1" /> Edit
+                      <Edit className='w-3 h-3 mr-1' /> Edit
                     </Button>
                     <Button
-                      variant="outline"
-                      size="sm"
+                      variant='outline'
+                      size='sm'
                       onClick={() => handleDeleteCity(city)}
-                      className="text-red-600 hover:bg-red-50"
+                      className='text-red-600 hover:bg-red-50'
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className='w-3 h-3' />
                     </Button>
                   </div>
                 </CardContent>

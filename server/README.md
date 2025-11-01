@@ -7,6 +7,7 @@ This is an Express.js backend server integrated with Firebase Admin SDK for data
 ### 1. Install Dependencies
 
 Dependencies are already installed in the root `package.json`:
+
 - `express` - Web framework
 - `firebase-admin` - Firebase Admin SDK
 - `cors` - Enable CORS
@@ -54,11 +55,13 @@ FIREBASE_SERVICE_ACCOUNT='{"type":"service_account","project_id":"...","private_
 ## Running the Server
 
 ### Development Mode (with auto-reload)
+
 ```bash
 npm run server:dev
 ```
 
 ### Production Mode
+
 ```bash
 npm run server
 ```
@@ -68,9 +71,11 @@ The server will start on `http://localhost:5000` (or the PORT you specified in .
 ## API Endpoints
 
 ### Health Check
+
 - **GET** `/health` - Check if server is running
 
 ### Users API
+
 - **GET** `/api/users` - Get all users
 - **GET** `/api/users/:id` - Get user by ID
 - **POST** `/api/users` - Create new user
@@ -101,6 +106,7 @@ server/
 3. Import and use routes in `server/index.js`
 
 Example:
+
 ```javascript
 // server/index.js
 import productRoutes from './routes/productRoutes.js';
@@ -110,11 +116,13 @@ app.use('/api/products', productRoutes);
 ## Testing with cURL
 
 ### Get all users
+
 ```bash
 curl http://localhost:5000/api/users
 ```
 
 ### Create a user
+
 ```bash
 curl -X POST http://localhost:5000/api/users \
   -H "Content-Type: application/json" \
@@ -122,11 +130,13 @@ curl -X POST http://localhost:5000/api/users \
 ```
 
 ### Get user by ID
+
 ```bash
 curl http://localhost:5000/api/users/USER_ID
 ```
 
 ### Update user
+
 ```bash
 curl -X PUT http://localhost:5000/api/users/USER_ID \
   -H "Content-Type: application/json" \
@@ -134,6 +144,7 @@ curl -X PUT http://localhost:5000/api/users/USER_ID \
 ```
 
 ### Delete user
+
 ```bash
 curl -X DELETE http://localhost:5000/api/users/USER_ID
 ```

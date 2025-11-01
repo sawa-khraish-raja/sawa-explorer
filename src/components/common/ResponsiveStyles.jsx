@@ -3,13 +3,13 @@ import React from 'react';
 export default function ResponsiveStyles() {
   return (
     <style>{`
-      /* ✅ CRITICAL: Force all text to be horizontal */
+      /*  CRITICAL: Force all text to be horizontal */
       * {
         writing-mode: horizontal-tb !important;
         text-orientation: mixed !important;
       }
 
-      /* ✅ Base responsive container */
+      /*  Base responsive container */
       .container {
         width: 100%;
         max-width: 1200px;
@@ -17,7 +17,7 @@ export default function ResponsiveStyles() {
         padding: 0 1rem;
       }
 
-      /* ✅ Section padding responsive */
+      /*  Section padding responsive */
       .section-padding {
         padding: 3rem 1rem;
       }
@@ -34,7 +34,7 @@ export default function ResponsiveStyles() {
         }
       }
 
-      /* ✅ Hero section - MUST be horizontal */
+      /*  Hero section - MUST be horizontal */
       .hero-section,
       .hero-section * {
         writing-mode: horizontal-tb !important;
@@ -42,13 +42,13 @@ export default function ResponsiveStyles() {
         white-space: normal !important;
       }
 
-      /* ✅ Mobile optimizations */
+      /*  Mobile optimizations */
       @media (max-width: 768px) {
         .container {
           padding: 0 0.75rem;
         }
 
-        /* ✅ Force horizontal text on mobile */
+        /*  Force horizontal text on mobile */
         h1, h2, h3, h4, h5, h6 {
           writing-mode: horizontal-tb !important;
           text-orientation: mixed !important;
@@ -56,7 +56,7 @@ export default function ResponsiveStyles() {
           word-break: break-word;
         }
 
-        /* ✅ Ensure readable font sizes */
+        /*  Ensure readable font sizes */
         body {
           font-size: 14px;
         }
@@ -81,20 +81,20 @@ export default function ResponsiveStyles() {
           line-height: 1.5 !important;
         }
 
-        /* ✅ Buttons responsive */
+        /*  Buttons responsive */
         button {
           min-height: 44px;
           padding: 0.5rem 1rem;
         }
 
-        /* ✅ Input fields responsive */
+        /*  Input fields responsive */
         input, textarea, select {
           font-size: 16px !important;
           min-height: 44px;
         }
       }
 
-      /* ✅ Tablet adjustments */
+      /*  Tablet adjustments */
       @media (min-width: 769px) and (max-width: 1024px) {
         .container {
           max-width: 960px;
@@ -110,7 +110,7 @@ export default function ResponsiveStyles() {
         }
       }
 
-      /* ✅ Desktop */
+      /*  Desktop */
       @media (min-width: 1025px) {
         .container {
           max-width: 1200px;
@@ -126,14 +126,14 @@ export default function ResponsiveStyles() {
         }
       }
 
-      /* ✅ Ultra-wide screens */
+      /*  Ultra-wide screens */
       @media (min-width: 1440px) {
         .container {
           max-width: 1400px;
         }
       }
 
-      /* ✅ Print styles */
+      /*  Print styles */
       @media print {
         .no-print {
           display: none !important;
@@ -145,7 +145,7 @@ export default function ResponsiveStyles() {
         }
       }
 
-      /* ✅ Reduced motion */
+      /*  Reduced motion */
       @media (prefers-reduced-motion: reduce) {
         * {
           animation-duration: 0.01ms !important;

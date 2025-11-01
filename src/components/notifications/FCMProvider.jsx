@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * ✅ FCM Provider - DISABLED
+ *  FCM Provider - DISABLED
  * Using in-app notifications only
  */
 export function FCMProvider({ children }) {

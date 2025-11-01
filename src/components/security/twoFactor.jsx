@@ -8,7 +8,7 @@
 export function formatTOTPInput(value) {
   // Remove non-digits
   const digits = value.replace(/\D/g, '');
-  
+
   // Limit to 6 digits
   return digits.substring(0, 6);
 }

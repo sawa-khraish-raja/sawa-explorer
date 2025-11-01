@@ -30,11 +30,15 @@ const initializeFirebase = () => {
         console.log('✓ Using FIREBASE_SERVICE_ACCOUNT environment variable');
       }
       // Option 3: Using individual environment variables
-      else if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
+      else if (
+        process.env.FIREBASE_PROJECT_ID &&
+        process.env.FIREBASE_PRIVATE_KEY &&
+        process.env.FIREBASE_CLIENT_EMAIL
+      ) {
         credential = admin.credential.cert({
           projectId: process.env.FIREBASE_PROJECT_ID,
           privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
         });
         console.log('✓ Using individual Firebase environment variables');
       }
@@ -46,11 +50,11 @@ const initializeFirebase = () => {
     }
 
     // Get database ID from environment or use default
-    const databaseId = process.env.FIRESTORE_DATABASE_ID || '(default)';
+    const databaseId = process.env.FIRESTORE_DATABASE_ID || 'test';
 
     admin.initializeApp({
       credential: credential,
-      databaseURL: process.env.FIREBASE_DATABASE_URL
+      databaseURL: process.env.FIREBASE_DATABASE_URL,
     });
 
     // If using a non-default database, log it
@@ -78,7 +82,7 @@ const getFirestore = () => {
     return firestoreInstance;
   }
 
-  const databaseId = process.env.FIRESTORE_DATABASE_ID;
+  const databaseId = process.env.FIRESTORE_DATABASE_ID || 'test';
 
   // For non-default database, we need to pass the database ID
   // Using the projectId/databaseId path format
@@ -87,7 +91,7 @@ const getFirestore = () => {
     firestoreInstance = admin.firestore();
     firestoreInstance.settings({
       databaseId: databaseId,
-      ignoreUndefinedProperties: true
+      ignoreUndefinedProperties: true,
     });
     console.log(`✓ Connected to Firestore database: ${databaseId}`);
   } else {

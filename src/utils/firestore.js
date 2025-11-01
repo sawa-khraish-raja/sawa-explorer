@@ -11,9 +11,10 @@ import {
   where,
   orderBy,
   limit,
-  serverTimestamp
+  serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
+import { notificationEntity } from '@/services/firebaseEntities/notificationEntity';
 
 /**
  * Firestore Helper Functions
@@ -33,12 +34,12 @@ export const addDocument = async (collectionName, data) => {
     const docRef = await addDoc(collection(db, collectionName), {
       ...data,
       created_at: serverTimestamp(),
-      updated_at: serverTimestamp()
+      updated_at: serverTimestamp(),
     });
-    console.log(`✅ Document created in ${collectionName} with ID:`, docRef.id);
+    console.log(` Document created in ${collectionName} with ID:`, docRef.id);
     return docRef.id;
   } catch (error) {
-    console.error(`❌ Error adding document to ${collectionName}:`, error);
+    console.error(` Error adding document to ${collectionName}:`, error);
     throw error;
   }
 };
@@ -54,11 +55,11 @@ export const setDocument = async (collectionName, docId, data) => {
     await setDoc(doc(db, collectionName, docId), {
       ...data,
       created_at: serverTimestamp(),
-      updated_at: serverTimestamp()
+      updated_at: serverTimestamp(),
     });
-    console.log(`✅ Document set in ${collectionName}/${docId}`);
+    console.log(` Document set in ${collectionName}/${docId}`);
   } catch (error) {
-    console.error(`❌ Error setting document ${collectionName}/${docId}:`, error);
+    console.error(` Error setting document ${collectionName}/${docId}:`, error);
     throw error;
   }
 };
@@ -83,7 +84,7 @@ export const getDocument = async (collectionName, docId) => {
       return null;
     }
   } catch (error) {
-    console.error(`❌ Error getting document ${collectionName}/${docId}:`, error);
+    console.error(` Error getting document ${collectionName}/${docId}:`, error);
     throw error;
   }
 };
@@ -100,10 +101,10 @@ export const getAllDocuments = async (collectionName) => {
     querySnapshot.forEach((doc) => {
       documents.push({ id: doc.id, ...doc.data() });
     });
-    console.log(`✅ Found ${documents.length} documents in ${collectionName}`);
+    console.log(` Found ${documents.length} documents in ${collectionName}`);
     return documents;
   } catch (error) {
-    console.error(`❌ Error getting documents from ${collectionName}:`, error);
+    console.error(` Error getting documents from ${collectionName}:`, error);
     throw error;
   }
 };
@@ -143,10 +144,10 @@ export const queryDocuments = async (collectionName, filters = [], options = {})
       documents.push({ id: doc.id, ...doc.data() });
     });
 
-    console.log(`✅ Query found ${documents.length} documents in ${collectionName}`);
+    console.log(` Query found ${documents.length} documents in ${collectionName}`);
     return documents;
   } catch (error) {
-    console.error(`❌ Error querying ${collectionName}:`, error);
+    console.error(` Error querying ${collectionName}:`, error);
     throw error;
   }
 };
@@ -164,11 +165,11 @@ export const updateDocument = async (collectionName, docId, data) => {
     const docRef = doc(db, collectionName, docId);
     await updateDoc(docRef, {
       ...data,
-      updated_at: serverTimestamp()
+      updated_at: serverTimestamp(),
     });
-    console.log(`✅ Document updated: ${collectionName}/${docId}`);
+    console.log(` Document updated: ${collectionName}/${docId}`);
   } catch (error) {
-    console.error(`❌ Error updating document ${collectionName}/${docId}:`, error);
+    console.error(` Error updating document ${collectionName}/${docId}:`, error);
     throw error;
   }
 };
@@ -183,9 +184,9 @@ export const updateDocument = async (collectionName, docId, data) => {
 export const deleteDocument = async (collectionName, docId) => {
   try {
     await deleteDoc(doc(db, collectionName, docId));
-    console.log(`✅ Document deleted: ${collectionName}/${docId}`);
+    console.log(` Document deleted: ${collectionName}/${docId}`);
   } catch (error) {
-    console.error(`❌ Error deleting document ${collectionName}/${docId}:`, error);
+    console.error(` Error deleting document ${collectionName}/${docId}:`, error);
     throw error;
   }
 };
@@ -201,7 +202,7 @@ export const createCity = async (cityData) => {
     country: cityData.country,
     description: cityData.description,
     image_url: cityData.image_url,
-    is_active: true
+    is_active: true,
   });
 };
 
@@ -216,7 +217,7 @@ export const createBooking = async (bookingData) => {
     check_out: bookingData.check_out,
     guests: bookingData.guests,
     status: 'pending',
-    total_price: bookingData.total_price
+    total_price: bookingData.total_price,
   });
 };
 
@@ -224,11 +225,9 @@ export const createBooking = async (bookingData) => {
  * Example: Get user's bookings
  */
 export const getUserBookings = async (userId) => {
-  return await queryDocuments(
-    'bookings',
-    [['user_id', '==', userId]],
-    { orderBy: { field: 'created_at', direction: 'desc' } }
-  );
+  return await queryDocuments('bookings', [['user_id', '==', userId]], {
+    orderBy: { field: 'created_at', direction: 'desc' },
+  });
 };
 
 // ========== BOOKING HELPERS ==========
@@ -241,22 +240,18 @@ export const getHostBookings = async (hostId, status = null) => {
   if (status) {
     filters.push(['status', '==', status]);
   }
-  return await queryDocuments(
-    'bookings',
-    filters,
-    { orderBy: { field: 'booking_date', direction: 'asc' } }
-  );
+  return await queryDocuments('bookings', filters, {
+    orderBy: { field: 'booking_date', direction: 'asc' },
+  });
 };
 
 /**
  * Get adventure bookings
  */
 export const getAdventureBookings = async (adventureId) => {
-  return await queryDocuments(
-    'bookings',
-    [['adventure_id', '==', adventureId]],
-    { orderBy: { field: 'booking_date', direction: 'asc' } }
-  );
+  return await queryDocuments('bookings', [['adventure_id', '==', adventureId]], {
+    orderBy: { field: 'booking_date', direction: 'asc' },
+  });
 };
 
 /**
@@ -265,7 +260,7 @@ export const getAdventureBookings = async (adventureId) => {
 export const updateBookingStatus = async (bookingId, status, updates = {}) => {
   return await updateDocument('bookings', bookingId, {
     status,
-    ...updates
+    ...updates,
   });
 };
 
@@ -275,36 +270,28 @@ export const updateBookingStatus = async (bookingId, status, updates = {}) => {
  * Get adventure reviews
  */
 export const getAdventureReviews = async (adventureId, limitCount = null) => {
-  return await queryDocuments(
-    'reviews',
-    [['adventure_id', '==', adventureId]],
-    {
-      orderBy: { field: 'created_at', direction: 'desc' },
-      limit: limitCount
-    }
-  );
+  return await queryDocuments('reviews', [['adventure_id', '==', adventureId]], {
+    orderBy: { field: 'created_at', direction: 'desc' },
+    limit: limitCount,
+  });
 };
 
 /**
  * Get user reviews (written by user)
  */
 export const getUserReviews = async (userId) => {
-  return await queryDocuments(
-    'reviews',
-    [['reviewer_id', '==', userId]],
-    { orderBy: { field: 'created_at', direction: 'desc' } }
-  );
+  return await queryDocuments('reviews', [['reviewer_id', '==', userId]], {
+    orderBy: { field: 'created_at', direction: 'desc' },
+  });
 };
 
 /**
  * Get host reviews (reviews for host's adventures)
  */
 export const getHostReviews = async (hostId) => {
-  return await queryDocuments(
-    'reviews',
-    [['host_id', '==', hostId]],
-    { orderBy: { field: 'created_at', direction: 'desc' } }
-  );
+  return await queryDocuments('reviews', [['host_id', '==', hostId]], {
+    orderBy: { field: 'created_at', direction: 'desc' },
+  });
 };
 
 /**
@@ -325,7 +312,7 @@ export const createReview = async (reviewData) => {
     photos: reviewData.photos || [],
     helpful_count: 0,
     is_verified: true,
-    is_flagged: false
+    is_flagged: false,
   });
 };
 
@@ -335,11 +322,9 @@ export const createReview = async (reviewData) => {
  * Get user chats
  */
 export const getUserChats = async (userId) => {
-  return await queryDocuments(
-    'chats',
-    [['participants', 'array-contains', userId]],
-    { orderBy: { field: 'last_message_at', direction: 'desc' } }
-  );
+  return await queryDocuments('chats', [['participants', 'array-contains', userId]], {
+    orderBy: { field: 'last_message_at', direction: 'desc' },
+  });
 };
 
 /**
@@ -347,14 +332,11 @@ export const getUserChats = async (userId) => {
  */
 export const getOrCreateChat = async (user1Id, user2Id, user1Data, user2Data) => {
   // Try to find existing chat
-  const existingChats = await queryDocuments(
-    'chats',
-    [['participants', 'array-contains', user1Id]]
-  );
+  const existingChats = await queryDocuments('chats', [
+    ['participants', 'array-contains', user1Id],
+  ]);
 
-  const chat = existingChats.find(c =>
-    c.participants.includes(user2Id)
-  );
+  const chat = existingChats.find((c) => c.participants.includes(user2Id));
 
   if (chat) {
     return chat;
@@ -365,20 +347,20 @@ export const getOrCreateChat = async (user1Id, user2Id, user1Data, user2Data) =>
     participants: [user1Id, user2Id],
     participant_names: {
       [user1Id]: user1Data.name,
-      [user2Id]: user2Data.name
+      [user2Id]: user2Data.name,
     },
     participant_photos: {
       [user1Id]: user1Data.photo || '',
-      [user2Id]: user2Data.photo || ''
+      [user2Id]: user2Data.photo || '',
     },
     last_message: '',
     last_message_sender: '',
     last_message_at: serverTimestamp(),
     unread_count: {
       [user1Id]: 0,
-      [user2Id]: 0
+      [user2Id]: 0,
     },
-    is_active: true
+    is_active: true,
   };
 
   const chatId = await addDocument('chats', chatData);
@@ -398,14 +380,14 @@ export const sendMessage = async (chatId, messageData) => {
     type: messageData.type || 'text',
     image_url: messageData.image_url || '',
     booking_id: messageData.booking_id || '',
-    read: false
+    read: false,
   });
 
   // Update chat last message
   await updateDocument('chats', chatId, {
     last_message: messageData.text,
     last_message_sender: messageData.sender_id,
-    last_message_at: serverTimestamp()
+    last_message_at: serverTimestamp(),
   });
 
   return messageId;
@@ -416,54 +398,68 @@ export const sendMessage = async (chatId, messageData) => {
 /**
  * Get user notifications
  */
-export const getUserNotifications = async (userId, unreadOnly = false) => {
-  const filters = [['user_id', '==', userId]];
-  if (unreadOnly) {
-    filters.push(['read', '==', false]);
+export const getUserNotifications = async (userId, unreadOnly = false, userEmail = null) => {
+  const criteria = {};
+  if (userId) {
+    criteria.user_id = userId;
   }
-  return await queryDocuments(
-    'notifications',
-    filters,
-    { orderBy: { field: 'created_at', direction: 'desc' } }
-  );
+  if (unreadOnly) {
+    criteria.read = false;
+  }
+
+  let results = [];
+
+  if (criteria.user_id) {
+    results = await notificationEntity.filter(criteria, '-created_date');
+  }
+
+  if ((!results.length || !criteria.user_id) && userEmail) {
+    const emailCriteria = { recipient_email: userEmail };
+    if (unreadOnly) {
+      emailCriteria.read = false;
+    }
+    const emailResults = await notificationEntity.filter(emailCriteria, '-created_date');
+
+    const existingIds = new Set(results.map((item) => item.id));
+    emailResults.forEach((item) => {
+      if (!existingIds.has(item.id)) {
+        results.push(item);
+      }
+    });
+  }
+
+  return results;
 };
 
 /**
  * Create notification
  */
 export const createNotification = async (notificationData) => {
-  return await addDocument('notifications', {
-    user_id: notificationData.user_id,
-    type: notificationData.type,
-    title: notificationData.title,
-    message: notificationData.message,
-    related_id: notificationData.related_id || '',
-    related_type: notificationData.related_type || '',
-    action_url: notificationData.action_url || '',
-    icon: notificationData.icon || '',
-    read: false
-  });
+  return await notificationEntity.create(notificationData);
 };
 
 /**
  * Mark notification as read
  */
 export const markNotificationAsRead = async (notificationId) => {
-  return await updateDocument('notifications', notificationId, {
+  return await notificationEntity.update(notificationId, {
     read: true,
-    read_at: serverTimestamp()
+    read_at: serverTimestamp(),
   });
 };
 
 /**
  * Mark all notifications as read
  */
-export const markAllNotificationsAsRead = async (userId) => {
-  const notifications = await getUserNotifications(userId, true);
-  const promises = notifications.map(n =>
-    markNotificationAsRead(n.id)
+export const markAllNotificationsAsRead = async (userId, userEmail = null) => {
+  const notifications = await getUserNotifications(userId, true, userEmail);
+  const updates = notifications.map((n) =>
+    notificationEntity.update(n.id, {
+      read: true,
+      read_at: serverTimestamp(),
+    })
   );
-  return await Promise.all(promises);
+  return await Promise.all(updates);
 };
 
 // ========== FAVORITES HELPERS ==========
@@ -472,11 +468,9 @@ export const markAllNotificationsAsRead = async (userId) => {
  * Get user favorites
  */
 export const getUserFavorites = async (userId) => {
-  return await queryDocuments(
-    'favorites',
-    [['user_id', '==', userId]],
-    { orderBy: { field: 'created_at', direction: 'desc' } }
-  );
+  return await queryDocuments('favorites', [['user_id', '==', userId]], {
+    orderBy: { field: 'created_at', direction: 'desc' },
+  });
 };
 
 /**
@@ -487,7 +481,7 @@ export const addToFavorites = async (userId, adventureData) => {
     user_id: userId,
     adventure_id: adventureData.id,
     adventure_title: adventureData.title,
-    adventure_image: adventureData.image_url || adventureData.images?.[0] || ''
+    adventure_image: adventureData.image_url || adventureData.images?.[0] || '',
   });
 };
 
@@ -495,13 +489,10 @@ export const addToFavorites = async (userId, adventureData) => {
  * Remove from favorites
  */
 export const removeFromFavorites = async (userId, adventureId) => {
-  const favorites = await queryDocuments(
-    'favorites',
-    [
-      ['user_id', '==', userId],
-      ['adventure_id', '==', adventureId]
-    ]
-  );
+  const favorites = await queryDocuments('favorites', [
+    ['user_id', '==', userId],
+    ['adventure_id', '==', adventureId],
+  ]);
 
   if (favorites.length > 0) {
     return await deleteDocument('favorites', favorites[0].id);
@@ -512,13 +503,10 @@ export const removeFromFavorites = async (userId, adventureId) => {
  * Check if adventure is favorited
  */
 export const isAdventureFavorited = async (userId, adventureId) => {
-  const favorites = await queryDocuments(
-    'favorites',
-    [
-      ['user_id', '==', userId],
-      ['adventure_id', '==', adventureId]
-    ]
-  );
+  const favorites = await queryDocuments('favorites', [
+    ['user_id', '==', userId],
+    ['adventure_id', '==', adventureId],
+  ]);
   return favorites.length > 0;
 };
 
@@ -532,7 +520,7 @@ export const getAdventuresByCity = async (cityId) => {
     'adventures',
     [
       ['city_id', '==', cityId],
-      ['is_active', '==', true]
+      ['is_active', '==', true],
     ],
     { orderBy: { field: 'rating', direction: 'desc' } }
   );
@@ -542,11 +530,9 @@ export const getAdventuresByCity = async (cityId) => {
  * Get host adventures
  */
 export const getHostAdventures = async (hostId) => {
-  return await queryDocuments(
-    'adventures',
-    [['host_id', '==', hostId]],
-    { orderBy: { field: 'created_at', direction: 'desc' } }
-  );
+  return await queryDocuments('adventures', [['host_id', '==', hostId]], {
+    orderBy: { field: 'created_at', direction: 'desc' },
+  });
 };
 
 /**
@@ -563,12 +549,8 @@ export const searchAdventures = async (searchParams) => {
     filters.push(['category', '==', searchParams.category]);
   }
 
-  return await queryDocuments(
-    'adventures',
-    filters,
-    {
-      orderBy: { field: searchParams.sortBy || 'rating', direction: 'desc' },
-      limit: searchParams.limit || 20
-    }
-  );
+  return await queryDocuments('adventures', filters, {
+    orderBy: { field: searchParams.sortBy || 'rating', direction: 'desc' },
+    limit: searchParams.limit || 20,
+  });
 };

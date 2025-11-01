@@ -44,7 +44,7 @@ export default function ValidatedInput({
     if (validatorFn) {
       const valid = validatorFn(value);
       setIsValid(valid);
-      
+
       if (!valid) {
         setError(getErrorMessage(validatorName || 'input'));
       } else {
@@ -55,12 +55,12 @@ export default function ValidatedInput({
 
   const handleChange = (e) => {
     let val = e.target.value;
-    
+
     // Auto-sanitize if enabled
     if (autoSanitize && typeof val === 'string') {
       val = SAWA_VALIDATION.textSafe(val);
     }
-    
+
     onChange(val);
   };
 
@@ -88,13 +88,13 @@ export default function ValidatedInput({
   return (
     <div className={cn('space-y-2', className)}>
       {label && (
-        <Label className="flex items-center gap-1">
+        <Label className='flex items-center gap-1'>
           {label}
-          {required && <span className="text-red-500">*</span>}
+          {required && <span className='text-red-500'>*</span>}
         </Label>
       )}
-      
-      <div className="relative">
+
+      <div className='relative'>
         <InputComponent
           type={type}
           value={value}
@@ -110,23 +110,23 @@ export default function ValidatedInput({
           )}
           {...props}
         />
-        
+
         {/* Validation icon */}
         {showValidation && touched && value && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+          <div className='absolute right-3 top-1/2 -translate-y-1/2'>
             {isValid ? (
-              <CheckCircle2 className="w-5 h-5 text-green-500" />
+              <CheckCircle2 className='w-5 h-5 text-green-500' />
             ) : error ? (
-              <AlertCircle className="w-5 h-5 text-red-500" />
+              <AlertCircle className='w-5 h-5 text-red-500' />
             ) : null}
           </div>
         )}
       </div>
-      
+
       {/* Error message */}
       {error && touched && (
-        <p className="text-sm text-red-500 flex items-center gap-1">
-          <AlertCircle className="w-4 h-4" />
+        <p className='text-sm text-red-500 flex items-center gap-1'>
+          <AlertCircle className='w-4 h-4' />
           {error}
         </p>
       )}

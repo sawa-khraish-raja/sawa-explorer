@@ -1,6 +1,6 @@
 export const sanitizeInput = (input) => {
   if (typeof input !== 'string') return input;
-  
+
   return input
     .replace(/[<>]/g, '')
     .replace(/javascript:/gi, '')
@@ -10,7 +10,7 @@ export const sanitizeInput = (input) => {
 
 export const sanitizeHTML = (html) => {
   if (typeof html !== 'string') return html;
-  
+
   const div = document.createElement('div');
   div.textContent = html;
   return div.innerHTML;
@@ -37,7 +37,7 @@ export const validateURL = (url) => {
 
 export const escapeHTML = (str) => {
   if (typeof str !== 'string') return str;
-  
+
   const div = document.createElement('div');
   div.appendChild(document.createTextNode(str));
   return div.innerHTML;
@@ -45,9 +45,9 @@ export const escapeHTML = (str) => {
 
 export const preventXSS = (obj) => {
   if (typeof obj !== 'object' || obj === null) return obj;
-  
+
   const cleaned = Array.isArray(obj) ? [] : {};
-  
+
   for (const key in obj) {
     if (typeof obj[key] === 'string') {
       cleaned[key] = sanitizeInput(obj[key]);
@@ -57,7 +57,7 @@ export const preventXSS = (obj) => {
       cleaned[key] = obj[key];
     }
   }
-  
+
   return cleaned;
 };
 

@@ -13,6 +13,7 @@ All collections exist within the same Firestore database (e.g., `test` for devel
 **Document ID:** Firebase Auth UID
 
 **Schema:**
+
 ```javascript
 {
   id: "firebase-uid",
@@ -39,6 +40,7 @@ All collections exist within the same Firestore database (e.g., `test` for devel
 **Document ID:** Auto-generated
 
 **Schema:**
+
 ```javascript
 {
   name: "Damascus",
@@ -65,6 +67,7 @@ All collections exist within the same Firestore database (e.g., `test` for devel
 **Document ID:** Auto-generated
 
 **Schema:**
+
 ```javascript
 {
   title: "Old Damascus Walking Tour",
@@ -105,6 +108,7 @@ All collections exist within the same Firestore database (e.g., `test` for devel
 **Document ID:** Auto-generated
 
 **Schema:**
+
 ```javascript
 {
   name: "Airport Pickup",
@@ -127,6 +131,7 @@ All collections exist within the same Firestore database (e.g., `test` for devel
 **Document ID:** Auto-generated
 
 **Schema:**
+
 ```javascript
 {
   booking_number: "BK-20240101-001",  // Unique booking reference
@@ -175,6 +180,7 @@ All collections exist within the same Firestore database (e.g., `test` for devel
 ```
 
 **Indexes Needed:**
+
 - `user_id` + `created_at` (descending)
 - `host_id` + `status`
 - `adventure_id` + `booking_date`
@@ -188,6 +194,7 @@ All collections exist within the same Firestore database (e.g., `test` for devel
 **Document ID:** Auto-generated or composite (e.g., `userId1_userId2`)
 
 **Schema:**
+
 ```javascript
 {
   participants: ["user-uid-1", "user-uid-2"],
@@ -220,6 +227,7 @@ All collections exist within the same Firestore database (e.g., `test` for devel
 ```
 
 **Indexes Needed:**
+
 - `participants` (array-contains) + `last_message_at` (descending)
 
 ---
@@ -231,6 +239,7 @@ All collections exist within the same Firestore database (e.g., `test` for devel
 **Path:** `chats/{chatId}/messages/{messageId}`
 
 **Schema:**
+
 ```javascript
 {
   sender_id: "user-uid",
@@ -254,6 +263,7 @@ All collections exist within the same Firestore database (e.g., `test` for devel
 ```
 
 **Indexes Needed:**
+
 - `created_at` (ascending)
 
 ---
@@ -265,6 +275,7 @@ All collections exist within the same Firestore database (e.g., `test` for devel
 **Document ID:** Auto-generated
 
 **Schema:**
+
 ```javascript
 {
   adventure_id: "adventure-doc-id",
@@ -305,6 +316,7 @@ All collections exist within the same Firestore database (e.g., `test` for devel
 ```
 
 **Indexes Needed:**
+
 - `adventure_id` + `created_at` (descending)
 - `reviewer_id` + `created_at` (descending)
 - `host_id` + `created_at` (descending)
@@ -318,6 +330,7 @@ All collections exist within the same Firestore database (e.g., `test` for devel
 **Document ID:** Auto-generated
 
 **Schema:**
+
 ```javascript
 {
   user_id: "user-uid",                // Recipient
@@ -343,6 +356,7 @@ All collections exist within the same Firestore database (e.g., `test` for devel
 ```
 
 **Indexes Needed:**
+
 - `user_id` + `read` + `created_at` (descending)
 
 ---
@@ -354,6 +368,7 @@ All collections exist within the same Firestore database (e.g., `test` for devel
 **Document ID:** Auto-generated
 
 **Schema:**
+
 ```javascript
 {
   booking_id: "booking-doc-id",
@@ -387,6 +402,7 @@ All collections exist within the same Firestore database (e.g., `test` for devel
 ```
 
 **Indexes Needed:**
+
 - `user_id` + `created_at` (descending)
 - `host_id` + `status`
 - `booking_id`
@@ -400,6 +416,7 @@ All collections exist within the same Firestore database (e.g., `test` for devel
 **Document ID:** Auto-generated or composite `{userId}_{adventureId}`
 
 **Schema:**
+
 ```javascript
 {
   user_id: "user-uid",
@@ -411,6 +428,7 @@ All collections exist within the same Firestore database (e.g., `test` for devel
 ```
 
 **Indexes Needed:**
+
 - `user_id` + `created_at` (descending)
 
 ---

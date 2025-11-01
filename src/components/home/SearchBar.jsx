@@ -1,19 +1,18 @@
-
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
-import { createPageUrl } from "@/utils";
-import { Users, MapPin, Search, Loader2, X, ChevronLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { queryDocuments } from '@/utils/firestore';
+import { createPageUrl } from '@/utils';
+import { Users, MapPin, Search, Loader2, X, ChevronLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useTranslation } from "@/components/i18n/LanguageContext";
+} from '@/components/ui/select';
+import { useTranslation } from '@/components/i18n/LanguageContext';
 import SimpleDatePicker from '../booking/SimpleDatePicker';
 import GuestSelector from '../booking/GuestSelector';
 import { showError } from '../utils/notifications';
@@ -24,46 +23,45 @@ export default function SearchBar() {
 
   const [isOpen, setIsOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  const [destination, setDestination] = useState("");
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
+  const [destination, setDestination] = useState('');
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split('T')[0];
   const scrollPositionRef = useRef(0);
 
-  // ✅ Cache cities query
+  //  Cache cities query (using Firestore)
   const { data: cities = [], isLoading: isLoadingCities } = useQuery({
     queryKey: ['activeCities'],
     queryFn: async () => {
-      const allCities = await base44.entities.City.filter({
-        is_active: true
+      // Get active cities from Firestore
+      const allCities = await queryDocuments('cities', [['is_active', '==', true]], {
+        orderBy: { field: 'name', direction: 'asc' },
       });
 
-      const validCities = (Array.isArray(allCities) ? allCities : []).filter(city => 
-        city && 
-        typeof city === 'object' && 
-        city.is_active && 
-        city.page_slug && 
-        typeof city.name === 'string' && 
-        city.id
+      // Filter for valid cities
+      const validCities = (Array.isArray(allCities) ? allCities : []).filter(
+        (city) =>
+          city && typeof city === 'object' && city.name && typeof city.name === 'string' && city.id
       );
-      
+
+      // Remove duplicates by name
       const uniqueCities = validCities.reduce((acc, city) => {
-        if (!acc.some(existingCity => existingCity.name === city.name)) {
+        if (!acc.some((existingCity) => existingCity.name === city.name)) {
           acc.push(city);
         }
         return acc;
       }, []);
-      
+
       return uniqueCities;
     },
     staleTime: 15 * 60 * 1000,
     cacheTime: 30 * 60 * 1000,
   });
 
-  // ✅ Validate search data
+  //  Validate search data
   const validateSearch = () => {
     const errors = [];
 
@@ -76,63 +74,68 @@ export default function SearchBar() {
     }
 
     if (!checkOut) {
-      errors.push(language === 'ar' ? 'يرجى اختيار تاريخ المغادرة' : 'Please select check-out date');
+      errors.push(
+        language === 'ar' ? 'يرجى اختيار تاريخ المغادرة' : 'Please select check-out date'
+      );
     }
 
     if (checkIn && checkOut) {
       const start = new Date(checkIn);
       const end = new Date(checkOut);
-      
+
       if (end <= start) {
-        errors.push(language === 'ar' ? 'تاريخ المغادرة يجب أن يكون بعد تاريخ الوصول' : 'Check-out must be after check-in');
+        errors.push(
+          language === 'ar'
+            ? 'تاريخ المغادرة يجب أن يكون بعد تاريخ الوصول'
+            : 'Check-out must be after check-in'
+        );
       }
     }
 
     if (adults < 1) {
-      errors.push(language === 'ar' ? 'يجب أن يكون هناك بالغ واحد على الأقل' : 'At least 1 adult is required');
+      errors.push(
+        language === 'ar' ? 'يجب أن يكون هناك بالغ واحد على الأقل' : 'At least 1 adult is required'
+      );
     }
 
     return errors;
   };
 
-  // ✅ Handle search submission
+  //  Handle search submission
   const handleSearch = async () => {
     const errors = validateSearch();
 
     if (errors.length > 0) {
-      showError(
-        language === 'ar' ? 'خطأ في البحث' : 'Search Error',
-        errors[0]
-      );
+      showError(language === 'ar' ? 'خطأ في البحث' : 'Search Error', errors[0]);
       return;
     }
 
-    const city = cities.find(c => c.name === destination);
+    const city = cities.find((c) => c.name === destination);
     if (!city || !city.page_slug) return;
 
-    // ✅ Save to recent searches
+    //  Save to recent searches
     saveToRecentSearches({
       destination,
       checkIn,
       checkOut,
       adults,
       children,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     setIsSearching(true);
 
-    // ✅ Build URL with all params
+    //  Build URL with all params
     const params = new URLSearchParams();
-    params.append("start", checkIn);
-    params.append("end", checkOut);
-    params.append("adults", adults.toString());
-    params.append("children", children.toString());
-    params.append("fromSearch", "true");
+    params.append('start', checkIn);
+    params.append('end', checkOut);
+    params.append('adults', adults.toString());
+    params.append('children', children.toString());
+    params.append('fromSearch', 'true');
 
     const url = createPageUrl(city.page_slug);
-    
-    // ✅ Small delay for UX
+
+    //  Small delay for UX
     setTimeout(() => {
       navigate(`${url}?${params.toString()}`);
       setIsOpen(false);
@@ -140,11 +143,14 @@ export default function SearchBar() {
     }, 500);
   };
 
-  // ✅ Recent searches management
+  //  Recent searches management
   const saveToRecentSearches = (search) => {
     try {
       const recent = JSON.parse(localStorage.getItem('sawa_recent_searches') || '[]');
-      const updated = [search, ...recent.filter(s => s.destination !== search.destination)].slice(0, 5);
+      const updated = [search, ...recent.filter((s) => s.destination !== search.destination)].slice(
+        0,
+        5
+      );
       localStorage.setItem('sawa_recent_searches', JSON.stringify(updated));
     } catch (error) {
       console.warn('Failed to save recent search:', error);
@@ -159,7 +165,7 @@ export default function SearchBar() {
     }
   };
 
-  // ✅ Prevent body scroll when modal open
+  //  Prevent body scroll when modal open
   useEffect(() => {
     if (isOpen) {
       scrollPositionRef.current = window.scrollY;
@@ -174,7 +180,7 @@ export default function SearchBar() {
       document.body.style.width = '';
       window.scrollTo(0, scrollPositionRef.current);
     }
-    
+
     return () => {
       document.body.style.overflow = '';
       document.body.style.position = '';
@@ -183,13 +189,25 @@ export default function SearchBar() {
     };
   }, [isOpen]);
 
-  // ✅ Get search summary
+  //  Get search summary
   const getSearchSummary = () => {
     const parts = [];
     if (destination) parts.push(destination);
-    if (checkIn) parts.push(`${new Date(checkIn).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`);
-    if (checkOut) parts.push(`${new Date(checkOut).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`);
-    
+    if (checkIn)
+      parts.push(
+        `${new Date(checkIn).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        })}`
+      );
+    if (checkOut)
+      parts.push(
+        `${new Date(checkOut).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        })}`
+      );
+
     return parts.length > 0 ? parts.join(' • ') : null;
   };
 
@@ -198,67 +216,66 @@ export default function SearchBar() {
 
   return (
     <>
-      {/* ✅ Search Trigger Button */}
-      <div className="w-full max-w-3xl mx-auto px-4 sm:px-6">
+      {/*  Search Trigger Button */}
+      <div className='w-full max-w-3xl mx-auto px-4 sm:px-6'>
         <button
           onClick={() => setIsOpen(true)}
-          className="w-full bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl px-4 py-3 sm:px-5 sm:py-3.5 hover:shadow-3xl transition-all duration-300 flex items-center justify-between group border border-gray-200/50"
+          className='w-full bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl px-4 py-3 sm:px-5 sm:py-3.5 hover:shadow-3xl transition-all duration-300 flex items-center justify-between group border border-gray-200/50'
         >
-          <div className="flex-1 text-left min-w-0">
+          <div className='flex-1 text-left min-w-0'>
             {searchSummary ? (
-              <p className="text-sm sm:text-base font-semibold text-gray-900 truncate">
+              <p className='text-sm sm:text-base font-semibold text-gray-900 truncate'>
                 {searchSummary}
               </p>
             ) : (
-              <div className="flex flex-col">
-                <p className="text-base sm:text-lg font-bold text-gray-900">
+              <div className='flex flex-col'>
+                <p className='text-base sm:text-lg font-bold text-gray-900'>
                   {language === 'ar' ? 'اكتشف الشرق الأوسط' : 'Discover the Middle East'}
                 </p>
-                <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-                  {language === 'ar' ? 'رحلات أصيلة مع مضيفين محليين' : 'Authentic travel with local hosts'}
+                <p className='text-xs sm:text-sm text-gray-500 mt-0.5'>
+                  {language === 'ar'
+                    ? 'رحلات أصيلة مع مضيفين محليين'
+                    : 'Authentic travel with local hosts'}
                 </p>
               </div>
             )}
           </div>
-          <div className="ml-3 bg-gradient-to-r from-[#9933CC] to-[#330066] text-white rounded-xl p-2.5 sm:p-3 group-hover:scale-110 transition-transform flex-shrink-0 shadow-lg">
-            <Search className="w-5 h-5 sm:w-6 sm:h-6" />
+          <div className='ml-3 bg-gradient-to-r from-[#9933CC] to-[#330066] text-white rounded-xl p-2.5 sm:p-3 group-hover:scale-110 transition-transform flex-shrink-0 shadow-lg'>
+            <Search className='w-5 h-5 sm:w-6 sm:h-6' />
           </div>
         </button>
       </div>
 
-      {/* ✅ Full Screen Search Modal */}
+      {/*  Full Screen Search Modal */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm"
+        <div
+          className='fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm'
           onClick={() => !isSearching && setIsOpen(false)}
         >
-          <div 
-            className="fixed inset-0 bg-white overflow-y-auto"
+          <div
+            className='fixed inset-0 bg-white overflow-y-auto'
             onClick={(e) => e.stopPropagation()}
           >
-            {/* ✅ Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 z-10 safe-area-top">
+            {/*  Header */}
+            <div className='sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 z-10 safe-area-top'>
               <button
                 onClick={() => !isSearching && setIsOpen(false)}
                 disabled={isSearching}
-                className="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors flex-shrink-0 disabled:opacity-50"
+                className='w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors flex-shrink-0 disabled:opacity-50'
               >
-                <X className="w-5 h-5 text-gray-900" />
+                <X className='w-5 h-5 text-gray-900' />
               </button>
-              <h2 className="text-lg font-bold text-gray-900 flex-1">
-                {t('search.where')}
-              </h2>
+              <h2 className='text-lg font-bold text-gray-900 flex-1'>{t('search.where')}</h2>
             </div>
 
-            <div className="p-4 space-y-5 pb-32">
-              
-              {/* ✅ Recent Searches */}
+            <div className='p-4 space-y-5 pb-32'>
+              {/*  Recent Searches */}
               {recentSearches.length > 0 && !destination && (
                 <div>
-                  <h3 className="text-sm font-bold text-gray-900 mb-3">
+                  <h3 className='text-sm font-bold text-gray-900 mb-3'>
                     {language === 'ar' ? 'عمليات بحث سابقة' : 'Recent Searches'}
                   </h3>
-                  <div className="space-y-2">
+                  <div className='space-y-2'>
                     {recentSearches.slice(0, 3).map((search, index) => (
                       <button
                         key={index}
@@ -269,14 +286,22 @@ export default function SearchBar() {
                           setAdults(search.adults);
                           setChildren(search.children);
                         }}
-                        className="w-full p-3 bg-purple-50 hover:bg-purple-100 rounded-xl border border-purple-200 text-left transition-colors"
+                        className='w-full p-3 bg-purple-50 hover:bg-purple-100 rounded-xl border border-purple-200 text-left transition-colors'
                       >
-                        <div className="flex items-center gap-2">
-                          <Search className="w-4 h-4 text-purple-600" />
-                          <span className="font-semibold text-gray-900">{search.destination}</span>
-                          <span className="text-sm text-gray-600">
-                            • {new Date(search.checkIn).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - 
-                            {new Date(search.checkOut).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        <div className='flex items-center gap-2'>
+                          <Search className='w-4 h-4 text-purple-600' />
+                          <span className='font-semibold text-gray-900'>{search.destination}</span>
+                          <span className='text-sm text-gray-600'>
+                            •{' '}
+                            {new Date(search.checkIn).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                            })}{' '}
+                            -
+                            {new Date(search.checkOut).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                            })}
                           </span>
                         </div>
                       </button>
@@ -285,25 +310,38 @@ export default function SearchBar() {
                 </div>
               )}
 
-              {/* ✅ Destination */}
+              {/*  Destination */}
               <div>
-                <label htmlFor="destination-select" className="block text-sm font-bold text-gray-900 mb-2">
+                <label
+                  htmlFor='destination-select'
+                  className='block text-sm font-bold text-gray-900 mb-2'
+                >
                   {t('search.where')}
                 </label>
-                <Select value={destination} onValueChange={setDestination} disabled={isLoadingCities || isSearching}>
-                  <SelectTrigger 
-                    id="destination-select"
-                    className="h-12 text-base border-2 border-gray-200 hover:border-purple-300 focus:border-purple-500 rounded-xl"
+                <Select
+                  value={destination}
+                  onValueChange={setDestination}
+                  disabled={isLoadingCities || isSearching}
+                >
+                  <SelectTrigger
+                    id='destination-select'
+                    className='h-12 text-base border-2 border-gray-200 hover:border-purple-300 focus:border-purple-500 rounded-xl'
                   >
-                    <SelectValue placeholder={isLoadingCities ? t('common.loading') : t('search.destination_placeholder')} />
+                    <SelectValue
+                      placeholder={
+                        isLoadingCities ? t('common.loading') : t('search.destination_placeholder')
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    {cities.map((city) => ( 
+                    {cities.map((city) => (
                       <SelectItem key={city.id} value={city.name}>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-gray-500" />
-                          <span className="font-semibold">{city.name}</span>
-                          {city.country && <span className="text-sm text-gray-500">• {city.country}</span>}
+                        <div className='flex items-center gap-2'>
+                          <MapPin className='w-4 h-4 text-gray-500' />
+                          <span className='font-semibold'>{city.name}</span>
+                          {city.country && (
+                            <span className='text-sm text-gray-500'>• {city.country}</span>
+                          )}
                         </div>
                       </SelectItem>
                     ))}
@@ -311,8 +349,8 @@ export default function SearchBar() {
                 </Select>
               </div>
 
-              {/* ✅ Dates */}
-              <div className="space-y-4">
+              {/*  Dates */}
+              <div className='space-y-4'>
                 <SimpleDatePicker
                   label={t('search.checkin')}
                   value={checkIn}
@@ -333,16 +371,16 @@ export default function SearchBar() {
                 />
               </div>
 
-              {/* ✅ Guests */}
+              {/*  Guests */}
               <div>
-                <label className="block text-sm font-bold text-gray-900 mb-3">
+                <label className='block text-sm font-bold text-gray-900 mb-3'>
                   {t('search.who')}
                 </label>
-                <div className="border-2 border-gray-200 rounded-xl p-3 sm:p-4">
-                  <GuestSelector 
-                    adults={adults} 
-                    children={children} 
-                    onAdultsChange={setAdults} 
+                <div className='border-2 border-gray-200 rounded-xl p-3 sm:p-4'>
+                  <GuestSelector
+                    adults={adults}
+                    children={children}
+                    onAdultsChange={setAdults}
                     onChildrenChange={setChildren}
                     language={language}
                   />
@@ -350,36 +388,36 @@ export default function SearchBar() {
               </div>
             </div>
 
-            {/* ✅ Bottom Action Bar */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 flex items-center justify-between safe-area-bottom z-20 shadow-lg">
+            {/*  Bottom Action Bar */}
+            <div className='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 flex items-center justify-between safe-area-bottom z-20 shadow-lg'>
               <button
                 onClick={() => {
                   if (!isSearching) {
-                    setDestination("");
-                    setCheckIn("");
-                    setCheckOut("");
+                    setDestination('');
+                    setCheckIn('');
+                    setCheckOut('');
                     setAdults(1);
                     setChildren(0);
                   }
                 }}
                 disabled={isSearching}
-                className="text-sm font-semibold text-gray-600 hover:text-gray-900 underline disabled:opacity-50"
+                className='text-sm font-semibold text-gray-600 hover:text-gray-900 underline disabled:opacity-50'
               >
                 {t('search.clear_all')}
               </button>
               <Button
                 onClick={handleSearch}
                 disabled={!destination || !checkIn || !checkOut || isSearching}
-                className="bg-gradient-to-r from-[#9933CC] to-[#330066] hover:from-[#7B2CBF] hover:to-[#1a0033] text-white rounded-xl px-8 h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className='bg-gradient-to-r from-[#9933CC] to-[#330066] hover:from-[#7B2CBF] hover:to-[#1a0033] text-white rounded-xl px-8 h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed'
               >
                 {isSearching ? (
                   <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    <Loader2 className='w-5 h-5 mr-2 animate-spin' />
                     {language === 'ar' ? 'جارٍ البحث...' : 'Searching...'}
                   </>
                 ) : (
                   <>
-                    <Search className="w-5 h-5 mr-2" />
+                    <Search className='w-5 h-5 mr-2' />
                     {t('search.search')}
                   </>
                 )}

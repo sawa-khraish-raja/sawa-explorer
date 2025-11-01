@@ -1,9 +1,9 @@
 import { base44 } from './base44Client';
-
+import { bookingEntity } from '@/services/firebaseEntities/bookingEntity';
 
 export const HostService = base44.entities.HostService;
 
-export const Booking = base44.entities.Booking;
+export const Booking = bookingEntity;
 
 export const Offer = base44.entities.Offer;
 
@@ -102,8 +102,6 @@ export const ConversionEvent = base44.entities.ConversionEvent;
 export const CampaignPerformance = base44.entities.CampaignPerformance;
 
 export const ContentQualityCheck = base44.entities.ContentQualityCheck;
-
-
 
 // auth sdk:
 export const User = base44.auth;

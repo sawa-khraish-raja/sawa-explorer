@@ -1,10 +1,9 @@
-
-import { base44 } from "@/api/base44Client";
-import { normLang } from "../i18n/i18nLang";
-import { isFeatureEnabled } from "../config/featureFlags";
+import { base44 } from '@/api/base44Client';
+import { normLang } from '../i18n/i18nLang';
+import { isFeatureEnabled } from '../config/featureFlags';
 import { isAIFeatureEnabled, AI_ALLOWED_CONTEXTS } from '../config/aiFlags';
 
-// ✅ Client-side translation cache
+//  Client-side translation cache
 class TranslationCache {
   constructor(maxSize = 50) {
     this.cache = new Map();
@@ -24,12 +23,12 @@ class TranslationCache {
   set(text, toLang, translation) {
     if (!isFeatureEnabled('translationCacheEnabled')) return;
     const key = this.getKey(text, toLang);
-    
+
     if (this.cache.size >= this.maxSize) {
       const firstKey = this.cache.keys().next().value;
       this.cache.delete(firstKey);
     }
-    
+
     this.cache.set(key, translation);
   }
 
@@ -40,7 +39,7 @@ class TranslationCache {
 
 const translationCache = new TranslationCache(50);
 
-// ✅ Debounce helper
+//  Debounce helper
 let translationQueue = [];
 let translationTimer = null;
 
@@ -48,13 +47,13 @@ function debounceTranslation(fn, delay = 100) {
   return (...args) => {
     return new Promise((resolve) => {
       translationQueue.push({ fn, args, resolve });
-      
+
       if (translationTimer) clearTimeout(translationTimer);
-      
+
       translationTimer = setTimeout(async () => {
         const queue = [...translationQueue];
         translationQueue = [];
-        
+
         for (const item of queue) {
           try {
             const result = await item.fn(...item.args);
@@ -98,7 +97,7 @@ async function translateMessageRaw(text, toLang) {
     const response = await base44.functions.invoke('translate', {
       text,
       from: 'auto',
-      to: targetLang
+      to: targetLang,
     });
 
     if (response.data?.ok && response.data?.translated) {
@@ -106,7 +105,7 @@ async function translateMessageRaw(text, toLang) {
       translationCache.set(text, targetLang, translated);
       return translated;
     }
-    
+
     return text; // Fallback
   } catch (error) {
     console.error('[Translation] Error:', error.message);
@@ -117,26 +116,26 @@ async function translateMessageRaw(text, toLang) {
 export const translateMessage = debounceTranslation(translateMessageRaw, 100);
 
 /**
- * ✅ ترجمة الرسائل - للشات فقط
+ *  ترجمة الرسائل - للشات فقط
  * Parallel batch translation
  * @param {Array} messages Array of message objects.
  * @param {string} targetLang Target language.
  * @returns {Promise<Array>} Translated messages.
  */
 export async function batchTranslateMessages(messages, targetLang) {
-  // ✅ التحقق من تفعيل الترجمة
+  //  التحقق من تفعيل الترجمة
   if (!isAIFeatureEnabled('CHAT_TRANSLATION')) {
     console.log('[Translation] Disabled by feature flag');
-    return messages.map(m => ({
+    return messages.map((m) => ({
       ...m,
       displayText: m.original_text || m.content || m.translated_text || '',
       originalText: m.original_text,
-      showOriginal: false
+      showOriginal: false,
     }));
   }
 
   const normalized = normLang(targetLang || 'ar');
-  
+
   if (!messages?.length) {
     return [];
   }
@@ -145,7 +144,7 @@ export async function batchTranslateMessages(messages, targetLang) {
 
   const batchSize = 5;
   const batches = [];
-  
+
   for (let i = 0; i < messages.length; i += batchSize) {
     batches.push(messages.slice(i, i + batchSize));
   }
@@ -155,24 +154,25 @@ export async function batchTranslateMessages(messages, targetLang) {
       return Promise.all(
         batch.map(async (message) => {
           try {
-            const originalText = message.original_text || message.content || message.translated_text || '';
-            
+            const originalText =
+              message.original_text || message.content || message.translated_text || '';
+
             if (!originalText.trim()) {
               return {
                 ...message,
                 displayText: '',
                 originalText: '',
                 showOriginal: false,
-                isTranslating: false
+                isTranslating: false,
               };
             }
 
-            // ✅ إرسال Context مع الترجمة
+            //  إرسال Context مع الترجمة
             const { data } = await base44.functions.invoke('translate', {
               text: originalText,
               from: 'auto',
               to: normalized,
-              context: AI_ALLOWED_CONTEXTS.CHAT // ✅ تحديد Context
+              context: AI_ALLOWED_CONTEXTS.CHAT, //  تحديد Context
             });
 
             if (data?.ok && data?.translated) {
@@ -181,7 +181,7 @@ export async function batchTranslateMessages(messages, targetLang) {
                 displayText: data.translated,
                 originalText: originalText,
                 showOriginal: false,
-                isTranslating: false
+                isTranslating: false,
               };
             }
 
@@ -190,9 +190,8 @@ export async function batchTranslateMessages(messages, targetLang) {
               displayText: originalText,
               originalText: originalText,
               showOriginal: false,
-              isTranslating: false
+              isTranslating: false,
             };
-
           } catch (error) {
             console.error('[Translation] Error:', error);
             const originalText = message.original_text || message.content || '';
@@ -201,7 +200,7 @@ export async function batchTranslateMessages(messages, targetLang) {
               displayText: originalText,
               originalText: originalText,
               showOriginal: false,
-              isTranslating: false
+              isTranslating: false,
             };
           }
         })
