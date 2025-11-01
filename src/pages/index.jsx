@@ -168,6 +168,8 @@ import SmartCampaigns from "./SmartCampaigns";
 
 import SmartGrowthPlan from "./SmartGrowthPlan";
 
+import DevTools from "./DevTools";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -339,7 +341,9 @@ const PAGES = {
     SmartCampaigns: SmartCampaigns,
     
     SmartGrowthPlan: SmartGrowthPlan,
-    
+
+    DevTools: DevTools,
+
 }
 
 function _getCurrentPage(url) {
