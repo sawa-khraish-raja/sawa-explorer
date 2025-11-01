@@ -230,3 +230,345 @@ export const getUserBookings = async (userId) => {
     { orderBy: { field: 'created_at', direction: 'desc' } }
   );
 };
+
+// ========== BOOKING HELPERS ==========
+
+/**
+ * Get host's bookings
+ */
+export const getHostBookings = async (hostId, status = null) => {
+  const filters = [['host_id', '==', hostId]];
+  if (status) {
+    filters.push(['status', '==', status]);
+  }
+  return await queryDocuments(
+    'bookings',
+    filters,
+    { orderBy: { field: 'booking_date', direction: 'asc' } }
+  );
+};
+
+/**
+ * Get adventure bookings
+ */
+export const getAdventureBookings = async (adventureId) => {
+  return await queryDocuments(
+    'bookings',
+    [['adventure_id', '==', adventureId]],
+    { orderBy: { field: 'booking_date', direction: 'asc' } }
+  );
+};
+
+/**
+ * Update booking status
+ */
+export const updateBookingStatus = async (bookingId, status, updates = {}) => {
+  return await updateDocument('bookings', bookingId, {
+    status,
+    ...updates
+  });
+};
+
+// ========== REVIEW HELPERS ==========
+
+/**
+ * Get adventure reviews
+ */
+export const getAdventureReviews = async (adventureId, limitCount = null) => {
+  return await queryDocuments(
+    'reviews',
+    [['adventure_id', '==', adventureId]],
+    {
+      orderBy: { field: 'created_at', direction: 'desc' },
+      limit: limitCount
+    }
+  );
+};
+
+/**
+ * Get user reviews (written by user)
+ */
+export const getUserReviews = async (userId) => {
+  return await queryDocuments(
+    'reviews',
+    [['reviewer_id', '==', userId]],
+    { orderBy: { field: 'created_at', direction: 'desc' } }
+  );
+};
+
+/**
+ * Get host reviews (reviews for host's adventures)
+ */
+export const getHostReviews = async (hostId) => {
+  return await queryDocuments(
+    'reviews',
+    [['host_id', '==', hostId]],
+    { orderBy: { field: 'created_at', direction: 'desc' } }
+  );
+};
+
+/**
+ * Create review
+ */
+export const createReview = async (reviewData) => {
+  return await addDocument('reviews', {
+    adventure_id: reviewData.adventure_id,
+    adventure_title: reviewData.adventure_title,
+    reviewer_id: reviewData.reviewer_id,
+    reviewer_name: reviewData.reviewer_name,
+    reviewer_photo: reviewData.reviewer_photo || '',
+    host_id: reviewData.host_id,
+    booking_id: reviewData.booking_id,
+    rating: reviewData.rating,
+    comment: reviewData.comment,
+    ratings: reviewData.ratings || {},
+    photos: reviewData.photos || [],
+    helpful_count: 0,
+    is_verified: true,
+    is_flagged: false
+  });
+};
+
+// ========== CHAT HELPERS ==========
+
+/**
+ * Get user chats
+ */
+export const getUserChats = async (userId) => {
+  return await queryDocuments(
+    'chats',
+    [['participants', 'array-contains', userId]],
+    { orderBy: { field: 'last_message_at', direction: 'desc' } }
+  );
+};
+
+/**
+ * Get or create chat between two users
+ */
+export const getOrCreateChat = async (user1Id, user2Id, user1Data, user2Data) => {
+  // Try to find existing chat
+  const existingChats = await queryDocuments(
+    'chats',
+    [['participants', 'array-contains', user1Id]]
+  );
+
+  const chat = existingChats.find(c =>
+    c.participants.includes(user2Id)
+  );
+
+  if (chat) {
+    return chat;
+  }
+
+  // Create new chat
+  const chatData = {
+    participants: [user1Id, user2Id],
+    participant_names: {
+      [user1Id]: user1Data.name,
+      [user2Id]: user2Data.name
+    },
+    participant_photos: {
+      [user1Id]: user1Data.photo || '',
+      [user2Id]: user2Data.photo || ''
+    },
+    last_message: '',
+    last_message_sender: '',
+    last_message_at: serverTimestamp(),
+    unread_count: {
+      [user1Id]: 0,
+      [user2Id]: 0
+    },
+    is_active: true
+  };
+
+  const chatId = await addDocument('chats', chatData);
+  return { id: chatId, ...chatData };
+};
+
+/**
+ * Send message in chat
+ */
+export const sendMessage = async (chatId, messageData) => {
+  // Add message to subcollection
+  const messageId = await addDocument(`chats/${chatId}/messages`, {
+    sender_id: messageData.sender_id,
+    sender_name: messageData.sender_name,
+    sender_photo: messageData.sender_photo || '',
+    text: messageData.text,
+    type: messageData.type || 'text',
+    image_url: messageData.image_url || '',
+    booking_id: messageData.booking_id || '',
+    read: false
+  });
+
+  // Update chat last message
+  await updateDocument('chats', chatId, {
+    last_message: messageData.text,
+    last_message_sender: messageData.sender_id,
+    last_message_at: serverTimestamp()
+  });
+
+  return messageId;
+};
+
+// ========== NOTIFICATION HELPERS ==========
+
+/**
+ * Get user notifications
+ */
+export const getUserNotifications = async (userId, unreadOnly = false) => {
+  const filters = [['user_id', '==', userId]];
+  if (unreadOnly) {
+    filters.push(['read', '==', false]);
+  }
+  return await queryDocuments(
+    'notifications',
+    filters,
+    { orderBy: { field: 'created_at', direction: 'desc' } }
+  );
+};
+
+/**
+ * Create notification
+ */
+export const createNotification = async (notificationData) => {
+  return await addDocument('notifications', {
+    user_id: notificationData.user_id,
+    type: notificationData.type,
+    title: notificationData.title,
+    message: notificationData.message,
+    related_id: notificationData.related_id || '',
+    related_type: notificationData.related_type || '',
+    action_url: notificationData.action_url || '',
+    icon: notificationData.icon || '',
+    read: false
+  });
+};
+
+/**
+ * Mark notification as read
+ */
+export const markNotificationAsRead = async (notificationId) => {
+  return await updateDocument('notifications', notificationId, {
+    read: true,
+    read_at: serverTimestamp()
+  });
+};
+
+/**
+ * Mark all notifications as read
+ */
+export const markAllNotificationsAsRead = async (userId) => {
+  const notifications = await getUserNotifications(userId, true);
+  const promises = notifications.map(n =>
+    markNotificationAsRead(n.id)
+  );
+  return await Promise.all(promises);
+};
+
+// ========== FAVORITES HELPERS ==========
+
+/**
+ * Get user favorites
+ */
+export const getUserFavorites = async (userId) => {
+  return await queryDocuments(
+    'favorites',
+    [['user_id', '==', userId]],
+    { orderBy: { field: 'created_at', direction: 'desc' } }
+  );
+};
+
+/**
+ * Add to favorites
+ */
+export const addToFavorites = async (userId, adventureData) => {
+  return await addDocument('favorites', {
+    user_id: userId,
+    adventure_id: adventureData.id,
+    adventure_title: adventureData.title,
+    adventure_image: adventureData.image_url || adventureData.images?.[0] || ''
+  });
+};
+
+/**
+ * Remove from favorites
+ */
+export const removeFromFavorites = async (userId, adventureId) => {
+  const favorites = await queryDocuments(
+    'favorites',
+    [
+      ['user_id', '==', userId],
+      ['adventure_id', '==', adventureId]
+    ]
+  );
+
+  if (favorites.length > 0) {
+    return await deleteDocument('favorites', favorites[0].id);
+  }
+};
+
+/**
+ * Check if adventure is favorited
+ */
+export const isAdventureFavorited = async (userId, adventureId) => {
+  const favorites = await queryDocuments(
+    'favorites',
+    [
+      ['user_id', '==', userId],
+      ['adventure_id', '==', adventureId]
+    ]
+  );
+  return favorites.length > 0;
+};
+
+// ========== ADVENTURE HELPERS ==========
+
+/**
+ * Get adventures by city
+ */
+export const getAdventuresByCity = async (cityId) => {
+  return await queryDocuments(
+    'adventures',
+    [
+      ['city_id', '==', cityId],
+      ['is_active', '==', true]
+    ],
+    { orderBy: { field: 'rating', direction: 'desc' } }
+  );
+};
+
+/**
+ * Get host adventures
+ */
+export const getHostAdventures = async (hostId) => {
+  return await queryDocuments(
+    'adventures',
+    [['host_id', '==', hostId]],
+    { orderBy: { field: 'created_at', direction: 'desc' } }
+  );
+};
+
+/**
+ * Search adventures
+ */
+export const searchAdventures = async (searchParams) => {
+  const filters = [['is_active', '==', true]];
+
+  if (searchParams.city_id) {
+    filters.push(['city_id', '==', searchParams.city_id]);
+  }
+
+  if (searchParams.category) {
+    filters.push(['category', '==', searchParams.category]);
+  }
+
+  return await queryDocuments(
+    'adventures',
+    filters,
+    {
+      orderBy: { field: searchParams.sortBy || 'rating', direction: 'desc' },
+      limit: searchParams.limit || 20
+    }
+  );
+};

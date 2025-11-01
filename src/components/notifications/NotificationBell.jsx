@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getUserNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteDocument } from '@/utils/firestore';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -24,19 +24,17 @@ export default function NotificationBell({ className }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showBadgePulse, setShowBadgePulse] = useState(false);
 
-  // ✅ Query notifications with polling for real-time updates
+  // ✅ Query notifications with polling for real-time updates (using Firestore)
   const { data: notifications = [], isLoading } = useQuery({
-    queryKey: ['notifications', user?.email],
+    queryKey: ['notifications', user?.id],
     queryFn: async () => {
-      if (!user?.email) return [];
-      const allNotifications = await base44.entities.Notification.filter({
-        recipient_email: user.email,
-      });
-      return allNotifications.sort((a, b) => 
-        new Date(b.created_date) - new Date(a.created_date)
+      if (!user?.id) return [];
+      const allNotifications = await getUserNotifications(user.id);
+      return allNotifications.sort((a, b) =>
+        new Date(b.created_at?.toDate?.() || b.created_at) - new Date(a.created_at?.toDate?.() || a.created_at)
       );
     },
-    enabled: !!user?.email,
+    enabled: !!user?.id,
     refetchInterval: 30000, // Poll every 30 seconds
     staleTime: 20000,
   });
@@ -52,38 +50,34 @@ export default function NotificationBell({ className }) {
     }
   }, [unreadCount]);
 
-  // ✅ Mark notification as read
+  // ✅ Mark notification as read (using Firestore)
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId) => {
-      await base44.entities.Notification.update(notificationId, { read: true });
+      await markNotificationAsRead(notificationId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications', user?.email] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] });
     },
   });
 
-  // ✅ Mark all as read
+  // ✅ Mark all as read (using Firestore)
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      const unreadNotifications = notifications.filter(n => !n.read);
-      await Promise.all(
-        unreadNotifications.map(n => 
-          base44.entities.Notification.update(n.id, { read: true })
-        )
-      );
+      if (!user?.id) return;
+      await markAllNotificationsAsRead(user.id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications', user?.email] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] });
     },
   });
 
-  // ✅ Delete notification
+  // ✅ Delete notification (using Firestore)
   const deleteNotificationMutation = useMutation({
     mutationFn: async (notificationId) => {
-      await base44.entities.Notification.delete(notificationId);
+      await deleteDocument('notifications', notificationId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications', user?.email] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] });
     },
   });
 

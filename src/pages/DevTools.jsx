@@ -69,12 +69,26 @@ export default function DevTools() {
 
   const loadStats = async () => {
     try {
-      const [cities, adventures, services, users, bookings] = await Promise.all([
-        getAllDocuments('cities'),
-        getAllDocuments('adventures'),
-        getAllDocuments('services'),
-        getAllDocuments('users'),
-        getAllDocuments('bookings')
+      const [
+        cities,
+        adventures,
+        services,
+        users,
+        bookings,
+        reviews,
+        chats,
+        notifications,
+        favorites
+      ] = await Promise.all([
+        getAllDocuments('cities').catch(() => []),
+        getAllDocuments('adventures').catch(() => []),
+        getAllDocuments('services').catch(() => []),
+        getAllDocuments('users').catch(() => []),
+        getAllDocuments('bookings').catch(() => []),
+        getAllDocuments('reviews').catch(() => []),
+        getAllDocuments('chats').catch(() => []),
+        getAllDocuments('notifications').catch(() => []),
+        getAllDocuments('favorites').catch(() => [])
       ]);
 
       setStats({
@@ -82,7 +96,11 @@ export default function DevTools() {
         adventures: adventures.length,
         services: services.length,
         users: users.length,
-        bookings: bookings.length
+        bookings: bookings.length,
+        reviews: reviews.length,
+        chats: chats.length,
+        notifications: notifications.length,
+        favorites: favorites.length
       });
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -100,6 +118,23 @@ export default function DevTools() {
           <h1 className="text-3xl font-bold mb-2">🛠️ Developer Tools</h1>
           <p className="text-gray-600">Seed your database with sample data</p>
         </div>
+
+        {/* Firestore Rules Warning */}
+        <Alert className="mb-6 border-yellow-500 bg-yellow-50">
+          <AlertDescription className="text-yellow-800">
+            <strong>⚠️ Important:</strong> Before seeding, make sure you've deployed Firestore security rules!
+            <br />
+            <a
+              href="https://console.firebase.google.com/project/sawa-explorer/firestore/rules"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline font-semibold"
+            >
+              → Update rules in Firebase Console
+            </a>
+            {' '}or use temporary development rules (allow all reads/writes).
+          </AlertDescription>
+        </Alert>
 
         {status && (
           <Alert className={status.type === 'success' ? 'border-green-500 bg-green-50 mb-6' : 'border-red-500 bg-red-50 mb-6'}>
@@ -120,7 +155,7 @@ export default function DevTools() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
                   <div className="text-2xl font-bold text-blue-600">{stats.cities}</div>
                   <div className="text-sm text-gray-600">Cities</div>
@@ -140,6 +175,22 @@ export default function DevTools() {
                 <div className="text-center p-4 bg-pink-50 rounded-lg">
                   <div className="text-2xl font-bold text-pink-600">{stats.bookings}</div>
                   <div className="text-sm text-gray-600">Bookings</div>
+                </div>
+                <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                  <div className="text-2xl font-bold text-yellow-600">{stats.reviews}</div>
+                  <div className="text-sm text-gray-600">Reviews</div>
+                </div>
+                <div className="text-center p-4 bg-indigo-50 rounded-lg">
+                  <div className="text-2xl font-bold text-indigo-600">{stats.chats}</div>
+                  <div className="text-sm text-gray-600">Chats</div>
+                </div>
+                <div className="text-center p-4 bg-red-50 rounded-lg">
+                  <div className="text-2xl font-bold text-red-600">{stats.notifications}</div>
+                  <div className="text-sm text-gray-600">Notifications</div>
+                </div>
+                <div className="text-center p-4 bg-teal-50 rounded-lg">
+                  <div className="text-2xl font-bold text-teal-600">{stats.favorites}</div>
+                  <div className="text-sm text-gray-600">Favorites</div>
                 </div>
               </div>
               <Button onClick={loadStats} variant="outline" className="mt-4 w-full">
@@ -215,6 +266,56 @@ export default function DevTools() {
           </Card>
         </div>
 
+        {/* Firestore Rules Setup */}
+        <Card className="mt-6 border-2 border-yellow-300">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              ⚠️ Setup Required: Firestore Security Rules
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <h3 className="font-semibold mb-2">Step 1: Copy These Development Rules</h3>
+              <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-xs">
+{`rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // TEMPORARY: Allow all for development
+    // ⚠️ Change this before production!
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}`}
+              </pre>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-2">Step 2: Update Rules in Firebase</h3>
+              <ol className="text-sm text-gray-600 space-y-2 list-decimal list-inside">
+                <li>
+                  Go to{' '}
+                  <a
+                    href="https://console.firebase.google.com/project/sawa-explorer/firestore/rules"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline font-semibold"
+                  >
+                    Firebase Console → Firestore Rules
+                  </a>
+                </li>
+                <li>Select the <strong>"test"</strong> database (top-right dropdown)</li>
+                <li>Paste the rules above</li>
+                <li>Click <strong>Publish</strong></li>
+              </ol>
+            </div>
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <p className="text-sm text-blue-800">
+                💡 <strong>Tip:</strong> These rules allow all access for testing. Before deploying to production, use the secure rules from <code className="bg-blue-100 px-2 py-1 rounded">firestore.rules</code> file.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Instructions */}
         <Card className="mt-6">
           <CardHeader>
@@ -239,7 +340,7 @@ export default function DevTools() {
                 >
                   Firebase Console
                 </a>
-                {' '}to see your data.
+                {' '}to see your data. Make sure to select the <strong>"test"</strong> database.
               </p>
             </div>
             <div>
