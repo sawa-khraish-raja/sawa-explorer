@@ -7,7 +7,8 @@ import {
   sendPasswordResetEmail,
   updateProfile
 } from 'firebase/auth';
-import { auth } from '../config/firebase';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '../config/firebase';
 
 const AuthContext = createContext({});
 
@@ -27,16 +28,60 @@ export const AuthProvider = ({ children }) => {
   // Sign up with email and password
   const signup = async (email, password, displayName) => {
     try {
+      console.log('🔵 Starting signup...');
       setError(null);
-      const result = await createUserWithEmailAndPassword(auth, email, password);
 
-      // Update profile with display name
+      console.log('🔵 Creating user in Firebase Auth...');
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      console.log('✅ User created in Firebase Auth');
+
+      // Update profile and create Firestore document in parallel
+      // Use Promise.allSettled to not block on failures
+      const promises = [];
+
       if (displayName) {
-        await updateProfile(result.user, { displayName });
+        console.log('🔵 Updating profile with display name...');
+        const profilePromise = updateProfile(result.user, { displayName })
+          .then(() => console.log('✅ Profile updated'))
+          .catch((err) => {
+            console.error('⚠️ Profile update failed:', err);
+            // Don't throw - profile update is non-critical
+          });
+        promises.push(profilePromise);
       }
 
+      // Create user document in Firestore
+      console.log('🔵 Creating user document in Firestore...');
+      const firestorePromise = setDoc(doc(db, 'users', result.user.uid), {
+        full_name: displayName,
+        email: email,
+        role_type: 'user',
+        host_approved: false,
+        created_at: serverTimestamp(),
+        updated_at: serverTimestamp()
+      })
+        .then(() => console.log('✅ User document created in Firestore'))
+        .catch((err) => {
+          console.error('⚠️ Firestore document creation failed:', err);
+          // Don't throw - we can create it later
+        });
+      promises.push(firestorePromise);
+
+      // Wait for both operations with a timeout
+      await Promise.race([
+        Promise.allSettled(promises),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Signup operations timed out')), 10000)
+        )
+      ]).catch((err) => {
+        console.warn('⚠️ Some signup operations did not complete:', err.message);
+        // Don't throw - user is already created
+      });
+
+      console.log('🎉 Signup complete!');
       return result;
     } catch (err) {
+      console.error('❌ Signup error:', err);
       setError(err.message);
       throw err;
     }

@@ -27,6 +27,8 @@ import { Toaster } from "sonner";
 import { AppProvider, useAppContext } from '@/components/context/AppContext';
 import { FCMProvider } from '@/components/notifications/FCMProvider';
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
+import { AuthModal } from '@/components/auth/AuthModal';
+import { useAuth } from '@/contexts/AuthContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -115,8 +117,30 @@ const AppContent = memo(({ children, currentPageName }) => {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState('login');
 
   const { user, userLoading: isLoadingUser } = useAppContext();
+  const { logout } = useAuth();
+
+  const openLoginModal = () => {
+    setAuthModalTab('login');
+    setAuthModalOpen(true);
+  };
+
+  const openSignupModal = () => {
+    setAuthModalTab('signup');
+    setAuthModalOpen(true);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // No reload needed - React state will update automatically
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   useEffect(() => {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || document.referrer.includes('android-app://');
@@ -524,7 +548,7 @@ const AppContent = memo(({ children, currentPageName }) => {
                           )}
 
                           <DropdownMenuSeparator className="my-2" />
-                          <DropdownMenuItem onClick={() => base44.auth.logout()} className="cursor-pointer text-red-600 flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 rounded-lg">
+                          <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 rounded-lg">
                             <LogOut className="w-4 h-4" />
                             <span className="text-sm font-semibold">{t('userMenu.logout')}</span>
                           </DropdownMenuItem>
@@ -545,12 +569,12 @@ const AppContent = memo(({ children, currentPageName }) => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56 bg-white shadow-xl border border-gray-200 rounded-2xl p-2 mt-2">
-                        <DropdownMenuItem onClick={() => base44.auth.redirectToLogin()} className="cursor-pointer flex items-center gap-3 px-4 py-3 hover:bg-[var(--brand-bg-accent-light)] rounded-lg">
+                        <DropdownMenuItem onClick={openLoginModal} className="cursor-pointer flex items-center gap-3 px-4 py-3 hover:bg-[var(--brand-bg-accent-light)] rounded-lg">
                           <User className="w-5 h-5 text-[var(--brand-primary)]" />
                           <span className="text-sm font-semibold text-[var(--brand-primary)]">{t('auth.login')}</span>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator className="my-2" />
-                        <DropdownMenuItem onClick={() => base44.auth.redirectToLogin()} className="cursor-pointer bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-secondary)] text-white flex items-center gap-3 px-4 py-3 rounded-lg hover:opacity-90">
+                        <DropdownMenuItem onClick={openSignupModal} className="cursor-pointer bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-secondary)] text-white flex items-center gap-3 px-4 py-3 rounded-lg hover:opacity-90">
                           <User className="w-5 h-5" />
                           <span className="text-sm font-semibold">{t('auth.signup')}</span>
                         </DropdownMenuItem>
@@ -720,7 +744,7 @@ const AppContent = memo(({ children, currentPageName }) => {
                         
                         <DropdownMenuSeparator className="my-1" />
                         
-                        <DropdownMenuItem onClick={() => base44.auth.logout()} className="cursor-pointer text-red-600 flex items-center gap-3 px-3 py-2 hover:bg-red-50 rounded-lg">
+                        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 flex items-center gap-3 px-3 py-2 hover:bg-red-50 rounded-lg">
                           <LogOut className="w-4 h-4" />
                           <span className="text-sm font-semibold">Logout</span>
                         </DropdownMenuItem>
@@ -762,13 +786,13 @@ const AppContent = memo(({ children, currentPageName }) => {
                         </DropdownMenuItem>
                         
                         <DropdownMenuSeparator className="my-2" />
-                        
-                        <DropdownMenuItem onClick={() => base44.auth.redirectToLogin()} className="cursor-pointer flex items-center gap-3 px-4 py-3 hover:bg-[var(--brand-bg-accent-light)] rounded-lg">
+
+                        <DropdownMenuItem onClick={openLoginModal} className="cursor-pointer flex items-center gap-3 px-4 py-3 hover:bg-[var(--brand-bg-accent-light)] rounded-lg">
                           <User className="w-5 h-5 text-[var(--brand-primary)]" />
                           <span className="text-sm font-semibold text-[var(--brand-primary)]">{t('auth.login')}</span>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator className="my-2" />
-                        <DropdownMenuItem onClick={() => base44.auth.redirectToLogin()} className="cursor-pointer bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-secondary)] text-white flex items-center gap-3 px-4 py-3 rounded-lg hover:opacity-90">
+                        <DropdownMenuItem onClick={openSignupModal} className="cursor-pointer bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-secondary)] text-white flex items-center gap-3 px-4 py-3 rounded-lg hover:opacity-90">
                           <User className="w-5 h-5" />
                           <span className="text-sm font-semibold">{t('auth.signup')}</span>
                         </DropdownMenuItem>
@@ -839,6 +863,11 @@ const AppContent = memo(({ children, currentPageName }) => {
         <ChatLauncher />
         <NotificationPrompt />
         <NotificationWelcomePrompt />
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          defaultTab={authModalTab}
+        />
       </div>
     </>
   );
