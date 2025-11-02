@@ -1,10 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Loader2, X } from 'lucide-react';
@@ -12,7 +24,7 @@ import { Badge } from '@/components/ui/badge';
 
 export default function ApproveHostDialog({ isOpen, onClose, user, onSuccess }) {
   const queryClient = useQueryClient();
-  
+
   const [hostType, setHostType] = useState('freelancer');
   const [city, setCity] = useState('');
   const [officeId, setOfficeId] = useState('');
@@ -43,14 +55,14 @@ export default function ApproveHostDialog({ isOpen, onClose, user, onSuccess }) 
       if (!city) throw new Error('Please select a city');
       if (hostType === 'office' && !officeId) throw new Error('Please select an office');
 
-      console.log('✅ Approving host:', { 
-        email: user.email, 
-        hostType, 
-        city, 
-        officeId 
+      console.log(' Approving host:', {
+        email: user.email,
+        hostType,
+        city,
+        officeId,
       });
 
-      // ✅ 1. Update User
+      //  1. Update User
       const userData = {
         host_approved: true,
         host_type: hostType,
@@ -60,14 +72,16 @@ export default function ApproveHostDialog({ isOpen, onClose, user, onSuccess }) 
         role_type: 'user',
         role: 'user',
         office_id: hostType === 'office' ? officeId : null,
-        company_name: hostType === 'office' ? offices.find(o => o.id === officeId)?.name : null,
+        company_name: hostType === 'office' ? offices.find((o) => o.id === officeId)?.name : null,
       };
 
       await base44.entities.User.update(user.id, userData);
 
-      // ✅ 2. Create/Update HostProfile
-      const profiles = await base44.entities.HostProfile.filter({ user_email: user.email });
-      
+      //  2. Create/Update HostProfile
+      const profiles = await base44.entities.HostProfile.filter({
+        user_email: user.email,
+      });
+
       const profileData = {
         user_email: user.email,
         user_id: user.id,
@@ -90,9 +104,9 @@ export default function ApproveHostDialog({ isOpen, onClose, user, onSuccess }) 
         await base44.entities.HostProfile.create(profileData);
       }
 
-      // ✅ 3. Update Office
+      //  3. Update Office
       if (hostType === 'office' && officeId) {
-        const office = offices.find(o => o.id === officeId);
+        const office = offices.find((o) => o.id === officeId);
         if (office) {
           const assignedHosts = office.assigned_hosts || [];
           if (!assignedHosts.includes(user.email)) {
@@ -104,11 +118,11 @@ export default function ApproveHostDialog({ isOpen, onClose, user, onSuccess }) 
         }
       }
 
-      // ✅ إرسال إشعارات عن جميع الحجوزات المفتوحة في المدينة
+      //  إرسال إشعارات عن جميع الحجوزات المفتوحة في المدينة
       try {
         const openBookings = await base44.entities.Booking.filter({
           city: city,
-          state: 'open'
+          state: 'open',
         });
 
         console.log(`📢 Found ${openBookings.length} open bookings in ${city}`);
@@ -122,11 +136,11 @@ export default function ApproveHostDialog({ isOpen, onClose, user, onSuccess }) 
             message: `A traveler needs help in ${booking.city} from ${booking.start_date} to ${booking.end_date}`,
             link: `/HostDashboard`,
             related_booking_id: booking.id,
-            read: false
+            read: false,
           });
         }
 
-        console.log(`✅ Notified new host about ${openBookings.length} open bookings`);
+        console.log(` Notified new host about ${openBookings.length} open bookings`);
       } catch (error) {
         console.error('⚠️ Failed to notify about existing bookings:', error);
       }
@@ -134,7 +148,7 @@ export default function ApproveHostDialog({ isOpen, onClose, user, onSuccess }) 
       return true;
     },
     onSuccess: () => {
-      // ✅ NO TOAST HERE - let parent handle it
+      //  NO TOAST HERE - let parent handle it
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
       queryClient.invalidateQueries({ queryKey: ['allHosts'] });
       onSuccess?.();
@@ -147,12 +161,12 @@ export default function ApproveHostDialog({ isOpen, onClose, user, onSuccess }) 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className='max-w-lg'>
         <DialogHeader>
           <DialogTitle>Approve Host: {user?.full_name || user?.email}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className='space-y-4 py-4'>
           {/* Host Type */}
           <div>
             <Label>Host Type</Label>
@@ -161,8 +175,8 @@ export default function ApproveHostDialog({ isOpen, onClose, user, onSuccess }) 
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="freelancer">Freelancer (35% SAWA)</SelectItem>
-                <SelectItem value="office">Office (28% SAWA + 7% Office)</SelectItem>
+                <SelectItem value='freelancer'>Freelancer (35% SAWA)</SelectItem>
+                <SelectItem value='office'>Office (28% SAWA + 7% Office)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -172,11 +186,13 @@ export default function ApproveHostDialog({ isOpen, onClose, user, onSuccess }) 
             <Label>City *</Label>
             <Select value={city} onValueChange={setCity}>
               <SelectTrigger>
-                <SelectValue placeholder="Select city..." />
+                <SelectValue placeholder='Select city...' />
               </SelectTrigger>
               <SelectContent>
-                {cities.map(c => (
-                  <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                {cities.map((c) => (
+                  <SelectItem key={c.id} value={c.name}>
+                    {c.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -188,14 +204,16 @@ export default function ApproveHostDialog({ isOpen, onClose, user, onSuccess }) 
               <Label>Office *</Label>
               <Select value={officeId} onValueChange={setOfficeId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select office..." />
+                  <SelectValue placeholder='Select office...' />
                 </SelectTrigger>
                 <SelectContent>
                   {offices.length === 0 ? (
-                    <div className="p-4 text-sm text-gray-500">No offices available</div>
+                    <div className='p-4 text-sm text-gray-500'>No offices available</div>
                   ) : (
-                    offices.map(o => (
-                      <SelectItem key={o.id} value={o.id}>{o.name} - {o.city}</SelectItem>
+                    offices.map((o) => (
+                      <SelectItem key={o.id} value={o.id}>
+                        {o.name} - {o.city}
+                      </SelectItem>
                     ))
                   )}
                 </SelectContent>
@@ -204,24 +222,22 @@ export default function ApproveHostDialog({ isOpen, onClose, user, onSuccess }) 
           )}
 
           {/* Visible */}
-          <div className="flex items-center gap-2">
-            <Checkbox 
-              checked={visible} 
-              onCheckedChange={setVisible}
-              id="visible" 
-            />
-            <Label htmlFor="visible">Visible in city page</Label>
+          <div className='flex items-center gap-2'>
+            <Checkbox checked={visible} onCheckedChange={setVisible} id='visible' />
+            <Label htmlFor='visible'>Visible in city page</Label>
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button 
+          <Button variant='outline' onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
             onClick={() => approveMutation.mutate()}
             disabled={approveMutation.isPending}
-            className="bg-green-600 hover:bg-green-700"
+            className='bg-green-600 hover:bg-green-700'
           >
-            {approveMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            {approveMutation.isPending && <Loader2 className='w-4 h-4 mr-2 animate-spin' />}
             Approve Host
           </Button>
         </DialogFooter>

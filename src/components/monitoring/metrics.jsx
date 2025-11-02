@@ -10,25 +10,25 @@ class MetricsCollector {
       translate_429: 0,
       voice_failures: 0,
       latency_samples: [],
-      last_reset: Date.now()
+      last_reset: Date.now(),
     };
-    
+
     // Reset metrics every hour
     setInterval(() => this.reset(), 60 * 60 * 1000);
   }
-  
+
   reset() {
     this.metrics = {
       http_errors: 0,
       translate_429: 0,
       voice_failures: 0,
       latency_samples: [],
-      last_reset: Date.now()
+      last_reset: Date.now(),
     };
   }
-  
+
   recordError(type) {
-    switch(type) {
+    switch (type) {
       case 'http':
         this.metrics.http_errors++;
         break;
@@ -40,36 +40,33 @@ class MetricsCollector {
         break;
     }
   }
-  
+
   recordLatency(ms) {
     this.metrics.latency_samples.push(ms);
-    
+
     // Keep only last 100 samples
     if (this.metrics.latency_samples.length > 100) {
       this.metrics.latency_samples.shift();
     }
   }
-  
+
   snapshot() {
     const latencies = this.metrics.latency_samples;
     const sorted = [...latencies].sort((a, b) => a - b);
-    
+
     return {
       http_errors: this.metrics.http_errors,
       translate_429: this.metrics.translate_429,
       voice_failures: this.metrics.voice_failures,
-      latency_avg: latencies.length > 0 
-        ? Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length)
-        : 0,
-      latency_p95: latencies.length > 0
-        ? sorted[Math.floor(sorted.length * 0.95)] || 0
-        : 0,
-      latency_p99: latencies.length > 0
-        ? sorted[Math.floor(sorted.length * 0.99)] || 0
-        : 0,
+      latency_avg:
+        latencies.length > 0
+          ? Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length)
+          : 0,
+      latency_p95: latencies.length > 0 ? sorted[Math.floor(sorted.length * 0.95)] || 0 : 0,
+      latency_p99: latencies.length > 0 ? sorted[Math.floor(sorted.length * 0.99)] || 0 : 0,
       sample_count: latencies.length,
       last_reset: this.metrics.last_reset,
-      uptime_ms: Date.now() - this.metrics.last_reset
+      uptime_ms: Date.now() - this.metrics.last_reset,
     };
   }
 }
@@ -81,7 +78,7 @@ export const metricsCollector = new MetricsCollector();
  */
 export async function trackApiCall(fn) {
   const start = Date.now();
-  
+
   try {
     const result = await fn();
     const duration = Date.now() - start;
@@ -90,7 +87,7 @@ export async function trackApiCall(fn) {
   } catch (error) {
     const duration = Date.now() - start;
     metricsCollector.recordLatency(duration);
-    
+
     // Record specific error types
     if (error.message?.includes('429')) {
       metricsCollector.recordError('translate_rate_limit');
@@ -99,7 +96,7 @@ export async function trackApiCall(fn) {
     } else {
       metricsCollector.recordError('http');
     }
-    
+
     throw error;
   }
 }

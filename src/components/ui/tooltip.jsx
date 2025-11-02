@@ -5,12 +5,12 @@ export const TooltipProvider = ({ children }) => children;
 
 export const Tooltip = ({ children }) => {
   const [isVisible, setIsVisible] = useState(false);
-  
-  return React.Children.map(children, child => {
+
+  return React.Children.map(children, (child) => {
     if (React.isValidElement(child)) {
-      return React.cloneElement(child, { 
-        isVisible, 
-        setIsVisible 
+      return React.cloneElement(child, {
+        isVisible,
+        setIsVisible,
       });
     }
     return child;
@@ -19,26 +19,26 @@ export const Tooltip = ({ children }) => {
 
 export const TooltipTrigger = ({ children, isVisible, setIsVisible, asChild, ...props }) => {
   const childElement = asChild ? children : <div>{children}</div>;
-  
+
   return React.cloneElement(childElement, {
     onMouseEnter: () => setIsVisible(true),
     onMouseLeave: () => setIsVisible(false),
     onFocus: () => setIsVisible(true),
     onBlur: () => setIsVisible(false),
-    ...props
+    ...props,
   });
 };
 
 export const TooltipContent = ({ children, isVisible, side = 'top', className, ...props }) => {
   if (!isVisible) return null;
-  
+
   const positionClasses = {
     top: 'bottom-full left-1/2 -translate-x-1/2 mb-2',
     bottom: 'top-full left-1/2 -translate-x-1/2 mt-2',
     left: 'right-full top-1/2 -translate-y-1/2 mr-2',
-    right: 'left-full top-1/2 -translate-y-1/2 ml-2'
+    right: 'left-full top-1/2 -translate-y-1/2 ml-2',
   };
-  
+
   return (
     <div
       className={cn(
@@ -50,7 +50,7 @@ export const TooltipContent = ({ children, isVisible, side = 'top', className, .
       {...props}
     >
       {children}
-      <div 
+      <div
         className={cn(
           'absolute w-2 h-2 bg-gray-900 transform rotate-45',
           side === 'top' && 'bottom-[-4px] left-1/2 -translate-x-1/2',

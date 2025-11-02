@@ -9,7 +9,14 @@ export default function BookingAmman() {
     best_time_to_visit: 'March to May, September to November',
     languages: ['Arabic', 'English'],
     currency: 'Jordanian Dinar',
-    highlights: ['Roman Theater', 'Citadel', 'Rainbow Street', 'Dead Sea Day Trips', 'Local Cuisine', 'Modern Shopping']
+    highlights: [
+      'Roman Theater',
+      'Citadel',
+      'Rainbow Street',
+      'Dead Sea Day Trips',
+      'Local Cuisine',
+      'Modern Shopping',
+    ],
   };
 
   return <BookingPageTemplate city={amman} />;

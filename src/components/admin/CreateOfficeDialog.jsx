@@ -15,7 +15,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -79,50 +79,62 @@ export default function CreateOfficeDialog({ isOpen, onClose, office }) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Building2 className="w-6 h-6" />
+          <DialogTitle className='flex items-center gap-2'>
+            <Building2 className='w-6 h-6' />
             {isEditing ? 'Edit Office' : 'Create New Office'}
           </DialogTitle>
           <DialogDescription>
-            {isEditing ? `Editing details for ${office.name}.` : 'Add a new office to the platform.'}
+            {isEditing
+              ? `Editing details for ${office.name}.`
+              : 'Add a new office to the platform.'}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+        <form onSubmit={handleSubmit} className='space-y-4 py-4'>
           <div>
-            <Label htmlFor="name">Office Name</Label>
-            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+            <Label htmlFor='name'>Office Name</Label>
+            <Input id='name' value={name} onChange={(e) => setName(e.target.value)} required />
           </div>
           <div>
-            <Label htmlFor="email">Contact Email</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Label htmlFor='email'>Contact Email</Label>
+            <Input
+              id='email'
+              type='email'
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
           <div>
-            <Label htmlFor="city">City</Label>
+            <Label htmlFor='city'>City</Label>
             <Select value={city} onValueChange={setCity}>
               <SelectTrigger>
-                <SelectValue placeholder="Select a city" />
+                <SelectValue placeholder='Select a city' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Damascus">Damascus</SelectItem>
-                <SelectItem value="Amman">Amman</SelectItem>
-                <SelectItem value="Istanbul">Istanbul</SelectItem>
-                <SelectItem value="Cairo">Cairo</SelectItem>
+                <SelectItem value='Damascus'>Damascus</SelectItem>
+                <SelectItem value='Amman'>Amman</SelectItem>
+                <SelectItem value='Istanbul'>Istanbul</SelectItem>
+                <SelectItem value='Cairo'>Cairo</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label htmlFor="description">Description</Label>
-            <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
+            <Label htmlFor='description'>Description</Label>
+            <Input
+              id='description'
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type='button' variant='outline' onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={mutation.isPending}>
+            <Button type='submit' disabled={mutation.isPending}>
               {mutation.isPending ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Loader2 className='w-4 h-4 mr-2 animate-spin' />
               ) : (
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className='w-4 h-4 mr-2' />
               )}
               {isEditing ? 'Save Changes' : 'Create Office'}
             </Button>

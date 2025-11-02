@@ -1,8 +1,16 @@
-
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import {
+  getDocument,
+  getAllDocuments,
+  subscribeToMessages,
+  sendMessageToConversation,
+  markMessagesAsRead,
+  updateDocument,
+  queryDocuments,
+  addDocument,
+} from '@/utils/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +28,7 @@ import {
   ChevronUp,
   MessageSquare,
   Volume2,
-  VolumeX
+  VolumeX,
 } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import TypingIndicator from './TypingIndicator';
@@ -31,7 +39,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   DropdownMenu,
@@ -57,7 +65,7 @@ const SUPPORTED_LANGUAGES = [
   { code: 'es', name: 'Español', flag: '🇪🇸' },
   { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
   { code: 'sv', name: 'Svenska', flag: '🇸🇪' },
-  { code: 'da', name: 'Dansk', flag: '🇩🇰' }
+  { code: 'da', name: 'Dansk', flag: '🇩🇰' },
 ];
 
 const detectBrowserLanguage = () => {
@@ -65,7 +73,7 @@ const detectBrowserLanguage = () => {
     const browserLang = navigator.language || navigator.userLanguage;
     const langCode = browserLang.split('-')[0].toLowerCase();
 
-    if (SUPPORTED_LANGUAGES.some(l => l.code === langCode)) {
+    if (SUPPORTED_LANGUAGES.some((l) => l.code === langCode)) {
       return langCode;
     }
 
@@ -76,11 +84,7 @@ const detectBrowserLanguage = () => {
   }
 };
 
-export default function ConversationView({
-  conversationId,
-  currentUser,
-  onBack
-}) {
+export default function ConversationView({ conversationId, currentUser, onBack }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
@@ -88,7 +92,7 @@ export default function ConversationView({
   const textareaRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
-  
+
   const [messageText, setMessageText] = useState('');
   const [showOfferDialog, setShowOfferDialog] = useState(false);
   const [offerType, setOfferType] = useState('service');
@@ -107,8 +111,8 @@ export default function ConversationView({
 
   const [displayLanguage, setDisplayLanguage] = useState(() => {
     const savedChatLang = localStorage.getItem('chat_display_lang');
-    
-    if (savedChatLang && SUPPORTED_LANGUAGES.some(l => l.code === savedChatLang)) {
+
+    if (savedChatLang && SUPPORTED_LANGUAGES.some((l) => l.code === savedChatLang)) {
       return savedChatLang;
     }
 
@@ -121,11 +125,11 @@ export default function ConversationView({
 
   const playNotificationSound = useCallback(() => {
     if (!soundEnabled) return;
-    
+
     try {
       const audio = new Audio('/notification.mp3');
       audio.volume = 0.5;
-      audio.play().catch(e => console.warn('Could not play sound:', e));
+      audio.play().catch((e) => console.warn('Could not play sound:', e));
     } catch (e) {
       console.warn('Sound playback error:', e);
     }
@@ -142,17 +146,17 @@ export default function ConversationView({
     console.log('🌍 [ConversationView] CHANGING LANGUAGE:', langCode);
     setDisplayLanguage(langCode);
     localStorage.setItem('chat_display_lang', langCode);
-    setTranslationVersion(prev => prev + 1);
+    setTranslationVersion((prev) => prev + 1);
 
-    const langName = SUPPORTED_LANGUAGES.find(l => l.code === langCode)?.name;
+    const langName = SUPPORTED_LANGUAGES.find((l) => l.code === langCode)?.name;
     toast.success(`Chat language: ${langName}`, { duration: 2000 });
   }, []);
 
   const handleBack = useCallback(() => {
     console.log('🔙 [ConversationView] Back button clicked');
-    
+
     if (onBack && typeof onBack === 'function') {
-      console.log('✅ [ConversationView] Calling onBack callback');
+      console.log(' [ConversationView] Calling onBack callback');
       onBack();
     } else {
       console.log('⚠️ [ConversationView] No onBack callback, using navigate');
@@ -160,63 +164,102 @@ export default function ConversationView({
     }
   }, [onBack, navigate]);
 
-  const { data: conversation } = useQuery({
+  const { data: conversation, isLoading: isLoadingConversation, error: conversationError } = useQuery({
     queryKey: ['conversation', conversationId],
     queryFn: async () => {
-      const conv = await base44.entities.Conversation.get(conversationId);
-      if (!conv) return null;
+      console.log('🔍 [ConversationView] Loading conversation:', conversationId);
+      console.log('🔍 [ConversationView] Current user email:', currentUser?.email);
 
-      return {
-        ...conv,
-        host_emails: Array.isArray(conv.host_emails) ? conv.host_emails : [],
-        traveler_email: conv.traveler_email || ''
-      };
+      try {
+        const conv = await getDocument('conversations', conversationId);
+        console.log('🔍 [ConversationView] Conversation loaded:', conv);
+        if (!conv) {
+          console.warn('⚠️ [ConversationView] Conversation not found!');
+          return null;
+        }
+
+        return {
+          ...conv,
+          host_emails: Array.isArray(conv.host_emails) ? conv.host_emails : [],
+          traveler_email: conv.traveler_email || '',
+        };
+      } catch (error) {
+        console.error('❌ [ConversationView] Error loading conversation:', error);
+        console.error('❌ Error details:', {
+          code: error.code,
+          message: error.message,
+          conversationId,
+          userEmail: currentUser?.email,
+        });
+        throw error;
+      }
     },
-    enabled: !!conversationId,
+    enabled: !!conversationId && !!currentUser?.email,
     staleTime: 60000,
+    retry: 3, // Retry up to 3 times for permission errors
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 
+  // Debug logging
+  useEffect(() => {
+    console.log('🔍 [ConversationView] Debug Info:', {
+      conversationId,
+      hasConversation: !!conversation,
+      hasCurrentUser: !!currentUser,
+      isLoadingConversation,
+      conversationError,
+    });
+  }, [conversationId, conversation, currentUser, isLoadingConversation, conversationError]);
+
   const [localMessages, setLocalMessages] = useState([]);
+  const [fetchedMessages, setFetchedMessages] = useState([]);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(true);
   const [lastMessageCount, setLastMessageCount] = useState(0);
-  
-  const { data: fetchedMessages = [], isLoading: isLoadingMessages } = useQuery({
-    queryKey: ['messages', conversationId],
-    queryFn: async () => {
-      const msgs = await base44.entities.Message.filter(
-        { conversation_id: conversationId },
-        'created_date'
-      );
-      
-      const messagesArray = Array.isArray(msgs) ? msgs : [];
-      
-      const unreadMessages = messagesArray.filter(msg => 
-        msg.sender_email !== currentUser.email &&
-        (!msg.read_by || !msg.read_by.includes(currentUser.email))
+
+  // Subscribe to messages in real-time
+  useEffect(() => {
+    if (!conversationId) {
+      setFetchedMessages([]);
+      setIsLoadingMessages(false);
+      return;
+    }
+
+    console.log('📡 Setting up messages subscription for conversation:', conversationId);
+    setIsLoadingMessages(true);
+
+    const unsubscribe = subscribeToMessages(conversationId, async (messages) => {
+      console.log('📡 Received messages update:', messages.length);
+
+      // Mark unread messages as read
+      const unreadMessages = messages.filter(
+        (msg) =>
+          msg.sender_email !== currentUser.email &&
+          (!msg.read_by || !msg.read_by.includes(currentUser.email))
       );
 
       if (unreadMessages.length > 0) {
-        Promise.all(
-          unreadMessages.map(msg =>
-            base44.entities.Message.update(msg.id, {
-              read_by: [...(msg.read_by || []), currentUser.email]
-            })
-          )
-        ).catch(console.error);
+        await markMessagesAsRead(
+          unreadMessages.map((m) => m.id),
+          currentUser.email,
+          conversationId
+        );
       }
 
-      return messagesArray;
-    },
-    enabled: !!conversationId,
-    refetchInterval: 3000,
-    refetchIntervalInBackground: false,
-    staleTime: 1000,
-  });
+      setFetchedMessages(messages);
+      setIsLoadingMessages(false);
+    });
+
+    return () => {
+      console.log('📡 Cleaning up messages subscription');
+      unsubscribe();
+    };
+  }, [conversationId, currentUser.email]);
 
   useEffect(() => {
     if (fetchedMessages.length > lastMessageCount && lastMessageCount > 0) {
       const newMessages = fetchedMessages.slice(lastMessageCount);
-      const hasNewFromOther = newMessages.some(msg => msg.sender_email !== currentUser.email);
-      
+      const hasNewFromOther = newMessages.some((msg) => msg.sender_email !== currentUser.email);
+
       if (hasNewFromOther) {
         playNotificationSound();
       }
@@ -226,21 +269,25 @@ export default function ConversationView({
 
   useEffect(() => {
     if (fetchedMessages) {
-      const serverMessagesMap = new Map(fetchedMessages.map(msg => [msg.id, msg]));
+      const serverMessagesMap = new Map(fetchedMessages.map((msg) => [msg.id, msg]));
       const newLocalState = [...fetchedMessages];
 
-      localMessages.forEach(localMsg => {
+      localMessages.forEach((localMsg) => {
         if (localMsg._isPending && !serverMessagesMap.has(localMsg.id)) {
           const similarFetched = fetchedMessages.find(
-            fm => fm.original_text === localMsg.original_text && fm.sender_email === localMsg.sender_email
+            (fm) =>
+              fm.original_text === localMsg.original_text &&
+              fm.sender_email === localMsg.sender_email
           );
           if (!similarFetched) {
-             newLocalState.push(localMsg);
+            newLocalState.push(localMsg);
           }
         }
       });
-      
-      newLocalState.sort((a, b) => new Date(a.created_date).getTime() - new Date(b.created_date).getTime());
+
+      newLocalState.sort(
+        (a, b) => new Date(a.created_date).getTime() - new Date(b.created_date).getTime()
+      );
       setLocalMessages(newLocalState);
     }
   }, [fetchedMessages]);
@@ -249,8 +296,9 @@ export default function ConversationView({
     if (localMessages.length > 0) {
       const container = messagesContainerRef.current;
       if (container) {
-        const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-        if (isNearBottom || localMessages.length === 1) { 
+        const isNearBottom =
+          container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+        if (isNearBottom || localMessages.length === 1) {
           messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
         }
       }
@@ -261,28 +309,37 @@ export default function ConversationView({
     queryKey: ['allUsersForConversation'],
     queryFn: async () => {
       try {
-        const users = await base44.entities.User.list();
+        const users = await getAllDocuments('users');
         return Array.isArray(users) ? users : [];
       } catch (error) {
+        console.error('Error loading users:', error);
         return [];
       }
     },
     staleTime: 2 * 60 * 1000,
   });
 
-  const isHost = conversation && Array.isArray(conversation.host_emails) &&
-                 conversation.host_emails.includes(currentUser?.email);
+  const isHost =
+    conversation &&
+    Array.isArray(conversation.host_emails) &&
+    conversation.host_emails.includes(currentUser?.email);
 
-  const otherUserEmail = conversation && currentUser ? (
-    isHost ? conversation.traveler_email : (conversation.host_emails?.[0] || '')
-  ) : '';
+  const otherUserEmail =
+    conversation && currentUser
+      ? isHost
+        ? conversation.traveler_email
+        : conversation.host_emails?.[0] || ''
+      : '';
 
-  const otherUser = allUsers.find(u => u && u.email === otherUserEmail);
+  const otherUser = allUsers.find((u) => u && u.email === otherUserEmail);
   const otherUserName = getUserDisplayName(otherUser) || 'User';
 
   const { data: booking } = useQuery({
     queryKey: ['bookingForConvo', conversation?.booking_id],
-    queryFn: async () => base44.entities.Booking.get(conversation.booking_id),
+    queryFn: async () => {
+      if (!conversation?.booking_id) return null;
+      return await getDocument('bookings', conversation.booking_id);
+    },
     enabled: !!conversation?.booking_id,
   });
 
@@ -291,14 +348,14 @@ export default function ConversationView({
   const canSendMessages = !isConversationClosed && !isBookingCancelled;
 
   const { data: cityData } = useQuery({
-    queryKey: ['cityData', booking?.city],
+    queryKey: ['cityData', booking?.city_name],
     queryFn: async () => {
-      if (!booking?.city) return null;
+      if (!booking?.city_name) return null;
 
-      const cities = await base44.entities.City.filter({ name: booking.city });
+      const cities = await queryDocuments('cities', [['name', '==', booking.city_name]]);
       return cities && cities.length > 0 ? cities[0] : null;
     },
-    enabled: !!booking?.city,
+    enabled: !!booking?.city_name,
     staleTime: 10 * 60 * 1000,
   });
 
@@ -306,9 +363,10 @@ export default function ConversationView({
     queryKey: ['offers', booking?.id],
     queryFn: async () => {
       if (!booking?.id) return [];
-      const allOffers = await base44.entities.Offer.filter(
-        { booking_id: booking.id },
-        '-created_date'
+      const allOffers = await queryDocuments(
+        'offers',
+        [['booking_id', '==', booking.id]],
+        { orderBy: { field: 'created_date', direction: 'desc' } }
       );
       return Array.isArray(allOffers) ? allOffers : [];
     },
@@ -322,12 +380,12 @@ export default function ConversationView({
     if (isBookingCancelled) return false;
     if (isConversationClosed) return false;
     if (booking?.status !== 'confirmed') return false;
-    return offers.some(o => o.status === 'accepted' && o.offer_type === 'service');
+    return offers.some((o) => o.status === 'accepted' && o.offer_type === 'service');
   }, [offers, isBookingCancelled, isConversationClosed, booking?.status]);
 
   const handleTextChange = (e) => {
     setMessageText(e.target.value);
-    
+
     if (!isTyping) {
       setIsTyping(true);
     }
@@ -343,7 +401,11 @@ export default function ConversationView({
 
   const handleSendMessage = useCallback(async () => {
     if (!canSendMessages) {
-      toast.error(isBookingCancelled ? 'Cannot send messages - booking is cancelled' : 'This conversation is closed');
+      toast.error(
+        isBookingCancelled
+          ? 'Cannot send messages - booking is cancelled'
+          : 'This conversation is closed'
+      );
       return;
     }
 
@@ -370,17 +432,17 @@ export default function ConversationView({
       attachments,
       read_by: [currentUser.email],
       delivered_to: [],
-      _isPending: true
+      _isPending: true,
     };
 
-    setLocalMessages(prev => [...(prev || []), tempMessage]);
+    setLocalMessages((prev) => [...(prev || []), tempMessage]);
 
     const currentText = messageText;
     const currentAttachments = attachments;
-    
+
     setMessageText('');
     setAttachments([]);
-    
+
     setTimeout(() => {
       if (textareaRef.current) {
         textareaRef.current.focus();
@@ -389,33 +451,30 @@ export default function ConversationView({
     }, 100);
 
     try {
-      const response = await base44.functions.invoke('chatRelay', {
-        conversation_id: conversation.id,
+      const messageId = await sendMessageToConversation(conversation.id, {
+        sender_email: currentUser.email,
         original_text: tempMessage.original_text,
         source_lang: tempMessage.source_lang,
         attachments: tempMessage.attachments,
-        is_voice_message: false
       });
 
-      if (response.data?.ok) {
-        setLocalMessages(prev => 
-          (prev || []).map(msg => 
-            msg.id === tempId ? { ...response.data.message, _isPending: false } : msg
-          )
-        );
+      console.log('✅ Message sent:', messageId);
 
-        await new Promise(resolve => setTimeout(resolve, 100));
-        queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
-        queryClient.invalidateQueries({ queryKey: ['rawConversations'] });
-      } else {
-        throw new Error(response.data?.reason || 'Failed to send message');
-      }
+      // Update local state with the message ID
+      setLocalMessages((prev) =>
+        (prev || []).map((msg) =>
+          msg.id === tempId ? { ...msg, id: messageId, _isPending: false } : msg
+        )
+      );
+
+      // Real-time subscription will handle updates automatically
+      queryClient.invalidateQueries({ queryKey: ['rawConversations'] });
     } catch (error) {
-      console.error('❌ [ConversationView] Failed to send message:', error);
-      setLocalMessages(prev => (prev || []).filter(msg => msg.id !== tempId));
+      console.error(' [ConversationView] Failed to send message:', error);
+      setLocalMessages((prev) => (prev || []).filter((msg) => msg.id !== tempId));
       setMessageText(currentText);
       setAttachments(currentAttachments);
-      
+
       toast.error('Failed to send message. Please try again.');
     } finally {
       setIsSendingMessage(false);
@@ -425,13 +484,28 @@ export default function ConversationView({
         }
       }, 100);
     }
-  }, [messageText, attachments, conversation, currentUser, isSendingMessage, conversationId, userPreferredLang, queryClient, canSendMessages, isBookingCancelled]);
+  }, [
+    messageText,
+    attachments,
+    conversation,
+    currentUser,
+    isSendingMessage,
+    conversationId,
+    userPreferredLang,
+    queryClient,
+    canSendMessages,
+    isBookingCancelled,
+  ]);
 
   const sendOfferMutation = useMutation({
     mutationFn: async () => {
       if (!offerPrice || !booking || !currentUser) throw new Error('Missing data');
       if (!canSendMessages) {
-        throw new Error(isBookingCancelled ? 'Cannot send offers - booking is cancelled' : 'This conversation is closed');
+        throw new Error(
+          isBookingCancelled
+            ? 'Cannot send offers - booking is cancelled'
+            : 'This conversation is closed'
+        );
       }
 
       const priceBase = parseFloat(offerPrice);
@@ -446,7 +520,7 @@ export default function ConversationView({
           price_total: priceBase,
           rental_details: rentalDetails,
           status: 'pending',
-          host_type: currentUser.host_type || 'freelancer'
+          host_type: currentUser.host_type || 'freelancer',
         };
       } else {
         const isOfficeHost = currentUser.host_type === 'office';
@@ -467,40 +541,58 @@ export default function ConversationView({
             office_percent: isOfficeHost ? 7 : 0,
             office_fee: officeFee,
             total: total,
-            host_type: isOfficeHost ? 'office' : 'freelancer'
+            host_type: isOfficeHost ? 'office' : 'freelancer',
           },
           price_total: total,
           inclusions: offerInclusions,
           status: 'pending',
-          host_type: isOfficeHost ? 'office' : 'freelancer'
+          host_type: isOfficeHost ? 'office' : 'freelancer',
         };
       }
 
-      const offer = await base44.entities.Offer.create(offerData);
+      // Create offer in Firestore
+      const offerId = await addDocument('offers', {
+        ...offerData,
+        host_id: currentUser.id,
+        host_name: currentUser.full_name || currentUser.email,
+        traveler_email: booking.traveler_email,
+        created_date: new Date().toISOString(),
+        updated_date: new Date().toISOString(),
+      });
 
-      await base44.functions.invoke('chatRelay', {
-        conversation_id: conversation.id,
-        original_text: offerType === 'rental'
-          ? `I'm sending you a rental offer for $${priceBase.toFixed(2)}`
-          : `I'm sending you a service offer for $${offerData.price_total.toFixed(2)}`,
+      console.log('✅ Offer created:', offerId);
+
+      // Send message about the offer
+      await sendMessageToConversation(conversation.id, {
+        sender_email: currentUser.email,
+        original_text:
+          offerType === 'rental'
+            ? `I'm sending you a rental offer for $${priceBase.toFixed(2)}`
+            : `I'm sending you a service offer for $${offerData.price_total.toFixed(2)}`,
         source_lang: userPreferredLang,
         attachments: [],
-        is_voice_message: false,
-        offer_data: { ...offerData, id: offer.id }
       });
 
-      await base44.entities.Notification.create({
+      // Create notification for traveler
+      const notificationData = {
         recipient_email: booking.traveler_email,
-        recipient_type: 'traveler',
-        title: `New ${offerType} offer for ${booking.city}`,
-        message: `You received a ${offerType} offer for $${offerData.price_total.toFixed(2)}`,
-        link: `/MyOffers`,
-        related_booking_id: booking.id,
-        related_offer_id: offer.id,
         type: 'offer_received',
-      });
+        title: `New ${offerType} offer for ${booking.city_name || booking.city}`,
+        message: `You received a ${offerType} offer for $${offerData.price_total.toFixed(2)}`,
+        booking_id: booking.id,
+        offer_id: offerId,
+        read: false,
+        created_date: new Date().toISOString(),
+      };
 
-      return offer;
+      // Only add traveler_id if it exists
+      if (booking.traveler_id) {
+        notificationData.user_id = booking.traveler_id;
+      }
+
+      await addDocument('notifications', notificationData);
+
+      return { id: offerId, ...offerData };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['offers'] });
@@ -521,47 +613,70 @@ export default function ConversationView({
   const acceptOfferMutation = useMutation({
     mutationFn: async (offerId) => {
       console.log('💬 [ConversationView] Accepting offer:', offerId);
-      
+
       if (!offerId || typeof offerId !== 'string') {
         throw new Error('Invalid offer ID');
       }
       if (!canSendMessages) {
-        throw new Error(isBookingCancelled ? 'Cannot accept offers - booking is cancelled' : 'This conversation is closed');
+        throw new Error(
+          isBookingCancelled
+            ? 'Cannot accept offers - booking is cancelled'
+            : 'This conversation is closed'
+        );
       }
 
-      const latestOffers = await base44.entities.Offer.filter(
-        { booking_id: booking.id },
-        '-created_date'
-      );
-      
-      const latestOffer = latestOffers.find(o => o.id === offerId);
-      
-      if (!latestOffer) {
+      // Get the offer
+      const offer = await getDocument('offers', offerId);
+
+      if (!offer) {
         throw new Error('Offer not found');
       }
 
-      if (latestOffer.status === 'accepted') {
+      if (offer.status === 'accepted') {
         throw new Error('This offer has already been accepted');
       }
 
-      console.log('💬 [ConversationView] Found offer:', latestOffer);
+      console.log('💬 [ConversationView] Found offer:', offer);
 
-      const response = await base44.functions.invoke('confirmBooking', {
-        booking_id: latestOffer.booking_id,
-        offer_id: offerId
+      // Update offer status to accepted
+      await updateDocument('offers', offerId, {
+        status: 'accepted',
+        accepted_date: new Date().toISOString(),
       });
 
-      console.log('💬 [ConversationView] Response:', response.data);
+      // Update booking status to confirmed
+      await updateDocument('bookings', booking.id, {
+        status: 'confirmed',
+        confirmed_date: new Date().toISOString(),
+        confirmed_offer_id: offerId,
+      });
 
-      if (!response.data || !response.data.ok) {
-        throw new Error(response.data?.error || 'Failed to accept offer');
+      // Create notification for host
+      const hostNotificationData = {
+        recipient_email: offer.host_email,
+        type: 'offer_accepted',
+        title: 'Offer Accepted!',
+        message: `Your offer for ${booking.city_name || booking.city} has been accepted`,
+        booking_id: booking.id,
+        offer_id: offerId,
+        read: false,
+        created_date: new Date().toISOString(),
+      };
+
+      // Only add host_id if it exists
+      if (offer.host_id) {
+        hostNotificationData.user_id = offer.host_id;
       }
 
-      return response.data;
+      await addDocument('notifications', hostNotificationData);
+
+      console.log('✅ Offer accepted successfully');
+
+      return { ok: true, offer_id: offerId };
     },
     onSuccess: async () => {
-      console.log('✅ [ConversationView] Offer accepted successfully');
-      
+      console.log(' [ConversationView] Offer accepted successfully');
+
       toast.success('Offer accepted! 🎉', { duration: 3000 });
 
       await Promise.all([
@@ -571,31 +686,46 @@ export default function ConversationView({
         queryClient.invalidateQueries({ queryKey: ['messages'] }),
         queryClient.invalidateQueries({ queryKey: ['conversation'] }),
         queryClient.invalidateQueries({ queryKey: ['travelerBookings'] }),
-        queryClient.invalidateQueries({ queryKey: ['myOffers'] })
+        queryClient.invalidateQueries({ queryKey: ['myOffers'] }),
       ]);
 
-      console.log('✅ [ConversationView] All queries refetched');
+      console.log(' [ConversationView] All queries refetched');
     },
     onError: (error) => {
-      console.error('❌ [ConversationView] Accept error:', error);
-      toast.error(error.message || 'Failed to accept offer', { duration: 5000 });
+      console.error(' [ConversationView] Accept error:', error);
+      toast.error(error.message || 'Failed to accept offer', {
+        duration: 5000,
+      });
     },
   });
 
   const declineOfferMutation = useMutation({
     mutationFn: async (offerId) => {
       if (!canSendMessages) {
-        throw new Error(isBookingCancelled ? 'Cannot decline offers - booking is cancelled' : 'This conversation is closed');
+        throw new Error(
+          isBookingCancelled
+            ? 'Cannot decline offers - booking is cancelled'
+            : 'This conversation is closed'
+        );
       }
-      return base44.entities.Offer.update(offerId, { status: 'declined' });
+
+      console.log('❌ Declining offer:', offerId);
+
+      // Update offer status to declined
+      await updateDocument('offers', offerId, {
+        status: 'declined',
+        declined_date: new Date().toISOString(),
+      });
+
+      return { ok: true, offer_id: offerId };
     },
     onSuccess: async () => {
       toast.success('Offer declined');
-      
+
       await Promise.all([
         refetchOffers(),
         queryClient.invalidateQueries({ queryKey: ['offers'] }),
-        queryClient.invalidateQueries({ queryKey: ['messages'] })
+        queryClient.invalidateQueries({ queryKey: ['messages'] }),
       ]);
     },
     onError: (error) => toast.error(error.message || 'Failed to decline offer'),
@@ -606,7 +736,8 @@ export default function ConversationView({
     if (!container) return;
 
     const handleScroll = () => {
-      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      const isNearBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight < 100;
       setShowScrollButton(!isNearBottom);
     };
 
@@ -623,36 +754,107 @@ export default function ConversationView({
     navigate(createPageUrl('MyOffers'));
   };
 
-  if (!conversation || !currentUser) {
+  // Show loading state
+  if (isLoadingConversation) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+      <div className='flex flex-col items-center justify-center h-full gap-4'>
+        <Loader2 className='w-8 h-8 animate-spin text-purple-600' />
+        <p className='text-sm text-gray-500'>Loading conversation...</p>
+      </div>
+    );
+  }
+
+  // Show error if there was a problem loading the conversation
+  if (conversationError) {
+    return (
+      <div className='flex flex-col items-center justify-center h-full gap-4 p-8 text-center'>
+        <MessageSquare className='w-16 h-16 text-red-300' />
+        <div>
+          <h3 className='text-lg font-semibold text-gray-900 mb-2'>Error Loading Conversation</h3>
+          <p className='text-sm text-gray-600 mb-2'>
+            {conversationError.message || 'Failed to load conversation'}
+          </p>
+          <p className='text-xs text-gray-500 mb-4'>
+            Conversation ID: {conversationId}
+          </p>
+          <div className='flex gap-2'>
+            <Button onClick={() => window.location.reload()} variant='default'>
+              Retry
+            </Button>
+            <Button onClick={handleBack} variant='outline'>
+              <ArrowLeft className='w-4 h-4 mr-2' />
+              Back to Messages
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if conversation not found
+  if (!conversation) {
+    return (
+      <div className='flex flex-col items-center justify-center h-full gap-4 p-8 text-center'>
+        <MessageSquare className='w-16 h-16 text-gray-300' />
+        <div>
+          <h3 className='text-lg font-semibold text-gray-900 mb-2'>Conversation Not Found</h3>
+          <p className='text-sm text-gray-600 mb-2'>
+            This conversation doesn't exist or you don't have access to it.
+          </p>
+          <p className='text-xs text-gray-500 mb-4'>
+            Conversation ID: {conversationId}
+          </p>
+          <Button onClick={handleBack} variant='outline'>
+            <ArrowLeft className='w-4 h-4 mr-2' />
+            Back to Messages
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if user not loaded
+  if (!currentUser) {
+    return (
+      <div className='flex flex-col items-center justify-center h-full gap-4'>
+        <Loader2 className='w-8 h-8 animate-spin text-purple-600' />
+        <p className='text-sm text-gray-500'>Loading user data...</p>
       </div>
     );
   }
 
   const isTraveler = conversation.traveler_email === currentUser.email;
-  const acceptedOffer = offers.find(o => o.status === 'accepted');
-  const myServiceOffer = offers.find(o => o.host_email === currentUser.email && o.offer_type === 'service');
-  const canSendServiceOffer = isHost && !myServiceOffer && !acceptedOffer && booking?.status !== 'confirmed' && canSendMessages;
+  const acceptedOffer = offers.find((o) => o.status === 'accepted');
+  const myServiceOffer = offers.find(
+    (o) => o.host_email === currentUser.email && o.offer_type === 'service'
+  );
+  const canSendServiceOffer =
+    isHost &&
+    !myServiceOffer &&
+    !acceptedOffer &&
+    booking?.status !== 'confirmed' &&
+    canSendMessages;
   const canSendRentalOffer = isHost && canSendMessages;
 
-  const currentLang = SUPPORTED_LANGUAGES.find(l => l.code === displayLanguage);
+  const currentLang = SUPPORTED_LANGUAGES.find((l) => l.code === displayLanguage);
   const isRTL = displayLanguage === 'ar' || displayLanguage === 'he';
 
   const getStatusBadge = (status) => {
     const badges = {
-      'pending': { label: 'Pending', className: 'bg-yellow-100 text-yellow-800' },
-      'confirmed': { label: 'Confirmed', className: 'bg-green-100 text-green-800' },
-      'completed': { label: 'Completed', className: 'bg-blue-100 text-blue-800' },
-      'cancelled': { label: 'Cancelled', className: 'bg-red-100 text-red-800' }
+      pending: { label: 'Pending', className: 'bg-yellow-100 text-yellow-800' },
+      confirmed: {
+        label: 'Confirmed',
+        className: 'bg-green-100 text-green-800',
+      },
+      completed: { label: 'Completed', className: 'bg-blue-100 text-blue-800' },
+      cancelled: { label: 'Cancelled', className: 'bg-red-100 text-red-800' },
     };
     const badge = badges[status] || badges['pending'];
     return <Badge className={badge.className}>{badge.label}</Badge>;
   };
 
   return (
-    <div className="fixed inset-0 flex bg-white z-50" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className='fixed inset-0 flex bg-white z-50' dir={isRTL ? 'rtl' : 'ltr'}>
       <style>{`
         .messages-container {
           overflow-y: auto !important;
@@ -680,29 +882,34 @@ export default function ConversationView({
       `}</style>
 
       {/* Booking Summary Sidebar - Desktop Only */}
-      <div className={cn(
-        "hidden lg:flex flex-col w-80 bg-white border-r border-gray-200 shadow-lg overflow-hidden",
-        !showBookingSummary && "hidden"
-      )}>
+      <div
+        className={cn(
+          'hidden lg:flex flex-col w-80 bg-white border-r border-gray-200 shadow-lg overflow-hidden',
+          !showBookingSummary && 'hidden'
+        )}
+      >
         {booking && (
-          <div className="relative h-[180px] overflow-hidden">
+          <div className='relative h-[180px] overflow-hidden'>
             <img
-              src={cityData?.cover_image || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'}
+              src={
+                cityData?.cover_image ||
+                'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'
+              }
               alt={booking.city}
-              className="w-full h-full object-cover"
+              className='w-full h-full object-cover'
               onError={(e) => {
                 e.target.src = 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800';
               }}
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/60" />
+            <div className='absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/60' />
 
-            <div className="absolute bottom-4 left-4 right-4 text-white">
-              <h2 className="text-2xl font-bold drop-shadow-lg mb-1">
-                {booking.city}
+            <div className='absolute bottom-4 left-4 right-4 text-white'>
+              <h2 className='text-2xl font-bold drop-shadow-lg mb-1'>
+                {booking.city_name || booking.city}
               </h2>
               {cityData?.country && (
-                <p className="text-sm opacity-90 drop-shadow-md flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />
+                <p className='text-sm opacity-90 drop-shadow-md flex items-center gap-1'>
+                  <MapPin className='w-3 h-3' />
                   {cityData.country}
                 </p>
               )}
@@ -710,46 +917,51 @@ export default function ConversationView({
           </div>
         )}
 
-        <div className="bg-gradient-to-r from-[#9933CC] to-[#7B2CBF] p-4 text-white">
-          <h3 className="font-bold text-lg flex items-center gap-2">
-            <Package className="w-5 h-5" />
+        <div className='bg-gradient-to-r from-[#9933CC] to-[#7B2CBF] p-4 text-white'>
+          <h3 className='font-bold text-lg flex items-center gap-2'>
+            <Package className='w-5 h-5' />
             Booking Summary
           </h3>
         </div>
 
         {booking && (
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className='flex-1 overflow-y-auto p-4 space-y-4'>
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-gray-700 mb-2">
-                  <Calendar className="w-4 h-4 text-[#9933CC]" />
-                  <span className="text-sm font-semibold">Trip Dates</span>
+              <CardContent className='p-4'>
+                <div className='flex items-center gap-2 text-gray-700 mb-2'>
+                  <Calendar className='w-4 h-4 text-[#9933CC]' />
+                  <span className='text-sm font-semibold'>Trip Dates</span>
                 </div>
-                <p className="text-sm text-gray-900">
-                  {format(new Date(booking.start_date), 'MMM d, yyyy')} → {format(new Date(booking.end_date), 'MMM d, yyyy')}
+                <p className='text-sm text-gray-900'>
+                  {format(new Date(booking.start_date), 'MMM d, yyyy')} →{' '}
+                  {format(new Date(booking.end_date), 'MMM d, yyyy')}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-gray-700 mb-2">
-                  <Users className="w-4 h-4 text-[#9933CC]" />
-                  <span className="text-sm font-semibold">Guests</span>
+              <CardContent className='p-4'>
+                <div className='flex items-center gap-2 text-gray-700 mb-2'>
+                  <Users className='w-4 h-4 text-[#9933CC]' />
+                  <span className='text-sm font-semibold'>Guests</span>
                 </div>
-                <p className="text-sm text-gray-900">
-                  {booking.number_of_adults || 1} Adult{(booking.number_of_adults || 1) > 1 ? 's' : ''}
-                  {booking.number_of_children > 0 && `, ${booking.number_of_children} Child${booking.number_of_children > 1 ? 'ren' : ''}`}
+                <p className='text-sm text-gray-900'>
+                  {booking.number_of_adults || 1} Adult
+                  {(booking.number_of_adults || 1) > 1 ? 's' : ''}
+                  {booking.number_of_children > 0 &&
+                    `, ${booking.number_of_children} Child${
+                      booking.number_of_children > 1 ? 'ren' : ''
+                    }`}
                 </p>
               </CardContent>
             </Card>
 
             {booking.selected_services && booking.selected_services.length > 0 && (
               <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-gray-700 mb-3">
-                    <Package className="w-4 h-4 text-[#9933CC]" />
-                    <span className="text-sm font-semibold">Selected Services</span>
+                <CardContent className='p-4'>
+                  <div className='flex items-center gap-2 text-gray-700 mb-3'>
+                    <Package className='w-4 h-4 text-[#9933CC]' />
+                    <span className='text-sm font-semibold'>Selected Services</span>
                   </div>
                   <BookingServicesDisplay
                     serviceIds={booking.selected_services}
@@ -760,9 +972,9 @@ export default function ConversationView({
             )}
 
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-gray-700">Status</span>
+              <CardContent className='p-4'>
+                <div className='flex items-center justify-between'>
+                  <span className='text-sm font-semibold text-gray-700'>Status</span>
                   {getStatusBadge(booking.status)}
                 </div>
               </CardContent>
@@ -772,54 +984,54 @@ export default function ConversationView({
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-gray-50">
-        
+      <div className='flex-1 flex flex-col h-full overflow-hidden bg-gray-50'>
         {/* Header */}
-        <div className="flex-shrink-0 bg-white border-b border-gray-200 shadow-sm z-20">
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className='flex-shrink-0 bg-white border-b border-gray-200 shadow-sm z-20'>
+          <div className='flex items-center justify-between p-4'>
+            <div className='flex items-center gap-3 flex-1 min-w-0'>
               <Button
-                variant="ghost"
-                size="icon"
+                variant='ghost'
+                size='icon'
                 onClick={handleBack}
-                className="flex-shrink-0 h-9 w-9 rounded-full hover:bg-gray-100 transition-all duration-200"
-                aria-label="Go back"
+                className='flex-shrink-0 h-9 w-9 rounded-full hover:bg-gray-100 transition-all duration-200'
+                aria-label='Go back'
               >
-                <ArrowLeft className={cn(
-                  "w-5 h-5 text-gray-700",
-                  isRTL && "rotate-180"
-                )} />
+                <ArrowLeft className={cn('w-5 h-5 text-gray-700', isRTL && 'rotate-180')} />
               </Button>
 
               {otherUser && (
-                <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className='flex items-center gap-3 flex-1 min-w-0'>
                   {otherUser.profile_photo ? (
-                    <div className="relative">
+                    <div className='relative'>
                       <img
                         src={otherUser.profile_photo}
                         alt={getUserDisplayName(otherUser)}
-                        className="w-10 h-10 rounded-full object-cover shadow-md ring-2 ring-gray-100"
+                        className='w-10 h-10 rounded-full object-cover shadow-md ring-2 ring-gray-100'
                       />
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full ring-2 ring-white" />
+                      <div className='absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full ring-2 ring-white' />
                     </div>
                   ) : (
-                    <div className="relative">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold text-base shadow-md ring-2 ring-gray-100">
+                    <div className='relative'>
+                      <div className='w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold text-base shadow-md ring-2 ring-gray-100'>
                         {getUserDisplayName(otherUser).charAt(0).toUpperCase()}
                       </div>
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full ring-2 ring-white" />
+                      <div className='absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full ring-2 ring-white' />
                     </div>
                   )}
 
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-base text-gray-900 truncate">
+                  <div className='flex-1 min-w-0'>
+                    <h3 className='font-bold text-base text-gray-900 truncate'>
                       {getUserDisplayName(otherUser)}
                     </h3>
                     {booking && (
-                      <p className="text-xs text-gray-500 truncate">
-                        {booking.city}
+                      <p className='text-xs text-gray-500 truncate'>
+                        {booking.city_name || booking.city}
                         {booking.start_date && booking.end_date && (
-                          <> • {format(new Date(booking.start_date), 'MMM d')} - {format(new Date(booking.end_date), 'MMM d')}</>
+                          <>
+                            {' '}
+                            • {format(new Date(booking.start_date), 'MMM d')} -{' '}
+                            {format(new Date(booking.end_date), 'MMM d')}
+                          </>
                         )}
                       </p>
                     )}
@@ -828,49 +1040,56 @@ export default function ConversationView({
               )}
             </div>
 
-            <div className="flex items-center gap-2">
-              {hasAcceptedServiceOffer && !isHost && !isBookingCancelled && !isConversationClosed && booking?.status === 'confirmed' && (
-                <Button
-                  onClick={handleCheckout}
-                  className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold shadow-md hover:shadow-lg transition-all flex items-center gap-2 px-4 h-9"
-                >
-                  <DollarSign className="w-4 h-4" />
-                  <span className="hidden sm:inline">
-                    {isRTL ? 'المتابعة للدفع' : 'Checkout'}
-                  </span>
-                  <span className="sm:hidden">💳</span>
-                </Button>
-              )}
+            <div className='flex items-center gap-2'>
+              {hasAcceptedServiceOffer &&
+                !isHost &&
+                !isBookingCancelled &&
+                !isConversationClosed &&
+                booking?.status === 'confirmed' && (
+                  <Button
+                    onClick={handleCheckout}
+                    className='bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold shadow-md hover:shadow-lg transition-all flex items-center gap-2 px-4 h-9'
+                  >
+                    <DollarSign className='w-4 h-4' />
+                    <span className='hidden sm:inline'>
+                      {isRTL ? 'المتابعة للدفع' : 'Checkout'}
+                    </span>
+                    <span className='sm:hidden'>💳</span>
+                  </Button>
+                )}
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    className="flex-shrink-0 h-9 w-9 rounded-full hover:bg-purple-50 transition-all duration-200 border border-gray-200"
+                    variant='ghost'
+                    size='icon'
+                    className='flex-shrink-0 h-9 w-9 rounded-full hover:bg-purple-50 transition-all duration-200 border border-gray-200'
                   >
-                    <Globe className="w-4.5 h-4.5 text-gray-700 hover:text-purple-600 transition-colors" />
+                    <Globe className='w-4.5 h-4.5 text-gray-700 hover:text-purple-600 transition-colors' />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-white shadow-xl border border-gray-200 rounded-xl p-2 mt-2 z-[100]">
-                  <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase">
+                <DropdownMenuContent
+                  align='end'
+                  className='w-48 bg-white shadow-xl border border-gray-200 rounded-xl p-2 mt-2 z-[100]'
+                >
+                  <div className='px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase'>
                     Chat Language
                   </div>
-                  {SUPPORTED_LANGUAGES.map(lang => (
+                  {SUPPORTED_LANGUAGES.map((lang) => (
                     <DropdownMenuItem
                       key={lang.code}
                       onClick={() => handleLanguageChange(lang.code)}
                       className={cn(
-                        "cursor-pointer flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200",
+                        'cursor-pointer flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200',
                         lang.code === displayLanguage
-                          ? "bg-purple-50 text-purple-600 font-semibold"
-                          : "hover:bg-gray-50"
+                          ? 'bg-purple-50 text-purple-600 font-semibold'
+                          : 'hover:bg-gray-50'
                       )}
                     >
-                      <span className="text-lg">{lang.flag}</span>
-                      <span className="flex-1 text-sm">{lang.name}</span>
+                      <span className='text-lg'>{lang.flag}</span>
+                      <span className='flex-1 text-sm'>{lang.name}</span>
                       {lang.code === displayLanguage && (
-                        <div className="w-2 h-2 rounded-full bg-purple-600" />
+                        <div className='w-2 h-2 rounded-full bg-purple-600' />
                       )}
                     </DropdownMenuItem>
                   ))}
@@ -878,15 +1097,15 @@ export default function ConversationView({
               </DropdownMenu>
 
               <Button
-                variant="ghost"
-                size="icon"
+                variant='ghost'
+                size='icon'
                 onClick={() => setShowBookingSummary(!showBookingSummary)}
-                className="lg:hidden flex-shrink-0 h-9 w-9 rounded-full hover:bg-gray-100"
+                className='lg:hidden flex-shrink-0 h-9 w-9 rounded-full hover:bg-gray-100'
               >
                 {showBookingSummary ? (
-                  <ChevronUp className="w-5 h-5 text-gray-700" />
+                  <ChevronUp className='w-5 h-5 text-gray-700' />
                 ) : (
-                  <ChevronDown className="w-5 h-5 text-gray-700" />
+                  <ChevronDown className='w-5 h-5 text-gray-700' />
                 )}
               </Button>
             </div>
@@ -894,68 +1113,81 @@ export default function ConversationView({
 
           {/* Mobile Booking Summary */}
           {showBookingSummary && booking && (
-            <div className="lg:hidden border-t border-gray-200 bg-white relative z-[5]">
-              <div className="p-4 bg-gray-50">
-                <Card className="overflow-hidden shadow-xl border-2 border-purple-200">
-                  
-                  <div className="relative">
-                    <div className="absolute inset-0">
+            <div className='lg:hidden border-t border-gray-200 bg-white relative z-[5]'>
+              <div className='p-4 bg-gray-50'>
+                <Card className='overflow-hidden shadow-xl border-2 border-purple-200'>
+                  <div className='relative'>
+                    <div className='absolute inset-0'>
                       <img
-                        src={cityData?.cover_image || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'}
+                        src={
+                          cityData?.cover_image ||
+                          'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'
+                        }
                         alt={booking.city}
-                        className="w-full h-full object-cover"
+                        className='w-full h-full object-cover'
                         onError={(e) => {
-                          e.target.src = 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800';
+                          e.target.src =
+                            'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800';
                         }}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/70 to-black/80" />
+                      <div className='absolute inset-0 bg-gradient-to-b from-black/60 via-black/70 to-black/80' />
                     </div>
 
-                    <div className="relative z-10 p-5 text-white">
-                      <div className="flex items-start justify-between mb-4">
+                    <div className='relative z-10 p-5 text-white'>
+                      <div className='flex items-start justify-between mb-4'>
                         <div>
-                          <h3 className="text-2xl font-bold drop-shadow-lg mb-1">
-                            {booking.city}
+                          <h3 className='text-2xl font-bold drop-shadow-lg mb-1'>
+                            {booking.city_name || booking.city}
                           </h3>
                           {cityData?.country && (
-                            <p className="text-sm text-white/90 flex items-center gap-1 drop-shadow-md">
-                              <MapPin className="w-3 h-3" />
+                            <p className='text-sm text-white/90 flex items-center gap-1 drop-shadow-md'>
+                              <MapPin className='w-3 h-3' />
                               {cityData.country}
                             </p>
                           )}
                         </div>
-                        <div className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full border border-white/30">
-                          <span className={cn(
-                            "text-xs font-bold",
-                            booking.status === 'confirmed' && "text-green-300",
-                            booking.status === 'pending' && "text-yellow-300",
-                            booking.status === 'cancelled' && "text-red-300"
-                          )}>
-                            {booking.status === 'confirmed' ? '✓ Confirmed' : 
-                             booking.status === 'pending' ? '⏳ Pending' : 
-                             booking.status === 'cancelled' ? '✕ Cancelled' : 
-                             booking.status}
+                        <div className='bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full border border-white/30'>
+                          <span
+                            className={cn(
+                              'text-xs font-bold',
+                              booking.status === 'confirmed' && 'text-green-300',
+                              booking.status === 'pending' && 'text-yellow-300',
+                              booking.status === 'cancelled' && 'text-red-300'
+                            )}
+                          >
+                            {booking.status === 'confirmed'
+                              ? '✓ Confirmed'
+                              : booking.status === 'pending'
+                                ? '⏳ Pending'
+                                : booking.status === 'cancelled'
+                                  ? '✕ Cancelled'
+                                  : booking.status}
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 mb-3 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/20">
-                        <Calendar className="w-5 h-5 text-purple-300 flex-shrink-0" />
+                      <div className='flex items-center gap-3 mb-3 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/20'>
+                        <Calendar className='w-5 h-5 text-purple-300 flex-shrink-0' />
                         <div>
-                          <p className="text-xs text-white/70 font-medium">Trip Dates</p>
-                          <p className="text-sm font-bold">
-                            {format(new Date(booking.start_date), 'MMM d')} - {format(new Date(booking.end_date), 'MMM d, yyyy')}
+                          <p className='text-xs text-white/70 font-medium'>Trip Dates</p>
+                          <p className='text-sm font-bold'>
+                            {format(new Date(booking.start_date), 'MMM d')} -{' '}
+                            {format(new Date(booking.end_date), 'MMM d, yyyy')}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/20">
-                        <Users className="w-5 h-5 text-purple-300 flex-shrink-0" />
+                      <div className='flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/20'>
+                        <Users className='w-5 h-5 text-purple-300 flex-shrink-0' />
                         <div>
-                          <p className="text-xs text-white/70 font-medium">Guests</p>
-                          <p className="text-sm font-bold">
-                            {booking.number_of_adults || 1} Adult{(booking.number_of_adults || 1) > 1 ? 's' : ''}
-                            {booking.number_of_children > 0 && `, ${booking.number_of_children} Child${booking.number_of_children > 1 ? 'ren' : ''}`}
+                          <p className='text-xs text-white/70 font-medium'>Guests</p>
+                          <p className='text-sm font-bold'>
+                            {booking.number_of_adults || 1} Adult
+                            {(booking.number_of_adults || 1) > 1 ? 's' : ''}
+                            {booking.number_of_children > 0 &&
+                              `, ${booking.number_of_children} Child${
+                                booking.number_of_children > 1 ? 'ren' : ''
+                              }`}
                           </p>
                         </div>
                       </div>
@@ -963,24 +1195,24 @@ export default function ConversationView({
                   </div>
 
                   {booking.selected_services && booking.selected_services.length > 0 && (
-                    <CardContent className="p-4 bg-white">
+                    <CardContent className='p-4 bg-white'>
                       <button
                         onClick={() => setExpandedDetails(!expandedDetails)}
-                        className="flex items-center justify-between w-full text-left mb-2"
+                        className='flex items-center justify-between w-full text-left mb-2'
                       >
-                        <span className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                          <Package className="w-4 h-4 text-purple-600" />
+                        <span className='text-sm font-semibold text-gray-800 flex items-center gap-2'>
+                          <Package className='w-4 h-4 text-purple-600' />
                           Selected Services
                         </span>
                         {expandedDetails ? (
-                          <ChevronUp className="w-4 h-4 text-gray-500" />
+                          <ChevronUp className='w-4 h-4 text-gray-500' />
                         ) : (
-                          <ChevronDown className="w-4 h-4 text-gray-500" />
+                          <ChevronDown className='w-4 h-4 text-gray-500' />
                         )}
                       </button>
 
                       {expandedDetails && (
-                        <div className="space-y-2 mt-2">
+                        <div className='space-y-2 mt-2'>
                           <BookingServicesDisplay
                             serviceIds={booking.selected_services}
                             language={displayLanguage}
@@ -997,40 +1229,40 @@ export default function ConversationView({
 
         {/* Send Offer Button */}
         {(canSendServiceOffer || canSendRentalOffer) && (
-          <div className="flex-shrink-0 bg-amber-50 border-b border-amber-200 p-3">
+          <div className='flex-shrink-0 bg-amber-50 border-b border-amber-200 p-3'>
             <Button
               onClick={() => setShowOfferDialog(true)}
-              size="sm"
-              className="w-full bg-[#7B2CBF] hover:bg-[#6A1FA0] text-white"
+              size='sm'
+              className='w-full bg-[#7B2CBF] hover:bg-[#6A1FA0] text-white'
               disabled={!canSendMessages}
             >
-              <DollarSign className="w-4 h-4 mr-2" />
+              <DollarSign className='w-4 h-4 mr-2' />
               Send Price Offer
             </Button>
           </div>
         )}
 
         {/* Messages Container */}
-        <div 
+        <div
           ref={messagesContainerRef}
-          className="flex-1 messages-container p-4 space-y-3 bg-[#F5F7FA] relative"
+          className='flex-1 messages-container p-4 space-y-3 bg-[#F5F7FA] relative'
           style={{ overflowY: 'auto', overflowX: 'hidden' }}
         >
           {isLoadingMessages ? (
-            <div className="flex justify-center items-center h-full">
-              <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
+            <div className='flex justify-center items-center h-full'>
+              <Loader2 className='w-6 h-6 animate-spin text-purple-600' />
             </div>
           ) : localMessages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center px-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-purple-200 rounded-full flex items-center justify-center mb-4">
-                <MessageSquare className="w-10 h-10 text-purple-600" />
+            <div className='flex flex-col items-center justify-center h-full text-center px-4'>
+              <div className='w-20 h-20 bg-gradient-to-br from-purple-100 to-purple-200 rounded-full flex items-center justify-center mb-4'>
+                <MessageSquare className='w-10 h-10 text-purple-600' />
               </div>
-              <p className="text-base font-bold text-gray-900 mb-2">No messages yet</p>
-              <p className="text-sm text-gray-500">Start the conversation!</p>
+              <p className='text-base font-bold text-gray-900 mb-2'>No messages yet</p>
+              <p className='text-sm text-gray-500'>Start the conversation!</p>
             </div>
           ) : (
             <>
-              {localMessages.map(msg => (
+              {localMessages.map((msg) => (
                 <div key={`${msg.id}-${translationVersion}`}>
                   <MessageBubble
                     message={msg}
@@ -1039,7 +1271,10 @@ export default function ConversationView({
                     isHostInConversation={isHost}
                     offers={offers}
                     onAcceptOffer={(offerId) => {
-                      console.log('🎯 [ConversationView] MessageBubble triggered accept for:', offerId);
+                      console.log(
+                        '🎯 [ConversationView] MessageBubble triggered accept for:',
+                        offerId
+                      );
                       acceptOfferMutation.mutate(offerId);
                     }}
                     onDeclineOffer={(offerId) => declineOfferMutation.mutate(offerId)}
@@ -1050,11 +1285,9 @@ export default function ConversationView({
                   <MessageStatus message={msg} currentUserEmail={currentUser.email} />
                 </div>
               ))}
-              
+
               <AnimatePresence>
-                {otherUserTyping && (
-                  <TypingIndicator userName={otherUserName} />
-                )}
+                {otherUserTyping && <TypingIndicator userName={otherUserName} />}
               </AnimatePresence>
 
               <div ref={messagesEndRef} />
@@ -1067,79 +1300,86 @@ export default function ConversationView({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
               onClick={scrollToBottom}
-              className="fixed bottom-24 right-8 w-12 h-12 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg flex items-center justify-center z-10 transition-all"
+              className='fixed bottom-24 right-8 w-12 h-12 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg flex items-center justify-center z-10 transition-all'
             >
-              <ChevronDown className="w-5 h-5" />
+              <ChevronDown className='w-5 h-5' />
             </motion.button>
           )}
         </div>
 
         {/* Input Area */}
-        <div className="flex-shrink-0 p-4 bg-white border-t border-gray-200 shadow-lg">
+        <div className='flex-shrink-0 p-4 bg-white border-t border-gray-200 shadow-lg'>
           {!canSendMessages ? (
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-gray-100 border-2 border-gray-300 rounded-2xl p-4 text-center">
-                <div className="flex items-center justify-center gap-2 text-gray-600">
-                  <MessageSquare className="w-5 h-5" />
-                  <p className="font-semibold">
-                    {isBookingCancelled 
-                      ? (isRTL ? 'تم إلغاء الحجز - المحادثة مغلقة' : 'Booking Cancelled - Chat Closed')
-                      : (isRTL ? 'المحادثة مغلقة' : 'Conversation Closed')
-                    }
+            <div className='max-w-4xl mx-auto'>
+              <div className='bg-gray-100 border-2 border-gray-300 rounded-2xl p-4 text-center'>
+                <div className='flex items-center justify-center gap-2 text-gray-600'>
+                  <MessageSquare className='w-5 h-5' />
+                  <p className='font-semibold'>
+                    {isBookingCancelled
+                      ? isRTL
+                        ? 'تم إلغاء الحجز - المحادثة مغلقة'
+                        : 'Booking Cancelled - Chat Closed'
+                      : isRTL
+                        ? 'المحادثة مغلقة'
+                        : 'Conversation Closed'}
                   </p>
                 </div>
                 {isBookingCancelled && (
-                  <p className="text-sm text-gray-500 mt-1">
-                    {isRTL 
+                  <p className='text-sm text-gray-500 mt-1'>
+                    {isRTL
                       ? 'لا يمكن إرسال رسائل في محادثة حجز ملغي'
-                      : 'Cannot send messages in a cancelled booking'
-                    }
+                      : 'Cannot send messages in a cancelled booking'}
                   </p>
                 )}
               </div>
             </div>
           ) : (
-            <div className="flex items-end gap-3 max-w-4xl mx-auto">
+            <div className='flex items-end gap-3 max-w-4xl mx-auto'>
               <textarea
                 ref={textareaRef}
                 value={messageText}
                 onChange={handleTextChange}
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey && (messageText.trim() || attachments.length > 0) && !isSendingMessage) {
+                  if (
+                    e.key === 'Enter' &&
+                    !e.shiftKey &&
+                    (messageText.trim() || attachments.length > 0) &&
+                    !isSendingMessage
+                  ) {
                     e.preventDefault();
                     handleSendMessage();
                   }
                 }}
-                placeholder="Type in any language..."
+                placeholder='Type in any language...'
                 disabled={isSendingMessage}
                 rows={1}
-                className="flex-1 resize-none text-base px-4 py-3 border-2 border-gray-200 focus:border-purple-600 rounded-2xl transition-all focus:outline-none overflow-hidden shadow-sm bg-gray-50 focus:bg-white"
+                className='flex-1 resize-none text-base px-4 py-3 border-2 border-gray-200 focus:border-purple-600 rounded-2xl transition-all focus:outline-none overflow-hidden shadow-sm bg-gray-50 focus:bg-white'
                 style={{ minHeight: '48px', maxHeight: '120px' }}
               />
               <Button
                 onClick={handleSendMessage}
                 disabled={(!messageText.trim() && attachments.length === 0) || isSendingMessage}
-                size="icon"
-                className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 h-12 w-12 rounded-full flex-shrink-0 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                size='icon'
+                className='bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 h-12 w-12 rounded-full flex-shrink-0 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed'
               >
                 {isSendingMessage ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className='w-5 h-5 animate-spin' />
                 ) : (
-                  <Send className="w-5 h-5" />
+                  <Send className='w-5 h-5' />
                 )}
               </Button>
 
               <Button
-                variant="ghost"
-                size="icon"
+                variant='ghost'
+                size='icon'
                 onClick={() => setSoundEnabled(!soundEnabled)}
-                className="h-12 w-12 rounded-full"
-                aria-label={soundEnabled ? "Mute notifications" : "Unmute notifications"}
+                className='h-12 w-12 rounded-full'
+                aria-label={soundEnabled ? 'Mute notifications' : 'Unmute notifications'}
               >
                 {soundEnabled ? (
-                  <Volume2 className="w-5 h-5 text-gray-600" />
+                  <Volume2 className='w-5 h-5 text-gray-600' />
                 ) : (
-                  <VolumeX className="w-5 h-5 text-gray-400" />
+                  <VolumeX className='w-5 h-5 text-gray-400' />
                 )}
               </Button>
             </div>
@@ -1153,27 +1393,27 @@ export default function ConversationView({
           <DialogHeader>
             <DialogTitle>Send Price Offer</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className='space-y-4 py-4'>
             <div>
               <Label>Offer Type</Label>
-              <div className="flex gap-2 mt-2">
+              <div className='flex gap-2 mt-2'>
                 <Button
-                  type="button"
+                  type='button'
                   variant={offerType === 'service' ? 'default' : 'outline'}
                   onClick={() => setOfferType('service')}
                   disabled={!canSendServiceOffer}
-                  className="flex-1"
+                  className='flex-1'
                 >
                   Service Offer
                   {!canSendServiceOffer && myServiceOffer && (
-                    <span className="ml-1 text-xs">(Sent)</span>
+                    <span className='ml-1 text-xs'>(Sent)</span>
                   )}
                 </Button>
                 <Button
-                  type="button"
+                  type='button'
                   variant={offerType === 'rental' ? 'default' : 'outline'}
                   onClick={() => setOfferType('rental')}
-                  className="flex-1"
+                  className='flex-1'
                   disabled={!canSendRentalOffer}
                 >
                   Rental Offer
@@ -1182,21 +1422,25 @@ export default function ConversationView({
             </div>
 
             <div>
-              <Label>{offerType === 'rental' ? 'Rental Price ($)' : 'Your Service Price ($)'}</Label>
+              <Label>
+                {offerType === 'rental' ? 'Rental Price ($)' : 'Your Service Price ($)'}
+              </Label>
               <Input
-                type="number"
-                step="0.01"
+                type='number'
+                step='0.01'
                 value={offerPrice}
                 onChange={(e) => setOfferPrice(e.target.value)}
-                placeholder="Enter price"
+                placeholder='Enter price'
                 disabled={!canSendMessages}
               />
               {offerPrice && offerType === 'service' && (
-                <p className="text-sm text-gray-500 mt-1">
+                <p className='text-sm text-gray-500 mt-1'>
                   + {currentUser.host_type === 'office' ? '35%' : '35%'} Commission =
-                  <span className="font-bold text-purple-600">
-                    {' '}${(parseFloat(offerPrice) * 1.35).toFixed(2)}
-                  </span> total
+                  <span className='font-bold text-purple-600'>
+                    {' '}
+                    ${(parseFloat(offerPrice) * 1.35).toFixed(2)}
+                  </span>{' '}
+                  total
                 </p>
               )}
             </div>
@@ -1207,7 +1451,7 @@ export default function ConversationView({
                 <Input
                   value={offerInclusions}
                   onChange={(e) => setOfferInclusions(e.target.value)}
-                  placeholder="e.g., Airport pickup, full day tour..."
+                  placeholder='e.g., Airport pickup, full day tour...'
                   disabled={!canSendMessages}
                 />
               </div>
@@ -1217,25 +1461,25 @@ export default function ConversationView({
                 <Input
                   value={rentalDetails}
                   onChange={(e) => setRentalDetails(e.target.value)}
-                  placeholder="e.g., 2-bedroom apartment..."
+                  placeholder='e.g., 2-bedroom apartment...'
                   disabled={!canSendMessages}
                 />
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowOfferDialog(false)}>
+            <Button variant='outline' onClick={() => setShowOfferDialog(false)}>
               Cancel
             </Button>
             <Button
               onClick={() => sendOfferMutation.mutate()}
               disabled={!offerPrice || sendOfferMutation.isPending || !canSendMessages}
-              className="bg-purple-600 hover:bg-purple-700"
+              className='bg-purple-600 hover:bg-purple-700'
             >
               {sendOfferMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                <Loader2 className='w-4 h-4 animate-spin mr-2' />
               ) : (
-                <DollarSign className="w-4 h-4 mr-2" />
+                <DollarSign className='w-4 h-4 mr-2' />
               )}
               Send Offer
             </Button>

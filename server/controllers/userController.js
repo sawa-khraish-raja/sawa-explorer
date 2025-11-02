@@ -9,17 +9,17 @@ export const getAllUsers = async (req, res) => {
     const usersSnapshot = await db.collection(USERS_COLLECTION).get();
     const users = [];
 
-    usersSnapshot.forEach(doc => {
+    usersSnapshot.forEach((doc) => {
       users.push({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       });
     });
 
     res.status(200).json({
       success: true,
       count: users.length,
-      data: users
+      data: users,
     });
   } catch (error) {
     // Handle NOT_FOUND error (collection doesn't exist yet)
@@ -28,14 +28,14 @@ export const getAllUsers = async (req, res) => {
         success: true,
         count: 0,
         data: [],
-        message: 'No users found. Collection will be created when you add the first user.'
+        message: 'No users found. Collection will be created when you add the first user.',
       });
     }
 
     console.error('Error getting users:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch users'
+      error: 'Failed to fetch users',
     });
   }
 };
@@ -50,7 +50,7 @@ export const getUserById = async (req, res) => {
     if (!userDoc.exists) {
       return res.status(404).json({
         success: false,
-        error: 'User not found'
+        error: 'User not found',
       });
     }
 
@@ -58,14 +58,14 @@ export const getUserById = async (req, res) => {
       success: true,
       data: {
         id: userDoc.id,
-        ...userDoc.data()
-      }
+        ...userDoc.data(),
+      },
     });
   } catch (error) {
     console.error('Error getting user:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch user'
+      error: 'Failed to fetch user',
     });
   }
 };
@@ -86,14 +86,14 @@ export const createUser = async (req, res) => {
       success: true,
       data: {
         id: docRef.id,
-        ...userData
-      }
+        ...userData,
+      },
     });
   } catch (error) {
     console.error('Error creating user:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to create user'
+      error: 'Failed to create user',
     });
   }
 };
@@ -115,14 +115,14 @@ export const updateUser = async (req, res) => {
       message: 'User updated successfully',
       data: {
         id,
-        ...updates
-      }
+        ...updates,
+      },
     });
   } catch (error) {
     console.error('Error updating user:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to update user'
+      error: 'Failed to update user',
     });
   }
 };
@@ -136,13 +136,13 @@ export const deleteUser = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'User deleted successfully'
+      message: 'User deleted successfully',
     });
   } catch (error) {
     console.error('Error deleting user:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to delete user'
+      error: 'Failed to delete user',
     });
   }
 };

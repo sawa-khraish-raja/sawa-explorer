@@ -13,7 +13,7 @@ export function useMetricsTracking() {
     // Track page load time
     const loadTime = performance.now();
     metricsCollector.recordLatency(loadTime);
-    
+
     console.log(`[METRICS] Page loaded in ${Math.round(loadTime)}ms`);
   }, []);
 }
@@ -24,7 +24,7 @@ export function useMetricsTracking() {
 export function withMetrics(apiCall) {
   return async (...args) => {
     const start = Date.now();
-    
+
     try {
       const result = await apiCall(...args);
       const duration = Date.now() - start;

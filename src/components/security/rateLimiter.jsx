@@ -15,23 +15,23 @@ const REQUESTS = new Map();
 export function checkClientRateLimit(key, maxRequests = 60, windowMs = 60000) {
   const now = Date.now();
   let entry = REQUESTS.get(key);
-  
+
   // Clean old entries
   if (entry && now > entry.reset) {
     REQUESTS.delete(key);
     entry = null;
   }
-  
+
   if (!entry) {
     entry = {
       count: 0,
-      reset: now + windowMs
+      reset: now + windowMs,
     };
   }
-  
+
   entry.count++;
   REQUESTS.set(key, entry);
-  
+
   return entry.count <= maxRequests;
 }
 
@@ -48,6 +48,6 @@ export function clearRateLimit(key) {
 export function getRemainingRequests(key, maxRequests = 60) {
   const entry = REQUESTS.get(key);
   if (!entry) return maxRequests;
-  
+
   return Math.max(0, maxRequests - entry.count);
 }

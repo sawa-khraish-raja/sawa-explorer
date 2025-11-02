@@ -1,29 +1,57 @@
-
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format, addDays } from "date-fns";
-import { Sparkles, Loader2, Download, History, Utensils, Bike, Palette, Mountain, Users, Moon, Calendar, DollarSign, Plane, Hotel, MapPin, Clock } from "lucide-react";
-import { cn } from "@/lib/utils";
+import React, { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { format, addDays } from 'date-fns';
+import {
+  Sparkles,
+  Loader2,
+  Download,
+  History,
+  Utensils,
+  Bike,
+  Palette,
+  Mountain,
+  Users,
+  Moon,
+  Calendar,
+  DollarSign,
+  Plane,
+  Hotel,
+  MapPin,
+  Clock,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { isAIFeatureEnabled } from '../config/aiFlags';
 import SimpleDatePicker from '../booking/SimpleDatePicker';
-import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "../i18n/LanguageContext";
-import { showWarning, showError, showSuccess, showInfo, showPredefinedNotification } from '../utils/notifications';
+import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from '../i18n/LanguageContext';
+import {
+  showWarning,
+  showError,
+  showSuccess,
+  showInfo,
+  showPredefinedNotification,
+} from '../utils/notifications';
 
 const CATEGORIES = [
-  { name: 'History', icon: <History className="w-4 h-4" /> },
-  { name: 'Culture', icon: <Palette className="w-4 h-4" /> },
-  { name: 'Food', icon: <Utensils className="w-4 h-4" /> },
-  { name: 'Sport', icon: <Bike className="w-4 h-4" /> },
-  { name: 'Nature', icon: <Mountain className="w-4 h-4" /> },
-  { name: 'Family', icon: <Users className="w-4 h-4" /> },
-  { name: 'Nightlife', icon: <Moon className="w-4 h-4" /> }
+  { name: 'History', icon: <History className='w-4 h-4' /> },
+  { name: 'Culture', icon: <Palette className='w-4 h-4' /> },
+  { name: 'Food', icon: <Utensils className='w-4 h-4' /> },
+  { name: 'Sport', icon: <Bike className='w-4 h-4' /> },
+  { name: 'Nature', icon: <Mountain className='w-4 h-4' /> },
+  { name: 'Family', icon: <Users className='w-4 h-4' /> },
+  { name: 'Nightlife', icon: <Moon className='w-4 h-4' /> },
 ];
 
-// ✅ ENHANCED: Safe JSON Parser with Multiple Strategies
+//  ENHANCED: Safe JSON Parser with Multiple Strategies
 function safeParseJSON(jsonStr) {
   if (!jsonStr || typeof jsonStr !== 'string') {
     throw new Error('Invalid input for JSON parsing: not a string');
@@ -33,7 +61,7 @@ function safeParseJSON(jsonStr) {
   try {
     const parsed = JSON.parse(jsonStr);
     if (parsed && typeof parsed === 'object') {
-      console.log('✅ safeParseJSON: Strategy 1 (direct parse) succeeded.');
+      console.log(' safeParseJSON: Strategy 1 (direct parse) succeeded.');
       return parsed;
     }
   } catch (e) {
@@ -45,7 +73,7 @@ function safeParseJSON(jsonStr) {
     const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch && jsonMatch[1]) {
       let extracted = jsonMatch[1];
-      
+
       // Attempt to clean up and parse the extracted block
       extracted = extracted
         .trim()
@@ -55,30 +83,33 @@ function safeParseJSON(jsonStr) {
         .replace(/\\"/g, '"') // Fix escaped quotes
         .replace(/\/\/.*$/gm, '') // Remove single-line comments
         .replace(/\/\*[\s\S]*?\*\//g, ''); // Remove multi-line comments
-      
+
       const parsed = JSON.parse(extracted);
-      console.log('✅ safeParseJSON: Strategy 2 (markdown extraction) succeeded.');
+      console.log(' safeParseJSON: Strategy 2 (markdown extraction) succeeded.');
       return parsed;
     } else {
-        // If no markdown block, try to find a standalone JSON object
-        const standaloneJsonMatch = jsonStr.match(/\{[\s\S]*\}/);
-        if (standaloneJsonMatch && standaloneJsonMatch[0]) {
-            let extracted = standaloneJsonMatch[0];
-            extracted = extracted
-                .trim()
-                .replace(/,(\s*[}\]])/g, '$1') 
-                .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*?)(\s*:)/g, '$1"$2"$3')
-                .replace(/:\s*'([^']*)'/g, ':"$1"') 
-                .replace(/\\"/g, '"')
-                .replace(/\/\/.*$/gm, '')
-                .replace(/\/\*[\s\S]*?\*\//g, '');
-            const parsed = JSON.parse(extracted);
-            console.log('✅ safeParseJSON: Strategy 2.1 (standalone JSON extraction) succeeded.');
-            return parsed;
-        }
+      // If no markdown block, try to find a standalone JSON object
+      const standaloneJsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+      if (standaloneJsonMatch && standaloneJsonMatch[0]) {
+        let extracted = standaloneJsonMatch[0];
+        extracted = extracted
+          .trim()
+          .replace(/,(\s*[}\]])/g, '$1')
+          .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*?)(\s*:)/g, '$1"$2"$3')
+          .replace(/:\s*'([^']*)'/g, ':"$1"')
+          .replace(/\\"/g, '"')
+          .replace(/\/\/.*$/gm, '')
+          .replace(/\/\*[\s\S]*?\*\//g, '');
+        const parsed = JSON.parse(extracted);
+        console.log(' safeParseJSON: Strategy 2.1 (standalone JSON extraction) succeeded.');
+        return parsed;
+      }
     }
   } catch (e) {
-    console.warn('⚠️ safeParseJSON: Strategy 2 (markdown/standalone extraction) failed:', e.message);
+    console.warn(
+      '⚠️ safeParseJSON: Strategy 2 (markdown/standalone extraction) failed:',
+      e.message
+    );
   }
 
   // Strategy 3: Aggressive cleanup and extraction for common JSON errors
@@ -86,7 +117,7 @@ function safeParseJSON(jsonStr) {
     let fixed = jsonStr
       .trim()
       .replace(/```json/g, '') // Remove markdown hints
-      .replace(/```/g, '')     // Remove markdown fences
+      .replace(/```/g, '') // Remove markdown fences
       .replace(/^\s*[\r\n]/gm, '') // Remove empty lines at start/end of string
       .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas in objects/arrays
       .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*?)(\s*:)/g, '$1"$2"$3') // Quote unquoted keys
@@ -94,15 +125,15 @@ function safeParseJSON(jsonStr) {
       .replace(/\\"/g, '"') // Fix escaped double quotes within values
       .replace(/\/\/.*$/gm, '') // Remove single line comments
       .replace(/\/\*[\s\S]*?\*\//g, ''); // Remove multi-line comments
-    
+
     // Ensure the string starts with '{' and ends with '}'
     const jsonStart = fixed.indexOf('{');
     const jsonEnd = fixed.lastIndexOf('}') + 1;
-    
+
     if (jsonStart !== -1 && jsonEnd > jsonStart) {
       fixed = fixed.substring(jsonStart, jsonEnd);
       const parsed = JSON.parse(fixed);
-      console.log('✅ safeParseJSON: Strategy 3 (aggressive cleanup) succeeded.');
+      console.log(' safeParseJSON: Strategy 3 (aggressive cleanup) succeeded.');
       return parsed;
     }
   } catch (e) {
@@ -112,23 +143,23 @@ function safeParseJSON(jsonStr) {
   throw new Error('All JSON parsing strategies failed to yield a valid JSON object.');
 }
 
-// ✅ ENHANCED: Generate Fallback Plan
+//  ENHANCED: Generate Fallback Plan
 function generateFallbackPlan(destination, days, totalBudget, currency, allDates, dailyBreakdown) {
   console.log('⚠️ Generating fallback plan due to AI response issues.');
-  
+
   const budgetBreakdown = {
     accommodation: Math.round(totalBudget * 0.4),
     activities: Math.round(totalBudget * 0.25),
     transport: Math.round(totalBudget * 0.2),
     meals: Math.round(totalBudget * 0.1),
-    emergency: Math.round(totalBudget * 0.05)
+    emergency: Math.round(totalBudget * 0.05),
   };
 
   const genericDailyBreakdown = {
     accommodation: Math.round(dailyBreakdown.accommodation),
     activities: Math.round(dailyBreakdown.activities),
     transport: Math.round(dailyBreakdown.transport),
-    meals: Math.round(dailyBreakdown.meals)
+    meals: Math.round(dailyBreakdown.meals),
   };
 
   return {
@@ -137,149 +168,170 @@ function generateFallbackPlan(destination, days, totalBudget, currency, allDates
     total_budget: totalBudget,
     currency,
     budget_breakdown: budgetBreakdown,
-    daily_plan: allDates.map(d => ({
+    daily_plan: allDates.map((d) => ({
       day: d.day,
       date: d.date,
       theme: `Day ${d.day} in ${destination}: Explore & Discover`,
       weather: {
-        temp: "25°C",
-        condition: "Pleasant"
+        temp: '25°C',
+        condition: 'Pleasant',
       },
       activities: [
         {
-          time: "09:00",
-          name: "Morning Exploration",
-          description: "Discover local culture and landmarks in the city center.",
+          time: '09:00',
+          name: 'Morning Exploration',
+          description: 'Discover local culture and landmarks in the city center.',
           cost: Math.round(genericDailyBreakdown.activities * 0.4),
-          duration: "3h",
-          category: "Cultural",
-          location: "City Center",
-          gps: "0.0,0.0"
+          duration: '3h',
+          category: 'Cultural',
+          location: 'City Center',
+          gps: '0.0,0.0',
         },
         {
-          time: "14:00",
-          name: "Afternoon Sightseeing",
-          description: "Visit a popular attraction or museum.",
+          time: '14:00',
+          name: 'Afternoon Sightseeing',
+          description: 'Visit a popular attraction or museum.',
           cost: Math.round(genericDailyBreakdown.activities * 0.4),
-          duration: "3h",
-          category: "Sightseeing",
-          location: "Main Tourist Area",
-          gps: "0.0,0.0"
+          duration: '3h',
+          category: 'Sightseeing',
+          location: 'Main Tourist Area',
+          gps: '0.0,0.0',
         },
         {
-          time: "19:00",
-          name: "Evening Relaxation",
-          description: "Enjoy a casual evening stroll or local entertainment.",
+          time: '19:00',
+          name: 'Evening Relaxation',
+          description: 'Enjoy a casual evening stroll or local entertainment.',
           cost: Math.round(genericDailyBreakdown.activities * 0.2),
-          duration: "2h",
-          category: "Leisure",
-          location: "Leisure District",
-          gps: "0.0,0.0"
-        }
+          duration: '2h',
+          category: 'Leisure',
+          location: 'Leisure District',
+          gps: '0.0,0.0',
+        },
       ],
       meals: [
-        { type: "Breakfast", suggestion: "Local Café for traditional breakfast", cost: Math.round(genericDailyBreakdown.meals * 0.25), time: "07:30", location: "Hotel Area" },
-        { type: "Lunch", suggestion: "Street Food or local eatery", cost: Math.round(genericDailyBreakdown.meals * 0.35), time: "12:30", location: "Downtown" },
-        { type: "Dinner", suggestion: "Restaurant with local cuisine", cost: Math.round(genericDailyBreakdown.meals * 0.4), time: "19:00", location: "City Center" }
+        {
+          type: 'Breakfast',
+          suggestion: 'Local Café for traditional breakfast',
+          cost: Math.round(genericDailyBreakdown.meals * 0.25),
+          time: '07:30',
+          location: 'Hotel Area',
+        },
+        {
+          type: 'Lunch',
+          suggestion: 'Street Food or local eatery',
+          cost: Math.round(genericDailyBreakdown.meals * 0.35),
+          time: '12:30',
+          location: 'Downtown',
+        },
+        {
+          type: 'Dinner',
+          suggestion: 'Restaurant with local cuisine',
+          cost: Math.round(genericDailyBreakdown.meals * 0.4),
+          time: '19:00',
+          location: 'City Center',
+        },
       ],
       transport: {
-        type: "Public Transport",
+        type: 'Public Transport',
         cost: genericDailyBreakdown.transport,
-        details: "Day pass for metro/bus system",
-        how_to_get_around: "Use the efficient public transport system for convenience."
+        details: 'Day pass for metro/bus system',
+        how_to_get_around: 'Use the efficient public transport system for convenience.',
       },
       accommodation: {
-        type: "Hotel",
+        type: 'Hotel',
         name: `${destination} City Hotel`,
         cost_per_night: genericDailyBreakdown.accommodation,
-        location: "City Center",
-        rating: "3-star"
+        location: 'City Center',
+        rating: '3-star',
       },
       daily_total: Math.round(
-        (genericDailyBreakdown.activities) +
-        (genericDailyBreakdown.meals) +
-        genericDailyBreakdown.transport +
-        genericDailyBreakdown.accommodation
-      )
+        genericDailyBreakdown.activities +
+          genericDailyBreakdown.meals +
+          genericDailyBreakdown.transport +
+          genericDailyBreakdown.accommodation
+      ),
     })),
     travel_essentials: {
       weather_overview: `Expect pleasant weather with average temperatures around 25°C. Pack light, breathable clothes.`,
-      best_time_to_visit: "Spring and autumn usually offer the most comfortable weather conditions.",
-      visa_info: "Please check visa requirements for your nationality before traveling.",
+      best_time_to_visit:
+        'Spring and autumn usually offer the most comfortable weather conditions.',
+      visa_info: 'Please check visa requirements for your nationality before traveling.',
       currency_tips: `Local currency is ${currency}. It's advisable to exchange at official banks or use ATMs.`,
       emergency_contacts: {
-        police: "Emergency Police: 112",
-        hospital: "Medical Emergency: 115",
-        embassy: "Contact your country's embassy for assistance."
-      }
+        police: 'Emergency Police: 112',
+        hospital: 'Medical Emergency: 115',
+        embassy: "Contact your country's embassy for assistance.",
+      },
     },
     local_guide: {
       customs: [
-        "Be respectful of local traditions and customs.",
-        "Dress modestly when visiting religious sites.",
-        "Learn a few basic local phrases to enhance your experience.",
-        "Punctuality is appreciated for scheduled events.",
-        "Bargaining may be common in markets, engage politely."
+        'Be respectful of local traditions and customs.',
+        'Dress modestly when visiting religious sites.',
+        'Learn a few basic local phrases to enhance your experience.',
+        'Punctuality is appreciated for scheduled events.',
+        'Bargaining may be common in markets, engage politely.',
       ],
       phrases: [
-        { english: "Hello", local: "Marhaba", pronunciation: "mahr-hah-bah" },
-        { english: "Thank you", local: "Shukran", pronunciation: "shook-ran" },
-        { english: "Please", local: "Min fadlak", pronunciation: "min fad-lak" },
-        { english: "Yes", local: "Na'am", pronunciation: "nah-ahm" },
-        { english: "No", local: "Laa", pronunciation: "lah" }
+        { english: 'Hello', local: 'Marhaba', pronunciation: 'mahr-hah-bah' },
+        { english: 'Thank you', local: 'Shukran', pronunciation: 'shook-ran' },
+        {
+          english: 'Please',
+          local: 'Min fadlak',
+          pronunciation: 'min fad-lak',
+        },
+        { english: 'Yes', local: "Na'am", pronunciation: 'nah-ahm' },
+        { english: 'No', local: 'Laa', pronunciation: 'lah' },
       ],
       dos_and_donts: {
         dos: [
-          "Do try local cuisine and street food.",
-          "Do engage with locals respectfully.",
-          "Do carry a reusable water bottle."
+          'Do try local cuisine and street food.',
+          'Do engage with locals respectfully.',
+          'Do carry a reusable water bottle.',
         ],
         donts: [
           "Don't litter in public places.",
           "Don't be excessively loud in quiet areas.",
-          "Don't disregard local customs and dress codes."
-        ]
+          "Don't disregard local customs and dress codes.",
+        ],
       },
-      sim_wifi_info: "Local SIM cards are generally available at the airport or telecom stores. Wi-Fi is widely available in hotels and cafes."
+      sim_wifi_info:
+        'Local SIM cards are generally available at the airport or telecom stores. Wi-Fi is widely available in hotels and cafes.',
     },
     safety: {
       warnings: [
-        "Be aware of your surroundings, especially in crowded areas.",
-        "Keep valuables secure and out of sight.",
-        "Avoid walking alone late at night in unfamiliar neighborhoods."
+        'Be aware of your surroundings, especially in crowded areas.',
+        'Keep valuables secure and out of sight.',
+        'Avoid walking alone late at night in unfamiliar neighborhoods.',
       ],
       scams: [
         "Be cautious of unsolicited 'guides' near tourist attractions.",
-        "Always agree on taxi fares before starting your journey to avoid surprises."
+        'Always agree on taxi fares before starting your journey to avoid surprises.',
       ],
-      safe_areas: [
-        "City Center",
-        "Major Tourist Districts",
-        "Main Shopping Areas"
-      ],
-      healthcare_info: "Pharmacies are commonly found. For serious medical issues, public and private hospitals are accessible."
+      safe_areas: ['City Center', 'Major Tourist Districts', 'Main Shopping Areas'],
+      healthcare_info:
+        'Pharmacies are commonly found. For serious medical issues, public and private hospitals are accessible.',
     },
     packing_list: [
-      "Lightweight clothing",
-      "Comfortable walking shoes",
-      "Sunscreen and a hat",
-      "Universal travel adapter",
-      "Basic first aid kit",
-      "Reusable water bottle",
-      "Small day backpack",
-      "Camera",
-      "Local currency (some cash)",
-      "Copies of important documents"
+      'Lightweight clothing',
+      'Comfortable walking shoes',
+      'Sunscreen and a hat',
+      'Universal travel adapter',
+      'Basic first aid kit',
+      'Reusable water bottle',
+      'Small day backpack',
+      'Camera',
+      'Local currency (some cash)',
+      'Copies of important documents',
     ],
     sawa_benefits: `SAWA offers authentic local experiences and adventures in ${destination}. Connect with verified local hosts for unique insights and personalized tours. Book through SAWA for a memorable and immersive journey!`,
     total_estimate: totalBudget,
     tips: [
-      "Book your accommodation and major attractions in advance for better deals.",
-      "Utilize public transportation to save on travel costs.",
-      "Immerse yourself in the local food scene, especially street food.",
-      "Download offline maps of the city before you arrive.",
-      "Learn a few basic phrases in the local language; it goes a long way."
-    ]
+      'Book your accommodation and major attractions in advance for better deals.',
+      'Utilize public transportation to save on travel costs.',
+      'Immerse yourself in the local food scene, especially street food.',
+      'Download offline maps of the city before you arrive.',
+      'Learn a few basic phrases in the local language; it goes a long way.',
+    ],
   };
 }
 
@@ -287,16 +339,16 @@ export default function AITripPlanner() {
   const { t, language } = useTranslation();
 
   const [user, setUser] = useState(null);
-  const [destination, setDestination] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [budget, setBudget] = useState("");
-  const [currency, setCurrency] = useState("USD");
+  const [destination, setDestination] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [budget, setBudget] = useState('');
+  const [currency, setCurrency] = useState('USD');
   const [loading, setLoading] = useState(false);
   const [tripPlan, setTripPlan] = useState(null);
   const [selectedCategories, setSelectedCategories] = useState([]);
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split('T')[0];
   const tripPlannerEnabled = isAIFeatureEnabled('AI_TRIP_PLANNER');
 
   useEffect(() => {
@@ -316,16 +368,14 @@ export default function AITripPlanner() {
     queryFn: async () => {
       if (!destination) return [];
       const events = await base44.entities.Event.filter({ city: destination });
-      return events.filter(e => new Date(e.start_datetime) >= new Date());
+      return events.filter((e) => new Date(e.start_datetime) >= new Date());
     },
     enabled: !!destination,
   });
 
   const toggleCategory = (categoryName) => {
     setSelectedCategories((prev) =>
-      prev.includes(categoryName) ?
-        prev.filter((c) => c !== categoryName) :
-        [...prev, categoryName]
+      prev.includes(categoryName) ? prev.filter((c) => c !== categoryName) : [...prev, categoryName]
     );
   };
 
@@ -356,41 +406,42 @@ export default function AITripPlanner() {
 
     setLoading(true);
     setTripPlan(null);
-    
+
     try {
       const days = calculateDays();
       const totalBudget = parseFloat(budget);
-      
+
       const dailyBudget = totalBudget / days;
       const budgetBreakdown = {
         accommodation: Math.round(totalBudget * 0.4),
         activities: Math.round(totalBudget * 0.25),
         transport: Math.round(totalBudget * 0.2),
         meals: Math.round(totalBudget * 0.1),
-        emergency: Math.round(totalBudget * 0.05)
+        emergency: Math.round(totalBudget * 0.05),
       };
-      
+
       const dailyBreakdown = {
         accommodation: Math.round(dailyBudget * 0.4),
         activities: Math.round(dailyBudget * 0.25),
         transport: Math.round(dailyBudget * 0.2),
-        meals: Math.round(dailyBudget * 0.1)
+        meals: Math.round(dailyBudget * 0.1),
       };
 
-      const interestsPrompt = selectedCategories.length > 0 ?
-        `Focus on: ${selectedCategories.join(', ')}` :
-        'Balanced activities';
+      const interestsPrompt =
+        selectedCategories.length > 0
+          ? `Focus on: ${selectedCategories.join(', ')}`
+          : 'Balanced activities';
 
       const allDates = Array.from({ length: days }, (_, i) => {
         const date = addDays(new Date(startDate), i);
         return {
           day: i + 1,
           date: format(date, 'yyyy-MM-dd'),
-          dayName: format(date, 'EEEE')
+          dayName: format(date, 'EEEE'),
         };
       });
 
-      // ✅ SIMPLIFIED PROMPT - More reliable JSON output
+      //  SIMPLIFIED PROMPT - More reliable JSON output
       const response = await base44.integrations.Core.InvokeLLM({
         prompt: `Create a detailed ${days}-day trip plan for ${destination}.
 Budget: ${budget} ${currency}. ${interestsPrompt}.
@@ -429,7 +480,9 @@ Structure:
         }
       ],
       "meals": [
-        {"type": "Breakfast", "suggestion": "Local Cafe", "cost": ${Math.round(dailyBreakdown.meals * 0.25)}, "time": "07:30", "location": "Hotel Area"}
+        {"type": "Breakfast", "suggestion": "Local Cafe", "cost": ${Math.round(
+          dailyBreakdown.meals * 0.25
+        )}, "time": "07:30", "location": "Hotel Area"}
       ],
       "transport": {
         "type": "Metro",
@@ -509,68 +562,89 @@ Structure:
   "tips":["Book accommodation in advance","Try local street food","Use public transport"]
 }`,
         response_json_schema: {
-          type: "object",
+          type: 'object',
           properties: {
-            destination: { type: "string" },
-            days: { type: "number" },
-            total_budget: { type: "number" },
-            currency: { type: "string" },
-            budget_breakdown: { type: "object" },
-            daily_plan: { type: "array" },
-            travel_essentials: { type: "object" },
-            local_guide: { type: "object" },
-            safety: { type: "object" },
-            packing_list: { type: "array" },
-            sawa_benefits: { type: "string" },
-            total_estimate: { type: "number" },
-            tips: { type: "array" }
+            destination: { type: 'string' },
+            days: { type: 'number' },
+            total_budget: { type: 'number' },
+            currency: { type: 'string' },
+            budget_breakdown: { type: 'object' },
+            daily_plan: { type: 'array' },
+            travel_essentials: { type: 'object' },
+            local_guide: { type: 'object' },
+            safety: { type: 'object' },
+            packing_list: { type: 'array' },
+            sawa_benefits: { type: 'string' },
+            total_estimate: { type: 'number' },
+            tips: { type: 'array' },
           },
-          required: ["destination", "days", "total_budget", "currency", "daily_plan"]
+          required: ['destination', 'days', 'total_budget', 'currency', 'daily_plan'],
         },
-        add_context_from_internet: true
+        add_context_from_internet: true,
       });
 
       let parsedPlan;
 
-      // ✅ ENHANCED: Try multiple parsing strategies
+      //  ENHANCED: Try multiple parsing strategies
       try {
         if (typeof response === 'object' && response !== null && response.destination) {
           // AI returned a direct JSON object (ideal case with response_json_schema)
           parsedPlan = response;
-          console.log('✅ AI returned valid object directly.');
+          console.log(' AI returned valid object directly.');
         } else {
           // AI returned string - try to parse it using safeParseJSON
-          parsedPlan = safeParseJSON(typeof response === 'string' ? response : JSON.stringify(response));
-          console.log('✅ Successfully parsed AI response string.');
+          parsedPlan = safeParseJSON(
+            typeof response === 'string' ? response : JSON.stringify(response)
+          );
+          console.log(' Successfully parsed AI response string.');
         }
       } catch (parseError) {
-        console.error("❌ All parsing strategies failed for AI response:", parseError.message);
-        console.log("📄 AI Response (first 2000 chars):", (typeof response === 'string' ? response : JSON.stringify(response)).substring(0, 2000));
-        
+        console.error(' All parsing strategies failed for AI response:', parseError.message);
+        console.log(
+          '📄 AI Response (first 2000 chars):',
+          (typeof response === 'string' ? response : JSON.stringify(response)).substring(0, 2000)
+        );
+
         // Use fallback plan
         showWarning(
           language === 'ar' ? 'استخدام خطة احتياطية' : 'Using Backup Plan',
-          language === 'ar' ? 'تم إنشاء خطة أساسية بنجاح' : 'Generated basic plan successfully due to parsing issues.'
+          language === 'ar'
+            ? 'تم إنشاء خطة أساسية بنجاح'
+            : 'Generated basic plan successfully due to parsing issues.'
         );
-        
-        parsedPlan = generateFallbackPlan(destination, days, totalBudget, currency, allDates, dailyBreakdown);
+
+        parsedPlan = generateFallbackPlan(
+          destination,
+          days,
+          totalBudget,
+          currency,
+          allDates,
+          dailyBreakdown
+        );
       }
 
-      // ✅ Validate critical plan structure elements
-      if (!parsedPlan || !parsedPlan.destination || !parsedPlan.daily_plan || !Array.isArray(parsedPlan.daily_plan)) {
-        throw new Error("Invalid plan structure or missing key elements after parsing/fallback.");
+      //  Validate critical plan structure elements
+      if (
+        !parsedPlan ||
+        !parsedPlan.destination ||
+        !parsedPlan.daily_plan ||
+        !Array.isArray(parsedPlan.daily_plan)
+      ) {
+        throw new Error('Invalid plan structure or missing key elements after parsing/fallback.');
       }
 
-      // ✅ Fill missing days if needed
+      //  Fill missing days if needed
       if (parsedPlan.daily_plan.length < days) {
-        console.warn(`⚠️ Only ${parsedPlan.daily_plan.length} of ${days} days generated. Attempting to fill missing days...`);
-        
+        console.warn(
+          `⚠️ Only ${parsedPlan.daily_plan.length} of ${days} days generated. Attempting to fill missing days...`
+        );
+
         while (parsedPlan.daily_plan.length < days) {
           const lastDayIndex = parsedPlan.daily_plan.length - 1;
           const prevDay = parsedPlan.daily_plan[lastDayIndex];
           const nextDayNum = parsedPlan.daily_plan.length + 1;
           const nextDateInfo = allDates[nextDayNum - 1];
-          
+
           if (!nextDateInfo) {
             console.warn(`Could not find date info for day ${nextDayNum}. Stopping day fill.`);
             break;
@@ -581,22 +655,26 @@ Structure:
             day: nextDayNum,
             date: nextDateInfo.date,
             theme: `Day ${nextDayNum} in ${destination}`,
-            activities: prevDay.activities ? prevDay.activities.map(a => ({...a})) : [],
-            meals: prevDay.meals ? prevDay.meals.map(m => ({...m})) : [],
-            transport: prevDay.transport ? {...prevDay.transport} : {},
-            accommodation: prevDay.accommodation ? {...prevDay.accommodation} : {}
+            activities: prevDay.activities ? prevDay.activities.map((a) => ({ ...a })) : [],
+            meals: prevDay.meals ? prevDay.meals.map((m) => ({ ...m })) : [],
+            transport: prevDay.transport ? { ...prevDay.transport } : {},
+            accommodation: prevDay.accommodation ? { ...prevDay.accommodation } : {},
           };
           parsedPlan.daily_plan.push(newDay);
         }
-        
+
         if (parsedPlan.daily_plan.length === days) {
           showInfo(
-            language === 'ar' ? `تم ملء الأيام المفقودة حتى ${parsedPlan.daily_plan.length} يومًا.` : `Filled to ${parsedPlan.daily_plan.length} days.`,
+            language === 'ar'
+              ? `تم ملء الأيام المفقودة حتى ${parsedPlan.daily_plan.length} يومًا.`
+              : `Filled to ${parsedPlan.daily_plan.length} days.`,
             { id: 'plan_fill_success', duration: 3000 }
           );
         } else {
           showWarning(
-            language === 'ar' ? `تم إنشاء ${parsedPlan.daily_plan.length} أيام من أصل ${days} أيام.` : `Generated ${parsedPlan.daily_plan.length} days out of ${days}.`,
+            language === 'ar'
+              ? `تم إنشاء ${parsedPlan.daily_plan.length} أيام من أصل ${days} أيام.`
+              : `Generated ${parsedPlan.daily_plan.length} days out of ${days}.`,
             { id: 'plan_fill_partial', duration: 4000 }
           );
         }
@@ -604,7 +682,9 @@ Structure:
         parsedPlan.daily_plan = parsedPlan.daily_plan.slice(0, days);
         console.warn(`⚠️ AI generated too many days. Trimmed to ${days}.`);
         showInfo(
-          language === 'ar' ? `تم تقليم الأيام الزائدة إلى ${days} يومًا.` : `Trimmed extra days to ${days}.`,
+          language === 'ar'
+            ? `تم تقليم الأيام الزائدة إلى ${days} يومًا.`
+            : `Trimmed extra days to ${days}.`,
           { id: 'plan_trim_extra', duration: 3000 }
         );
       }
@@ -613,38 +693,51 @@ Structure:
         if (!day.date && allDates[index]) day.date = allDates[index].date;
         if (!day.day) day.day = index + 1;
 
-        const activitiesCost = (day.activities || []).reduce((sum, a) => sum + (parseFloat(a.cost) || 0), 0);
+        const activitiesCost = (day.activities || []).reduce(
+          (sum, a) => sum + (parseFloat(a.cost) || 0),
+          0
+        );
         const mealsCost = (day.meals || []).reduce((sum, m) => sum + (parseFloat(m.cost) || 0), 0);
         const transportCost = parseFloat(day.transport?.cost) || 0;
         const accommodationCost = parseFloat(day.accommodation?.cost_per_night) || 0;
-        
-        day.daily_total = Math.round(activitiesCost + mealsCost + transportCost + accommodationCost);
-        
+
+        day.daily_total = Math.round(
+          activitiesCost + mealsCost + transportCost + accommodationCost
+        );
+
         return day;
       });
 
       const actualTotal = parsedPlan.daily_plan.reduce((sum, day) => sum + day.daily_total, 0);
       parsedPlan.total_estimate = actualTotal;
 
-      console.log(`✅ Generated ${parsedPlan.daily_plan.length}-day plan successfully`);
+      console.log(` Generated ${parsedPlan.daily_plan.length}-day plan successfully`);
       console.log(`💰 Total: ${currency} ${actualTotal} (Target: ${currency} ${totalBudget})`);
 
       setTripPlan(parsedPlan);
       showSuccess(
-        language === 'ar' ? `🎉 خطة رحلتك لـ ${parsedPlan.daily_plan.length} أيام جاهزة!` : `🎉 Your ${parsedPlan.daily_plan.length}-day trip plan is ready!`,
+        language === 'ar'
+          ? `🎉 خطة رحلتك لـ ${parsedPlan.daily_plan.length} أيام جاهزة!`
+          : `🎉 Your ${parsedPlan.daily_plan.length}-day trip plan is ready!`,
         { id: 'plan_success', duration: 4000 }
       );
-      
     } catch (error) {
-      console.error("❌ AI Planning Error:", error);
-      
-      let errorMessage = language === 'ar' ? 'فشل في إنشاء خطة الرحلة' : 'Failed to generate trip plan';
-      if (error.message.includes("JSON") || error.message.includes("parsing")) {
-        errorMessage = language === 'ar' ? 'خطأ في تنسيق البيانات المستلمة. يرجى المحاولة مرة أخرى.' : 'Data format error received. Please try again.';
-      } else if (error.message.includes("network")) {
-        errorMessage = language === 'ar' ? 'خطأ في الشبكة. يرجى التحقق من اتصالك.' : 'Network error. Check your connection.';
+      console.error(' AI Planning Error:', error);
+
+      let errorMessage =
+        language === 'ar' ? 'فشل في إنشاء خطة الرحلة' : 'Failed to generate trip plan';
+      if (error.message.includes('JSON') || error.message.includes('parsing')) {
+        errorMessage =
+          language === 'ar'
+            ? 'خطأ في تنسيق البيانات المستلمة. يرجى المحاولة مرة أخرى.'
+            : 'Data format error received. Please try again.';
+      } else if (error.message.includes('network')) {
+        errorMessage =
+          language === 'ar'
+            ? 'خطأ في الشبكة. يرجى التحقق من اتصالك.'
+            : 'Network error. Check your connection.';
       }
-      
+
       showError(errorMessage, { id: 'plan_error' });
     }
     setLoading(false);
@@ -652,138 +745,135 @@ Structure:
 
   if (!tripPlannerEnabled) {
     return (
-      <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 border-2 border-gray-200">
-        <p className="text-center text-gray-600">AI Trip Planner is currently unavailable</p>
+      <div className='bg-white rounded-2xl shadow-xl p-6 sm:p-8 border-2 border-gray-200'>
+        <p className='text-center text-gray-600'>AI Trip Planner is currently unavailable</p>
       </div>
     );
   }
 
   return (
-    <div id="ai-trip-plan-container" className="bg-white rounded-2xl shadow-xl p-5 sm:p-6 lg:p-8 border-2 border-[#CCCCFF]">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-br from-[#330066] to-[#9933CC] rounded-xl flex items-center justify-center shadow-lg overflow-hidden flex-shrink-0">
-          <img 
-            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68e8bf2aebfc9660599d11a9/e62457e5e_WhatsAppImage2025-10-16at235513_248ceca9.jpg"
-            alt="SAWA"
-            className="w-full h-full object-cover"
+    <div
+      id='ai-trip-plan-container'
+      className='bg-white rounded-2xl shadow-xl p-5 sm:p-6 lg:p-8 border-2 border-[#CCCCFF]'
+    >
+      <div className='flex items-center gap-3 mb-6'>
+        <div className='w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-br from-[#330066] to-[#9933CC] rounded-xl flex items-center justify-center shadow-lg overflow-hidden flex-shrink-0'>
+          <img
+            src='https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68e8bf2aebfc9660599d11a9/e62457e5e_WhatsAppImage2025-10-16at235513_248ceca9.jpg'
+            alt='SAWA'
+            className='w-full h-full object-cover'
           />
         </div>
         <div>
-          <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
-            AI Trip Planner
-          </h3>
-          <p className="text-xs sm:text-sm text-gray-600">
+          <h3 className='text-xl sm:text-2xl font-bold text-gray-900'>AI Trip Planner</h3>
+          <p className='text-xs sm:text-sm text-gray-600'>
             Get your personalized itinerary in seconds
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-6'>
         <Select value={destination} onValueChange={setDestination}>
-          <SelectTrigger className="h-12">
-            <SelectValue placeholder="Select destination" />
+          <SelectTrigger className='h-12'>
+            <SelectValue placeholder='Select destination' />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Damascus">Damascus</SelectItem>
-            <SelectItem value="Amman">Amman</SelectItem>
-            <SelectItem value="Istanbul">Istanbul</SelectItem>
-            <SelectItem value="Cairo">Cairo</SelectItem>
+            <SelectItem value='Damascus'>Damascus</SelectItem>
+            <SelectItem value='Amman'>Amman</SelectItem>
+            <SelectItem value='Istanbul'>Istanbul</SelectItem>
+            <SelectItem value='Cairo'>Cairo</SelectItem>
           </SelectContent>
         </Select>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className='grid grid-cols-2 gap-2'>
           <SimpleDatePicker
-            label=""
+            label=''
             value={startDate}
             onChange={setStartDate}
             minDate={today}
-            placeholder="Start date"
+            placeholder='Start date'
             required
           />
           <SimpleDatePicker
-            label=""
+            label=''
             value={endDate}
             onChange={setEndDate}
             minDate={startDate || today}
-            placeholder="End date"
+            placeholder='End date'
             required
           />
         </div>
 
-        <div className="flex gap-2">
-          <div className="flex-1">
+        <div className='flex gap-2'>
+          <div className='flex-1'>
             <Input
-              type="number"
-              placeholder="Enter budget"
+              type='number'
+              placeholder='Enter budget'
               value={budget}
               onChange={(e) => setBudget(e.target.value)}
-              className="h-12"
-              min="1"
+              className='h-12'
+              min='1'
               required
             />
           </div>
           <Select value={currency} onValueChange={setCurrency}>
-            <SelectTrigger className="w-24 h-12">
+            <SelectTrigger className='w-24 h-12'>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="USD">USD $</SelectItem>
-              <SelectItem value="EUR">EUR €</SelectItem>
+              <SelectItem value='USD'>USD $</SelectItem>
+              <SelectItem value='EUR'>EUR €</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
       {user && (
-        <div className="mb-6">
-          <p className="text-sm font-medium text-center text-gray-700 mb-3">
-            What interests you?
-          </p>
-          <div className="flex flex-wrap justify-center gap-3">
+        <div className='mb-6'>
+          <p className='text-sm font-medium text-center text-gray-700 mb-3'>What interests you?</p>
+          <div className='flex flex-wrap justify-center gap-3'>
             {CATEGORIES.map((category) => (
               <Button
                 key={category.name}
-                variant={selectedCategories.includes(category.name) ? "default" : "outline"}
+                variant={selectedCategories.includes(category.name) ? 'default' : 'outline'}
                 onClick={() => toggleCategory(category.name)}
                 className={cn(
-                  "rounded-full transition-all border-2",
-                  selectedCategories.includes(category.name) 
-                    ? "bg-gradient-to-r from-[#330066] to-[#9933CC] text-white border-[#9933CC]" 
-                    : "border-[#CCCCFF] hover:border-[#9933CC] hover:bg-[#E6E6FF]"
+                  'rounded-full transition-all border-2',
+                  selectedCategories.includes(category.name)
+                    ? 'bg-gradient-to-r from-[#330066] to-[#9933CC] text-white border-[#9933CC]'
+                    : 'border-[#CCCCFF] hover:border-[#9933CC] hover:bg-[#E6E6FF]'
                 )}
               >
                 {category.icon}
-                <span className="ml-2">{category.name}</span>
+                <span className='ml-2'>{category.name}</span>
               </Button>
             ))}
           </div>
         </div>
       )}
 
-      <Button 
-        onClick={handlePlan} 
-        disabled={loading} 
-        className="w-full h-12 bg-gradient-to-r from-[#330066] to-[#9933CC] hover:from-[#47008F] hover:to-[#AD5CD6] text-white font-semibold shadow-lg"
+      <Button
+        onClick={handlePlan}
+        disabled={loading}
+        className='w-full h-12 bg-gradient-to-r from-[#330066] to-[#9933CC] hover:from-[#47008F] hover:to-[#AD5CD6] text-white font-semibold shadow-lg'
       >
-        {loading ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Sparkles className="w-5 h-5 mr-2" />}
+        {loading ? (
+          <Loader2 className='w-5 h-5 mr-2 animate-spin' />
+        ) : (
+          <Sparkles className='w-5 h-5 mr-2' />
+        )}
         {loading ? 'Generating plan...' : 'Generate Trip Plan'}
       </Button>
 
       {loading && (
-        <div className="mt-6 flex flex-col items-center py-8">
-          <Loader2 className="w-12 h-12 animate-spin text-[#9933CC] mb-4" />
-          <p className="text-gray-600 text-center">
-            Creating your personalized trip plan...
-          </p>
-          <p className="text-sm text-gray-500 mt-2">
-            This may take a few seconds
-          </p>
+        <div className='mt-6 flex flex-col items-center py-8'>
+          <Loader2 className='w-12 h-12 animate-spin text-[#9933CC] mb-4' />
+          <p className='text-gray-600 text-center'>Creating your personalized trip plan...</p>
+          <p className='text-sm text-gray-500 mt-2'>This may take a few seconds</p>
         </div>
       )}
 
-      {tripPlan && !loading && (
-        <TripPlanDisplay plan={tripPlan} language={language} />
-      )}
+      {tripPlan && !loading && <TripPlanDisplay plan={tripPlan} language={language} />}
     </div>
   );
 }
@@ -792,51 +882,81 @@ function TripPlanDisplay({ plan, language }) {
   if (!plan || !plan.daily_plan) return null;
 
   return (
-    <div id="trip-plan-display" className="mt-8 space-y-6">
+    <div id='trip-plan-display' className='mt-8 space-y-6'>
       {/* Budget Breakdown */}
-      <div className="bg-gradient-to-br from-[#F5F3FF] to-white p-6 rounded-2xl border-2 border-[#E6CCFF]">
-        <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <DollarSign className="w-6 h-6 text-[#9933CC]" />
+      <div className='bg-gradient-to-br from-[#F5F3FF] to-white p-6 rounded-2xl border-2 border-[#E6CCFF]'>
+        <h3 className='text-xl font-bold text-gray-900 mb-4 flex items-center gap-2'>
+          <DollarSign className='w-6 h-6 text-[#9933CC]' />
           Budget Breakdown
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <BudgetItem icon={<Hotel />} label={'Accommodation'} amount={plan.budget_breakdown.accommodation} currency={plan.currency} />
-          <BudgetItem icon={<MapPin />} label={'Activities'} amount={plan.budget_breakdown.activities} currency={plan.currency} />
-          <BudgetItem icon={<Plane />} label={'Transport'} amount={plan.budget_breakdown.transport} currency={plan.currency} />
-          <BudgetItem icon={<Utensils />} label={'Meals'} amount={plan.budget_breakdown.meals} currency={plan.currency} />
-          <BudgetItem icon={<Sparkles />} label={'Emergency'} amount={plan.budget_breakdown.emergency} currency={plan.currency} />
+        <div className='grid grid-cols-2 md:grid-cols-5 gap-4'>
+          <BudgetItem
+            icon={<Hotel />}
+            label={'Accommodation'}
+            amount={plan.budget_breakdown.accommodation}
+            currency={plan.currency}
+          />
+          <BudgetItem
+            icon={<MapPin />}
+            label={'Activities'}
+            amount={plan.budget_breakdown.activities}
+            currency={plan.currency}
+          />
+          <BudgetItem
+            icon={<Plane />}
+            label={'Transport'}
+            amount={plan.budget_breakdown.transport}
+            currency={plan.currency}
+          />
+          <BudgetItem
+            icon={<Utensils />}
+            label={'Meals'}
+            amount={plan.budget_breakdown.meals}
+            currency={plan.currency}
+          />
+          <BudgetItem
+            icon={<Sparkles />}
+            label={'Emergency'}
+            amount={plan.budget_breakdown.emergency}
+            currency={plan.currency}
+          />
         </div>
       </div>
 
       {/* Daily Timeline */}
-      <div className="space-y-4">
-        <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Calendar className="w-6 h-6 text-[#9933CC]" />
+      <div className='space-y-4'>
+        <h3 className='text-2xl font-bold text-gray-900 flex items-center gap-2'>
+          <Calendar className='w-6 h-6 text-[#9933CC]' />
           {plan.days}-Day Itinerary
         </h3>
-        
+
         {plan.daily_plan.map((day, index) => (
-          <DayCard key={index} day={day} dayNumber={index + 1} currency={plan.currency} language={language} />
+          <DayCard
+            key={index}
+            day={day}
+            dayNumber={index + 1}
+            currency={plan.currency}
+            language={language}
+          />
         ))}
       </div>
 
       {/* Total Summary */}
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-2xl border-2 border-green-200">
-        <div className="flex justify-between items-center">
+      <div className='bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-2xl border-2 border-green-200'>
+        <div className='flex justify-between items-center'>
           <div>
-            <h3 className="text-xl font-bold text-gray-900">
-              Total Cost
-            </h3>
-            <p className="text-sm text-gray-600">
+            <h3 className='text-xl font-bold text-gray-900'>Total Cost</h3>
+            <p className='text-sm text-gray-600'>
               {plan.days} days in {plan.destination}
             </p>
           </div>
-          <div className="text-right">
-            <div className="text-3xl font-bold text-green-700">
+          <div className='text-right'>
+            <div className='text-3xl font-bold text-green-700'>
               {plan.currency} {plan.total_estimate}
             </div>
-            <p className="text-sm text-gray-600">
-              ~{plan.currency} {(plan.total_estimate / plan.days).toFixed(0)}/day
+            <p className='text-sm text-gray-600'>
+              ~{plan.currency} {(plan.total_estimate / plan.days).toFixed(0)}
+              /day
             </p>
           </div>
         </div>
@@ -844,15 +964,15 @@ function TripPlanDisplay({ plan, language }) {
 
       {/* Tips */}
       {plan.tips && plan.tips.length > 0 && (
-        <div className="bg-blue-50 p-6 rounded-2xl border-2 border-blue-200">
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-blue-600" />
+        <div className='bg-blue-50 p-6 rounded-2xl border-2 border-blue-200'>
+          <h3 className='text-lg font-bold text-gray-900 mb-4 flex items-center gap-2'>
+            <Sparkles className='w-5 h-5 text-blue-600' />
             Travel Tips
           </h3>
-          <ul className="space-y-2">
+          <ul className='space-y-2'>
             {plan.tips.map((tip, i) => (
-              <li key={i} className="text-gray-700 flex items-start gap-2">
-                <span className="text-blue-600 font-bold">💡</span>
+              <li key={i} className='text-gray-700 flex items-start gap-2'>
+                <span className='text-blue-600 font-bold'>💡</span>
                 {tip}
               </li>
             ))}
@@ -861,12 +981,12 @@ function TripPlanDisplay({ plan, language }) {
       )}
 
       {/* Download Button */}
-      <Button 
-        onClick={() => window.print()} 
-        variant="outline" 
-        className="w-full h-12 border-2 border-[#9933CC] hover:bg-[#E6E6FF]"
+      <Button
+        onClick={() => window.print()}
+        variant='outline'
+        className='w-full h-12 border-2 border-[#9933CC] hover:bg-[#E6E6FF]'
       >
-        <Download className="w-5 h-5 mr-2" />
+        <Download className='w-5 h-5 mr-2' />
         Download PDF
       </Button>
     </div>
@@ -875,67 +995,75 @@ function TripPlanDisplay({ plan, language }) {
 
 function BudgetItem({ icon, label, amount, currency }) {
   return (
-    <div className="text-center p-4 bg-white rounded-xl border border-gray-200">
-      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-2 text-[#9933CC]">
+    <div className='text-center p-4 bg-white rounded-xl border border-gray-200'>
+      <div className='w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-2 text-[#9933CC]'>
         {icon}
       </div>
-      <p className="text-xs text-gray-600 mb-1">{label}</p>
-      <p className="font-bold text-gray-900">{currency} {amount}</p>
+      <p className='text-xs text-gray-600 mb-1'>{label}</p>
+      <p className='font-bold text-gray-900'>
+        {currency} {amount}
+      </p>
     </div>
   );
 }
 
 function DayCard({ day, dayNumber, currency, language }) {
-  const formattedDate = format(new Date(day.date), language === 'ar' ? 'EEEE, d MMMM yyyy' : 'EEEE, MMMM d, yyyy');
+  const formattedDate = format(
+    new Date(day.date),
+    language === 'ar' ? 'EEEE, d MMMM yyyy' : 'EEEE, MMMM d, yyyy'
+  );
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-[#E6E6FF] p-6 hover:shadow-lg transition-all">
-      <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
-        <div className="w-12 h-12 bg-gradient-to-br from-[#9933CC] to-[#330066] rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+    <div className='bg-white rounded-2xl border-2 border-[#E6E6FF] p-6 hover:shadow-lg transition-all'>
+      <div className='flex items-center gap-3 mb-4 pb-4 border-b border-gray-100'>
+        <div className='w-12 h-12 bg-gradient-to-br from-[#9933CC] to-[#330066] rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0'>
           {dayNumber}
         </div>
-        <div className="flex-1">
-          <h4 className="font-bold text-lg text-gray-900">
-            Day {dayNumber}
-          </h4>
-          <p className="text-sm text-gray-600">{formattedDate}</p>
-          {day.theme && (
-            <p className="text-sm text-[#9933CC] font-semibold mt-1">{day.theme}</p>
-          )}
+        <div className='flex-1'>
+          <h4 className='font-bold text-lg text-gray-900'>Day {dayNumber}</h4>
+          <p className='text-sm text-gray-600'>{formattedDate}</p>
+          {day.theme && <p className='text-sm text-[#9933CC] font-semibold mt-1'>{day.theme}</p>}
         </div>
-        <div className="text-right">
-          <p className="text-xs text-gray-500">Day Total</p>
-          <p className="text-lg font-bold text-[#9933CC]">{currency} {day.daily_total}</p>
+        <div className='text-right'>
+          <p className='text-xs text-gray-500'>Day Total</p>
+          <p className='text-lg font-bold text-[#9933CC]'>
+            {currency} {day.daily_total}
+          </p>
         </div>
       </div>
 
       {/* Activities Timeline */}
-      <div className="space-y-3 mb-4">
-        <h5 className="font-semibold text-gray-900 flex items-center gap-2">
-          <Clock className="w-4 h-4 text-[#9933CC]" />
+      <div className='space-y-3 mb-4'>
+        <h5 className='font-semibold text-gray-900 flex items-center gap-2'>
+          <Clock className='w-4 h-4 text-[#9933CC]' />
           Activities Schedule
         </h5>
         {day.activities?.map((activity, i) => (
-          <div key={i} className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
-            <div className="text-sm font-mono text-[#9933CC] font-semibold min-w-[60px]">
+          <div
+            key={i}
+            className='flex items-start gap-3 p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors'
+          >
+            <div className='text-sm font-mono text-[#9933CC] font-semibold min-w-[60px]'>
               {activity.time}
-              {activity.end_time && <span className="text-gray-400"> - {activity.end_time}</span>}
+              {activity.end_time && <span className='text-gray-400'> - {activity.end_time}</span>}
             </div>
-            <div className="flex-1">
-              <h6 className="font-semibold text-gray-900">{activity.name}</h6>
-              <p className="text-sm text-gray-600 mt-0.5">{activity.description}</p>
+            <div className='flex-1'>
+              <h6 className='font-semibold text-gray-900'>{activity.name}</h6>
+              <p className='text-sm text-gray-600 mt-0.5'>{activity.description}</p>
               {activity.location && (
-                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />
+                <p className='text-xs text-gray-500 mt-1 flex items-center gap-1'>
+                  <MapPin className='w-3 h-3' />
                   {activity.location}
                 </p>
               )}
-              <div className="flex items-center gap-3 mt-2 text-xs">
-                <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded font-medium">
+              <div className='flex items-center gap-3 mt-2 text-xs'>
+                <span className='px-2 py-0.5 bg-purple-100 text-purple-700 rounded font-medium'>
                   {activity.category}
                 </span>
-                <span className="text-gray-600">⏱️ {activity.duration}</span>
-                <span className="font-bold text-[#9933CC]">💰 {currency} {activity.cost}</span>
+                <span className='text-gray-600'>⏱️ {activity.duration}</span>
+                <span className='font-bold text-[#9933CC]'>
+                  💰 {currency} {activity.cost}
+                </span>
               </div>
             </div>
           </div>
@@ -944,18 +1072,20 @@ function DayCard({ day, dayNumber, currency, language }) {
 
       {/* Meals */}
       {day.meals && day.meals.length > 0 && (
-        <div className="mb-4">
-          <h5 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-            <Utensils className="w-4 h-4 text-orange-600" />
+        <div className='mb-4'>
+          <h5 className='font-semibold text-gray-900 mb-2 flex items-center gap-2'>
+            <Utensils className='w-4 h-4 text-orange-600' />
             Meals
           </h5>
-          <div className="grid grid-cols-3 gap-2">
+          <div className='grid grid-cols-3 gap-2'>
             {day.meals.map((meal, i) => (
-              <div key={i} className="text-center p-3 bg-orange-50 rounded-lg">
-                <p className="text-xs font-semibold text-gray-700">{meal.type}</p>
-                {meal.time && <p className="text-xs text-gray-500">{meal.time}</p>}
-                <p className="text-xs text-gray-600 mt-1">{meal.suggestion}</p>
-                <p className="text-xs font-bold text-orange-600 mt-1">{currency} {meal.cost}</p>
+              <div key={i} className='text-center p-3 bg-orange-50 rounded-lg'>
+                <p className='text-xs font-semibold text-gray-700'>{meal.type}</p>
+                {meal.time && <p className='text-xs text-gray-500'>{meal.time}</p>}
+                <p className='text-xs text-gray-600 mt-1'>{meal.suggestion}</p>
+                <p className='text-xs font-bold text-orange-600 mt-1'>
+                  {currency} {meal.cost}
+                </p>
               </div>
             ))}
           </div>
@@ -963,28 +1093,34 @@ function DayCard({ day, dayNumber, currency, language }) {
       )}
 
       {/* Transport & Accommodation */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className='grid grid-cols-2 gap-3'>
         {day.transport && (
-          <div className="p-3 bg-blue-50 rounded-lg">
-            <h6 className="font-semibold text-gray-900 mb-1 flex items-center gap-1.5 text-sm">
-              <Plane className="w-4 h-4 text-blue-600" />
+          <div className='p-3 bg-blue-50 rounded-lg'>
+            <h6 className='font-semibold text-gray-900 mb-1 flex items-center gap-1.5 text-sm'>
+              <Plane className='w-4 h-4 text-blue-600' />
               Transport
             </h6>
-            <p className="text-sm text-gray-700">{day.transport.type}</p>
-            <p className="text-xs text-gray-600">{day.transport.details}</p>
-            <p className="text-sm font-bold text-blue-600 mt-1">{currency} {day.transport.cost}</p>
+            <p className='text-sm text-gray-700'>{day.transport.type}</p>
+            <p className='text-xs text-gray-600'>{day.transport.details}</p>
+            <p className='text-sm font-bold text-blue-600 mt-1'>
+              {currency} {day.transport.cost}
+            </p>
           </div>
         )}
 
         {day.accommodation && (
-          <div className="p-3 bg-green-50 rounded-lg">
-            <h6 className="font-semibold text-gray-900 mb-1 flex items-center gap-1.5 text-sm">
-              <Hotel className="w-4 h-4 text-green-600" />
+          <div className='p-3 bg-green-50 rounded-lg'>
+            <h6 className='font-semibold text-gray-900 mb-1 flex items-center gap-1.5 text-sm'>
+              <Hotel className='w-4 h-4 text-green-600' />
               Accommodation
             </h6>
-            <p className="text-sm font-semibold text-gray-700">{day.accommodation.name}</p>
-            <p className="text-xs text-gray-600">{day.accommodation.type} • {day.accommodation.location}</p>
-            <p className="text-sm font-bold text-green-600 mt-1">{currency} {day.accommodation.cost_per_night} / night</p>
+            <p className='text-sm font-semibold text-gray-700'>{day.accommodation.name}</p>
+            <p className='text-xs text-gray-600'>
+              {day.accommodation.type} • {day.accommodation.location}
+            </p>
+            <p className='text-sm font-bold text-green-600 mt-1'>
+              {currency} {day.accommodation.cost_per_night} / night
+            </p>
           </div>
         )}
       </div>

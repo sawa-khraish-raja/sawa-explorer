@@ -4,7 +4,14 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ArrowLeft, Search, Plus, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -25,7 +32,9 @@ export default function OfficeHosts() {
     queryKey: ['userOffice', user?.email],
     queryFn: async () => {
       const allOffices = await base44.entities.Office.list();
-      return allOffices.find(o => o.email?.toLowerCase().trim() === user.email.toLowerCase().trim());
+      return allOffices.find(
+        (o) => o.email?.toLowerCase().trim() === user.email.toLowerCase().trim()
+      );
     },
     enabled: !!user?.email,
   });
@@ -34,45 +43,49 @@ export default function OfficeHosts() {
     queryKey: ['officeHosts', office?.id],
     queryFn: async () => {
       if (!office?.id) return [];
-      const hosts = await base44.entities.User.filter({ office_id: office.id, host_approved: true });
+      const hosts = await base44.entities.User.filter({
+        office_id: office.id,
+        host_approved: true,
+      });
       return hosts;
     },
     enabled: !!office?.id,
   });
 
-  const filteredHosts = officeHosts.filter(host =>
-    host.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    host.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredHosts = officeHosts.filter(
+    (host) =>
+      host.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      host.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+      <div className='flex justify-center items-center min-h-screen'>
+        <Loader2 className='w-8 h-8 animate-spin text-purple-600' />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-4">
+    <div className='min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50 py-8'>
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+        <div className='mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+          <div className='flex items-center gap-4'>
             <Button
-              variant="outline"
+              variant='outline'
               onClick={() => navigate(createPageUrl('OfficeDashboard'))}
-              className="flex items-center gap-2"
+              className='flex items-center gap-2'
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className='w-4 h-4' />
               Back
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Manage Hosts</h1>
-              <p className="text-gray-500">View and manage hosts associated with {office?.name}</p>
+              <h1 className='text-3xl font-bold text-gray-900'>Manage Hosts</h1>
+              <p className='text-gray-500'>View and manage hosts associated with {office?.name}</p>
             </div>
           </div>
           <Button onClick={() => navigate(createPageUrl('OfficeAddHost'))}>
-            <UserPlus className="w-4 h-4 mr-2" />
+            <UserPlus className='w-4 h-4 mr-2' />
             Add New Host
           </Button>
         </div>
@@ -80,13 +93,13 @@ export default function OfficeHosts() {
         <Card>
           <CardHeader>
             <CardTitle>Your Hosts ({filteredHosts.length})</CardTitle>
-            <div className="mt-4 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input 
-                placeholder="Search by name or email..."
+            <div className='mt-4 relative'>
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400' />
+              <Input
+                placeholder='Search by name or email...'
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className='pl-10'
               />
             </div>
           </CardHeader>
@@ -104,27 +117,35 @@ export default function OfficeHosts() {
               <TableBody>
                 {filteredHosts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center h-24">
+                    <TableCell colSpan={5} className='text-center h-24'>
                       No hosts found.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredHosts.map(host => (
+                  filteredHosts.map((host) => (
                     <TableRow key={host.id}>
                       <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-600">
-                              {host.profile_photo ? <img src={host.profile_photo} alt={host.full_name} className="w-full h-full object-cover rounded-full" /> : host.full_name?.charAt(0).toUpperCase()}
+                        <div className='flex items-center gap-3'>
+                          <div className='w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-600'>
+                            {host.profile_photo ? (
+                              <img
+                                src={host.profile_photo}
+                                alt={host.full_name}
+                                className='w-full h-full object-cover rounded-full'
+                              />
+                            ) : (
+                              host.full_name?.charAt(0).toUpperCase()
+                            )}
                           </div>
                           <div>
-                            <div className="font-medium">{host.full_name}</div>
-                            <div className="text-sm text-gray-500">{host.email}</div>
+                            <div className='font-medium'>{host.full_name}</div>
+                            <div className='text-sm text-gray-500'>{host.email}</div>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>{host.city}</TableCell>
                       <TableCell>
-                        <Badge variant={host.host_approved ? "default" : "destructive"}>
+                        <Badge variant={host.host_approved ? 'default' : 'destructive'}>
                           {host.host_approved ? 'Active' : 'Inactive'}
                         </Badge>
                       </TableCell>

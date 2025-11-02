@@ -9,7 +9,14 @@ export default function BookingDamascus() {
     best_time_to_visit: 'March to May, September to November',
     languages: ['Arabic', 'English'],
     currency: 'Syrian Pound',
-    highlights: ['Umayyad Mosque', 'Old Damascus', 'Souq Al-Hamidiyah', 'Mount Qasioun', 'Traditional Hammams', 'Ancient Architecture']
+    highlights: [
+      'Umayyad Mosque',
+      'Old Damascus',
+      'Souq Al-Hamidiyah',
+      'Mount Qasioun',
+      'Traditional Hammams',
+      'Ancient Architecture',
+    ],
   };
 
   return <BookingPageTemplate city={damascus} />;

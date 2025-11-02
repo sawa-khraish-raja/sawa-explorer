@@ -1,5 +1,5 @@
 /**
- * ✅ SAWA Centralized Pricing Engine
+ *  SAWA Centralized Pricing Engine
  * Calculates final prices for Agency vs Freelancer hosts
  */
 
@@ -11,11 +11,7 @@
  * @param {Object} params.agencyDefaults - Agency default commissions
  * @returns {Object} {sawa, office}
  */
-export function resolveCommission({ 
-  hostType, 
-  overrides = null, 
-  agencyDefaults = null 
-}) {
+export function resolveCommission({ hostType, overrides = null, agencyDefaults = null }) {
   // Custom overrides take priority
   if (overrides && (overrides.sawa || overrides.office)) {
     return {
@@ -50,14 +46,13 @@ export function resolveCommission({
  * @param {Object} params.agencyDefaults - Agency default commissions
  * @returns {Object} Complete price breakdown
  */
-export function calcFinalPrice({ 
-  basePrice, 
-  hostType, 
-  overrides = null, 
-  agencyDefaults = null 
-}) {
+export function calcFinalPrice({ basePrice, hostType, overrides = null, agencyDefaults = null }) {
   const base = parseFloat(basePrice) || 0;
-  const { sawa, office } = resolveCommission({ hostType, overrides, agencyDefaults });
+  const { sawa, office } = resolveCommission({
+    hostType,
+    overrides,
+    agencyDefaults,
+  });
 
   const sawaFee = parseFloat((base * (sawa / 100)).toFixed(2));
   const officeFee = parseFloat((base * (office / 100)).toFixed(2));
@@ -69,7 +64,7 @@ export function calcFinalPrice({
     sawa_fee: sawaFee,
     office_percent: office,
     office_fee: officeFee,
-    total
+    total,
   };
 }
 
@@ -81,14 +76,16 @@ export function calcFinalPrice({
  */
 export function formatPriceBreakdown(breakdown, currency = '$') {
   if (!breakdown) return '';
-  
+
   const lines = [
     `Host services: ${currency}${breakdown.base_price.toFixed(2)}`,
-    `SAWA (${breakdown.sawa_percent}%): ${currency}${breakdown.sawa_fee.toFixed(2)}`
+    `SAWA (${breakdown.sawa_percent}%): ${currency}${breakdown.sawa_fee.toFixed(2)}`,
   ];
 
   if (breakdown.office_percent > 0) {
-    lines.push(`Office (${breakdown.office_percent}%): ${currency}${breakdown.office_fee.toFixed(2)}`);
+    lines.push(
+      `Office (${breakdown.office_percent}%): ${currency}${breakdown.office_fee.toFixed(2)}`
+    );
   }
 
   lines.push(`Total: ${currency}${breakdown.total.toFixed(2)}`);

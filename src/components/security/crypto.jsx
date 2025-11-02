@@ -11,7 +11,7 @@
  */
 export async function encrypt(text) {
   if (!text) return text;
-  
+
   // Frontend doesn't have access to encryption key
   // This will be handled by backend functions
   console.warn('[CRYPTO] Encryption should be done on backend');
@@ -25,7 +25,7 @@ export async function encrypt(text) {
  */
 export async function decrypt(encryptedBase64) {
   if (!encryptedBase64) return encryptedBase64;
-  
+
   // Frontend can't decrypt without key
   console.warn('[CRYPTO] Decryption should be done on backend');
   return encryptedBase64;
@@ -38,13 +38,13 @@ export async function decrypt(encryptedBase64) {
  */
 export async function hashData(text) {
   if (!text) return text;
-  
+
   try {
     const encoder = new TextEncoder();
     const data = encoder.encode(String(text));
     const hash = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hash));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
   } catch (error) {
     console.error('[CRYPTO] Hash error:', error);
     return text;

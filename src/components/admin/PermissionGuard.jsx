@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -7,19 +6,35 @@ import { createPageUrl } from '@/utils';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-// ✅ All available admin pages
+//  All available admin pages
 export const ADMIN_PAGES = {
   dashboard: { id: 'dashboard', name: 'Dashboard', path: 'AdminDashboard' },
   users: { id: 'users', name: 'Users Management', path: 'AdminUsers' },
   hosts: { id: 'hosts', name: 'Hosts Management', path: 'AdminHosts' },
-  host_requests: { id: 'host_requests', name: 'Host Requests', path: 'AdminHostRequests' },
+  host_requests: {
+    id: 'host_requests',
+    name: 'Host Requests',
+    path: 'AdminHostRequests',
+  },
   bookings: { id: 'bookings', name: 'Bookings', path: 'AdminBookings' },
-  customer_support: { id: 'customer_support', name: 'Customer Support', path: 'CustomerSupport' },
-  partner_requests: { id: 'partner_requests', name: 'Partner Requests', path: 'AdminPartnerRequests' },
+  customer_support: {
+    id: 'customer_support',
+    name: 'Customer Support',
+    path: 'CustomerSupport',
+  },
+  partner_requests: {
+    id: 'partner_requests',
+    name: 'Partner Requests',
+    path: 'AdminPartnerRequests',
+  },
   messages: { id: 'messages', name: 'Messages', path: 'AdminMessages' },
   events: { id: 'events', name: 'Events', path: 'AdminEvents' },
   cities: { id: 'cities', name: 'Cities', path: 'AdminCities' },
-  hero_slides: { id: 'hero_slides', name: 'Hero Slides', path: 'AdminHeroSlides' },
+  hero_slides: {
+    id: 'hero_slides',
+    name: 'Hero Slides',
+    path: 'AdminHeroSlides',
+  },
   offices: { id: 'offices', name: 'Offices', path: 'AdminOffices' },
   analytics: { id: 'analytics', name: 'Analytics', path: 'AdminAnalytics' },
 };
@@ -38,8 +53,8 @@ export function useAdminPermissions() {
     refetchInterval: 3000,
   });
 
-  const hasFullAccess = user?.role_type === 'admin' &&
-    (!user?.admin_access_type || user?.admin_access_type === 'full');
+  const hasFullAccess =
+    user?.role_type === 'admin' && (!user?.admin_access_type || user?.admin_access_type === 'full');
 
   const hasPageAccess = (pageId) => {
     if (!user || user.role_type !== 'admin') return false;
@@ -64,7 +79,7 @@ export default function PermissionGuard({ pageId, children }) {
 
   useEffect(() => {
     if (!isLoading && user) {
-      // ✅ Check if user lost admin role
+      //  Check if user lost admin role
       if (user.role_type !== 'admin') {
         console.log('🚫 Not an admin, redirecting to Home...');
         toast.success('🏠 Redirecting to Home page...', { duration: 2000 });
@@ -72,7 +87,7 @@ export default function PermissionGuard({ pageId, children }) {
         return;
       }
 
-      // ✅ Check page access
+      //  Check page access
       if (!hasPageAccess(pageId)) {
         console.log('🚫 No access to this page, redirecting to Dashboard...');
         navigate(createPageUrl('AdminDashboard'), { replace: true });
@@ -82,8 +97,8 @@ export default function PermissionGuard({ pageId, children }) {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <Loader2 className="w-8 h-8 animate-spin text-[var(--brand-primary)]" />
+      <div className='flex justify-center items-center h-96'>
+        <Loader2 className='w-8 h-8 animate-spin text-[var(--brand-primary)]' />
       </div>
     );
   }

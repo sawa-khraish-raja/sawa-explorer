@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -9,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogDescription
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -51,22 +50,22 @@ export default function ManageCityAccessDialog({ user, isOpen, onClose, onSucces
       await base44.entities.User.update(user.id, {
         assigned_cities: selectedCities,
         city: selectedCities[0] || null, // أول مدينة كـ primary
-        visible_in_city: true // تأكد من الرؤية (as per outline, always true on save)
+        visible_in_city: true, // تأكد من الرؤية (as per outline, always true on save)
       });
 
       // تحديث HostProfile إذا موجود
       try {
         const hostProfiles = await base44.entities.HostProfile.filter({
-          user_email: user.email
+          user_email: user.email,
         });
 
         if (hostProfiles && hostProfiles.length > 0) {
           await base44.entities.HostProfile.update(hostProfiles[0].id, {
             city: selectedCities[0] || null,
             cities: selectedCities,
-            last_synced: new Date().toISOString()
+            last_synced: new Date().toISOString(),
           });
-          console.log('✅ HostProfile updated');
+          console.log(' HostProfile updated');
         }
       } catch (error) {
         console.log('⚠️ No HostProfile to update or error during update:', error);
@@ -79,8 +78,8 @@ export default function ManageCityAccessDialog({ user, isOpen, onClose, onSucces
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
       queryClient.invalidateQueries({ queryKey: ['cityHosts'] });
       // Use toast for success notification
-      toast.success(`✅ Cities updated for ${data.email}`, {
-        description: `Assigned to: ${data.cities.join(', ')}`
+      toast.success(` Cities updated for ${data.email}`, {
+        description: `Assigned to: ${data.cities.join(', ')}`,
       });
       if (onSuccess) onSuccess(); // Call the optional onSuccess prop
       onClose();
@@ -89,16 +88,14 @@ export default function ManageCityAccessDialog({ user, isOpen, onClose, onSucces
       console.error('Update city access error:', error);
       // Use toast for error notification
       toast.error('Failed to update cities', {
-        description: error.message || 'An unknown error occurred.'
+        description: error.message || 'An unknown error occurred.',
       });
-    }
+    },
   });
 
   const handleToggleCity = (city) => {
-    setSelectedCities(prev =>
-      prev.includes(city)
-        ? prev.filter(c => c !== city)
-        : [...prev, city]
+    setSelectedCities((prev) =>
+      prev.includes(city) ? prev.filter((c) => c !== city) : [...prev, city]
     );
   };
 
@@ -118,10 +115,10 @@ export default function ManageCityAccessDialog({ user, isOpen, onClose, onSucces
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className='sm:max-w-[500px]'>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <MapPin className="w-6 h-6 text-purple-600" />
+          <DialogTitle className='flex items-center gap-2 text-xl'>
+            <MapPin className='w-6 h-6 text-purple-600' />
             {/* Updated to use the 'user' prop */}
             Manage City Access: {user.full_name || user.email}
           </DialogTitle>
@@ -130,24 +127,21 @@ export default function ManageCityAccessDialog({ user, isOpen, onClose, onSucces
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4 space-y-6">
-          <div className="space-y-3">
-            <Label className="text-base font-semibold">Available Cities</Label>
-            <div className="grid grid-cols-2 gap-3">
+        <div className='py-4 space-y-6'>
+          <div className='space-y-3'>
+            <Label className='text-base font-semibold'>Available Cities</Label>
+            <div className='grid grid-cols-2 gap-3'>
               {AVAILABLE_CITIES.map((city) => (
                 <div
                   key={city}
-                  className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+                  className='flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors'
                 >
                   <Checkbox
                     id={`city-${city}`}
                     checked={selectedCities.includes(city)}
                     onCheckedChange={() => handleToggleCity(city)}
                   />
-                  <Label
-                    htmlFor={`city-${city}`}
-                    className="flex-1 cursor-pointer font-medium"
-                  >
+                  <Label htmlFor={`city-${city}`} className='flex-1 cursor-pointer font-medium'>
                     {city}
                   </Label>
                 </div>
@@ -155,12 +149,12 @@ export default function ManageCityAccessDialog({ user, isOpen, onClose, onSucces
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200">
+          <div className='flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200'>
             <div>
-              <Label htmlFor="visible-toggle" className="font-semibold text-purple-900">
+              <Label htmlFor='visible-toggle' className='font-semibold text-purple-900'>
                 Show on City Pages
               </Label>
-              <p className="text-sm text-purple-700 mt-1">
+              <p className='text-sm text-purple-700 mt-1'>
                 Display this host publicly on city booking pages
               </p>
             </div>
@@ -172,20 +166,20 @@ export default function ManageCityAccessDialog({ user, isOpen, onClose, onSucces
                 Sticking to the outline's explicit instruction: `visible_in_city: true`.
             */}
             <Checkbox
-              id="visible-toggle"
+              id='visible-toggle'
               checked={visibleInCity}
               onCheckedChange={setVisibleInCity}
             />
           </div>
 
           {selectedCities.length > 0 && (
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm font-semibold text-gray-700 mb-2">
+            <div className='p-4 bg-gray-50 rounded-lg'>
+              <p className='text-sm font-semibold text-gray-700 mb-2'>
                 Selected Cities ({selectedCities.length}):
               </p>
-              <div className="flex flex-wrap gap-2">
-                {selectedCities.map(city => (
-                  <Badge key={city} className="bg-purple-600 text-white">
+              <div className='flex flex-wrap gap-2'>
+                {selectedCities.map((city) => (
+                  <Badge key={city} className='bg-purple-600 text-white'>
                     {city}
                   </Badge>
                 ))}
@@ -195,21 +189,17 @@ export default function ManageCityAccessDialog({ user, isOpen, onClose, onSucces
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={updateCityAccessMutation.isPending}
-          >
+          <Button variant='outline' onClick={onClose} disabled={updateCityAccessMutation.isPending}>
             Cancel
           </Button>
           <Button
             onClick={handleSave}
             disabled={updateCityAccessMutation.isPending || selectedCities.length === 0}
-            className="bg-purple-600 hover:bg-purple-700"
+            className='bg-purple-600 hover:bg-purple-700'
           >
             {updateCityAccessMutation.isPending ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Loader2 className='w-4 h-4 mr-2 animate-spin' />
                 Saving...
               </>
             ) : (

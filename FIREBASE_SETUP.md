@@ -23,10 +23,12 @@ mv ~/Downloads/your-project-firebase-adminsdk-xxxxx.json server/config/serviceAc
 ### Step 3: Get Your Database URL
 
 **For Firestore (Most Common):**
+
 - Go to **Firestore Database** in Firebase Console
 - Your database URL is: `https://YOUR_PROJECT_ID.firebaseio.com`
 
 **For Realtime Database:**
+
 - Go to **Realtime Database** in Firebase Console
 - Copy the database URL shown at the top
 
@@ -76,11 +78,13 @@ FIREBASE_DATABASE_URL=https://your-project.firebaseio.com
 ## Testing Your Setup
 
 ### 1. Start the server:
+
 ```bash
 npm run server:dev
 ```
 
 You should see:
+
 ```
 ✓ Using serviceAccountKey.json file
 ✓ Firebase Admin initialized successfully
@@ -88,23 +92,27 @@ Server is running on port 5000
 ```
 
 ### 2. Test the health endpoint:
+
 ```bash
 curl http://localhost:5000/health
 ```
 
 Expected response:
+
 ```json
-{"status":"ok","message":"Server is running"}
+{ "status": "ok", "message": "Server is running" }
 ```
 
 ### 3. Test Firebase connection:
+
 ```bash
 curl http://localhost:5000/api/users
 ```
 
 Expected response:
+
 ```json
-{"success":true,"count":0,"data":[]}
+{ "success": true, "count": 0, "data": [] }
 ```
 
 ---
@@ -112,19 +120,23 @@ Expected response:
 ## Troubleshooting
 
 ### Error: "Cannot find module 'serviceAccountKey.json'"
+
 - Make sure the file is in `server/config/serviceAccountKey.json`
 - Or use the environment variable method instead
 
 ### Error: "Invalid credential"
+
 - Check that your service account key is valid
 - Make sure the JSON format is correct
 - Try downloading a new key from Firebase Console
 
 ### Error: "FIREBASE_DATABASE_URL is required"
+
 - Make sure your `.env` file has `FIREBASE_DATABASE_URL=...`
 - Check that the URL matches your Firebase project
 
 ### Server starts but API returns errors
+
 - Go to Firebase Console → Firestore Database
 - Make sure Firestore is enabled for your project
 - Check Firebase Console for any permission issues
@@ -133,9 +145,9 @@ Expected response:
 
 ## Security Reminders
 
-- ✅ `serviceAccountKey.json` is in `.gitignore` (never commit it!)
-- ✅ `.env` is in `.gitignore` (never commit it!)
-- ✅ Use environment variables for production deployments
+- `serviceAccountKey.json` is in `.gitignore` (never commit it!)
+- `.env` is in `.gitignore` (never commit it!)
+- Use environment variables for production deployments
 - ⚠️ Service account keys have admin access - keep them secure!
 
 ---

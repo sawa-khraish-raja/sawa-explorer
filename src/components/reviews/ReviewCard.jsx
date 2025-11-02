@@ -12,20 +12,18 @@ import { toast } from 'sonner';
 
 const StarDisplay = ({ rating, showNumber = true }) => {
   return (
-    <div className="flex items-center gap-1">
+    <div className='flex items-center gap-1'>
       {[1, 2, 3, 4, 5].map((star) => (
         <Star
           key={star}
           className={cn(
-            "w-4 h-4",
-            star <= rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+            'w-4 h-4',
+            star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
           )}
         />
       ))}
       {showNumber && (
-        <span className="ml-1 text-sm font-semibold text-gray-700">
-          {rating.toFixed(1)}
-        </span>
+        <span className='ml-1 text-sm font-semibold text-gray-700'>{rating.toFixed(1)}</span>
       )}
     </div>
   );
@@ -46,12 +44,12 @@ export default function ReviewCard({ review, currentUser, onUpdate }) {
   const handleHelpful = async () => {
     try {
       const updatedHelpfulBy = hasHelpful
-        ? review.helpful_by.filter(email => email !== currentUser.email)
+        ? review.helpful_by.filter((email) => email !== currentUser.email)
         : [...(review.helpful_by || []), currentUser.email];
 
       await base44.entities.Review.update(review.id, {
         helpful_by: updatedHelpfulBy,
-        helpful_count: updatedHelpfulBy.length
+        helpful_count: updatedHelpfulBy.length,
       });
 
       toast.success(hasHelpful ? 'Removed from helpful' : 'Marked as helpful');
@@ -68,7 +66,7 @@ export default function ReviewCard({ review, currentUser, onUpdate }) {
     try {
       await base44.entities.Review.update(review.id, {
         host_response: response.trim(),
-        host_response_date: new Date().toISOString()
+        host_response_date: new Date().toISOString(),
       });
 
       toast.success('Response submitted');
@@ -87,34 +85,32 @@ export default function ReviewCard({ review, currentUser, onUpdate }) {
     { label: 'Value', value: review.value_rating },
     { label: 'Accuracy', value: review.accuracy_rating },
     { label: 'Cleanliness', value: review.cleanliness_rating },
-    { label: 'Location', value: review.location_rating }
-  ].filter(r => r.value > 0);
+    { label: 'Location', value: review.location_rating },
+  ].filter((r) => r.value > 0);
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-6">
+    <Card className='hover:shadow-md transition-shadow'>
+      <CardContent className='p-6'>
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <div className="flex items-start gap-3 flex-1">
-            <Avatar className="w-12 h-12">
+        <div className='flex items-start justify-between gap-4 mb-4'>
+          <div className='flex items-start gap-3 flex-1'>
+            <Avatar className='w-12 h-12'>
               <AvatarImage src={review.reviewer_photo} />
-              <AvatarFallback className="bg-purple-100 text-purple-700 font-semibold">
+              <AvatarFallback className='bg-purple-100 text-purple-700 font-semibold'>
                 {review.reviewer_name?.charAt(0) || 'U'}
               </AvatarFallback>
             </Avatar>
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h4 className="font-semibold text-gray-900">
-                  {review.reviewer_name}
-                </h4>
+
+            <div className='flex-1 min-w-0'>
+              <div className='flex items-center gap-2 flex-wrap'>
+                <h4 className='font-semibold text-gray-900'>{review.reviewer_name}</h4>
                 {review.is_verified && (
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                  <Badge variant='outline' className='bg-green-50 text-green-700 border-green-200'>
                     ✓ Verified
                   </Badge>
                 )}
               </div>
-              <p className="text-sm text-gray-500">
+              <p className='text-sm text-gray-500'>
                 {format(new Date(review.created_date), 'MMMM d, yyyy')}
               </p>
             </div>
@@ -125,10 +121,10 @@ export default function ReviewCard({ review, currentUser, onUpdate }) {
 
         {/* Sub-ratings */}
         {subRatings.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 pb-4 border-b">
+          <div className='grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 pb-4 border-b'>
             {subRatings.map((rating, idx) => (
-              <div key={idx} className="flex items-center justify-between">
-                <span className="text-xs text-gray-600">{rating.label}</span>
+              <div key={idx} className='flex items-center justify-between'>
+                <span className='text-xs text-gray-600'>{rating.label}</span>
                 <StarDisplay rating={rating.value} showNumber={false} />
               </div>
             ))}
@@ -136,27 +132,25 @@ export default function ReviewCard({ review, currentUser, onUpdate }) {
         )}
 
         {/* Comment */}
-        <p className="text-gray-700 leading-relaxed mb-4 whitespace-pre-wrap">
-          {review.comment}
-        </p>
+        <p className='text-gray-700 leading-relaxed mb-4 whitespace-pre-wrap'>{review.comment}</p>
 
         {/* Photos */}
         {review.photos && review.photos.length > 0 && (
-          <div className="mb-4">
-            <div className="flex gap-2 flex-wrap">
+          <div className='mb-4'>
+            <div className='flex gap-2 flex-wrap'>
               {review.photos.slice(0, 4).map((photo, idx) => (
                 <img
                   key={idx}
                   src={photo}
                   alt={`Review photo ${idx + 1}`}
-                  className="w-20 h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                  className='w-20 h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity'
                   onClick={() => setShowPhotos(true)}
                 />
               ))}
               {review.photos.length > 4 && (
                 <button
                   onClick={() => setShowPhotos(true)}
-                  className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center text-sm font-semibold text-gray-600 hover:bg-gray-200"
+                  className='w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center text-sm font-semibold text-gray-600 hover:bg-gray-200'
                 >
                   +{review.photos.length - 4}
                 </button>
@@ -167,58 +161,53 @@ export default function ReviewCard({ review, currentUser, onUpdate }) {
 
         {/* Host Response */}
         {review.host_response && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg border-l-4 border-purple-500">
-            <div className="flex items-center gap-2 mb-2">
-              <MessageSquare className="w-4 h-4 text-purple-600" />
-              <span className="text-sm font-semibold text-gray-900">
+          <div className='mt-4 p-4 bg-gray-50 rounded-lg border-l-4 border-purple-500'>
+            <div className='flex items-center gap-2 mb-2'>
+              <MessageSquare className='w-4 h-4 text-purple-600' />
+              <span className='text-sm font-semibold text-gray-900'>
                 Response from {review.reviewed_name}
               </span>
-              <span className="text-xs text-gray-500 ml-auto">
+              <span className='text-xs text-gray-500 ml-auto'>
                 {format(new Date(review.host_response_date), 'MMM d, yyyy')}
               </span>
             </div>
-            <p className="text-sm text-gray-700">
-              {review.host_response}
-            </p>
+            <p className='text-sm text-gray-700'>{review.host_response}</p>
           </div>
         )}
 
         {/* Actions */}
-        <div className="flex items-center gap-3 mt-4 pt-4 border-t">
+        <div className='flex items-center gap-3 mt-4 pt-4 border-t'>
           {currentUser && !isReviewer && (
             <Button
-              variant="ghost"
-              size="sm"
+              variant='ghost'
+              size='sm'
               onClick={handleHelpful}
-              className={cn(
-                "gap-2",
-                hasHelpful && "text-purple-600"
-              )}
+              className={cn('gap-2', hasHelpful && 'text-purple-600')}
             >
-              <ThumbsUp className={cn("w-4 h-4", hasHelpful && "fill-current")} />
+              <ThumbsUp className={cn('w-4 h-4', hasHelpful && 'fill-current')} />
               Helpful ({review.helpful_count || 0})
             </Button>
           )}
 
           {isReviewed && !review.host_response && (
             <Button
-              variant="ghost"
-              size="sm"
+              variant='ghost'
+              size='sm'
               onClick={() => setShowResponse(!showResponse)}
-              className="gap-2"
+              className='gap-2'
             >
-              <MessageSquare className="w-4 h-4" />
+              <MessageSquare className='w-4 h-4' />
               Respond
             </Button>
           )}
 
           {(isAdmin || isReviewed) && (
             <Button
-              variant="ghost"
-              size="sm"
-              className="gap-2 text-red-600 hover:text-red-700 ml-auto"
+              variant='ghost'
+              size='sm'
+              className='gap-2 text-red-600 hover:text-red-700 ml-auto'
             >
-              <Flag className="w-4 h-4" />
+              <Flag className='w-4 h-4' />
               Report
             </Button>
           )}
@@ -226,35 +215,35 @@ export default function ReviewCard({ review, currentUser, onUpdate }) {
 
         {/* Response Form */}
         {showResponse && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg space-y-3">
+          <div className='mt-4 p-4 bg-gray-50 rounded-lg space-y-3'>
             <Textarea
               value={response}
               onChange={(e) => setResponse(e.target.value)}
-              placeholder="Write your response..."
+              placeholder='Write your response...'
               rows={3}
             />
-            <div className="flex gap-2">
+            <div className='flex gap-2'>
               <Button
                 onClick={handleSubmitResponse}
                 disabled={isSubmitting || !response.trim()}
-                size="sm"
-                className="bg-purple-600 hover:bg-purple-700"
+                size='sm'
+                className='bg-purple-600 hover:bg-purple-700'
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className='w-4 h-4 mr-2 animate-spin' />
                     Sending...
                   </>
                 ) : (
                   <>
-                    <Send className="w-4 h-4 mr-2" />
+                    <Send className='w-4 h-4 mr-2' />
                     Send Response
                   </>
                 )}
               </Button>
               <Button
-                variant="outline"
-                size="sm"
+                variant='outline'
+                size='sm'
                 onClick={() => {
                   setShowResponse(false);
                   setResponse('');
@@ -270,22 +259,22 @@ export default function ReviewCard({ review, currentUser, onUpdate }) {
       {/* Photo Lightbox */}
       {showPhotos && (
         <div
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          className='fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4'
           onClick={() => setShowPhotos(false)}
         >
           <button
             onClick={() => setShowPhotos(false)}
-            className="absolute top-4 right-4 text-white hover:text-gray-300"
+            className='absolute top-4 right-4 text-white hover:text-gray-300'
           >
-            <X className="w-8 h-8" />
+            <X className='w-8 h-8' />
           </button>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl'>
             {review.photos.map((photo, idx) => (
               <img
                 key={idx}
                 src={photo}
                 alt={`Review photo ${idx + 1}`}
-                className="max-h-[80vh] object-contain rounded-lg"
+                className='max-h-[80vh] object-contain rounded-lg'
               />
             ))}
           </div>

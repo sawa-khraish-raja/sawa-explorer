@@ -13,15 +13,15 @@ export default function SyncHostsButton() {
     setSyncing(true);
     try {
       console.log('🔄 Syncing hosts...');
-      
+
       // Just refresh the queries
       await queryClient.invalidateQueries({ queryKey: ['allUsers'] });
       await queryClient.invalidateQueries({ queryKey: ['officeHosts'] });
-      
-      console.log('✅ Sync complete');
+
+      console.log(' Sync complete');
       toast.success('Hosts data refreshed!');
     } catch (error) {
-      console.error('❌ Sync error:', error);
+      console.error(' Sync error:', error);
       toast.error('Failed to sync hosts');
     } finally {
       setSyncing(false);
@@ -29,20 +29,15 @@ export default function SyncHostsButton() {
   };
 
   return (
-    <Button
-      onClick={syncHosts}
-      disabled={syncing}
-      variant="outline"
-      className="gap-2"
-    >
+    <Button onClick={syncHosts} disabled={syncing} variant='outline' className='gap-2'>
       {syncing ? (
         <>
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <Loader2 className='w-4 h-4 animate-spin' />
           Refreshing...
         </>
       ) : (
         <>
-          <RefreshCw className="w-4 h-4" />
+          <RefreshCw className='w-4 h-4' />
           Refresh Data
         </>
       )}

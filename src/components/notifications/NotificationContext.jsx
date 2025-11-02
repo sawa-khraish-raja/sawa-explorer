@@ -5,12 +5,8 @@ const NotificationContext = createContext();
 
 export function NotificationProvider({ children }) {
   const appContext = useApp();
-  
-  return (
-    <NotificationContext.Provider value={appContext}>
-      {children}
-    </NotificationContext.Provider>
-  );
+
+  return <NotificationContext.Provider value={appContext}>{children}</NotificationContext.Provider>;
 }
 
 export const useNotifications = () => {

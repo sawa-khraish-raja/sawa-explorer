@@ -11,7 +11,7 @@
  */
 export function calculateAdventureCommissions(hostPrice, hostType) {
   const price = parseFloat(hostPrice) || 0;
-  
+
   if (price <= 0) {
     return {
       hostReceives: 0,
@@ -20,7 +20,7 @@ export function calculateAdventureCommissions(hostPrice, hostType) {
       officePercent: 0,
       officeAmount: 0,
       travelerPays: 0,
-      breakdown: []
+      breakdown: [],
     };
   }
 
@@ -33,7 +33,7 @@ export function calculateAdventureCommissions(hostPrice, hostType) {
 
   switch (hostType) {
     case 'admin':
-      // ✅ Admin: No commission
+      //  Admin: No commission
       sawaPercent = 0;
       officePercent = 0;
       sawaAmount = 0;
@@ -42,12 +42,12 @@ export function calculateAdventureCommissions(hostPrice, hostType) {
       breakdown.push({
         label: 'Admin Adventure - No Commission',
         amount: price,
-        type: 'base'
+        type: 'base',
       });
       break;
 
     case 'freelancer':
-      // ✅ Freelance Host: 35% SAWA on top
+      //  Freelance Host: 35% SAWA on top
       sawaPercent = 35;
       officePercent = 0;
       sawaAmount = price * 0.35;
@@ -60,7 +60,7 @@ export function calculateAdventureCommissions(hostPrice, hostType) {
       break;
 
     case 'office':
-      // ✅ Office Host: 28% SAWA + 7% Office on top
+      //  Office Host: 28% SAWA + 7% Office on top
       sawaPercent = 28;
       officePercent = 7;
       sawaAmount = price * 0.28;
@@ -69,12 +69,16 @@ export function calculateAdventureCommissions(hostPrice, hostType) {
       breakdown.push(
         { label: 'Host receives', amount: price, type: 'host' },
         { label: 'SAWA commission (28%)', amount: sawaAmount, type: 'sawa' },
-        { label: 'Office commission (7%)', amount: officeAmount, type: 'office' }
+        {
+          label: 'Office commission (7%)',
+          amount: officeAmount,
+          type: 'office',
+        }
       );
       break;
 
     case 'office_entity':
-      // ✅ Office Entity: 35% SAWA on top
+      //  Office Entity: 35% SAWA on top
       sawaPercent = 35;
       officePercent = 0;
       sawaAmount = price * 0.35;
@@ -104,7 +108,7 @@ export function calculateAdventureCommissions(hostPrice, hostType) {
     officePercent,
     officeAmount: parseFloat(officeAmount.toFixed(2)),
     travelerPays: parseFloat(travelerPays.toFixed(2)),
-    breakdown
+    breakdown,
   };
 }
 
@@ -113,10 +117,10 @@ export function calculateAdventureCommissions(hostPrice, hostType) {
  */
 export function formatCommissionBreakdown(commissions) {
   const { breakdown, travelerPays } = commissions;
-  
+
   return {
     details: breakdown,
     total: travelerPays,
-    summary: breakdown.map(item => `${item.label}: $${item.amount.toFixed(2)}`).join(' + ')
+    summary: breakdown.map((item) => `${item.label}: $${item.amount.toFixed(2)}`).join(' + '),
   };
 }

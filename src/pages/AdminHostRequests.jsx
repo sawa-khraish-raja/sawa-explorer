@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -46,9 +45,10 @@ export default function AdminHostRequests() {
   });
 
   // Filter requests
-  const filteredRequests = allRequests.filter(request => {
+  const filteredRequests = allRequests.filter((request) => {
     const matchesTab = activeTab === 'all' || request.status === activeTab;
-    const matchesSearch = !searchQuery ||
+    const matchesSearch =
+      !searchQuery ||
       request.host_full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       request.host_email?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCity = cityFilter === 'all' || request.host_city === cityFilter;
@@ -59,11 +59,11 @@ export default function AdminHostRequests() {
 
   // Stats
   const stats = {
-    pending: allRequests.filter(r => r.status === 'pending').length,
-    under_review: allRequests.filter(r => r.status === 'under_review').length,
-    approved: allRequests.filter(r => r.status === 'approved').length,
-    rejected: allRequests.filter(r => r.status === 'rejected').length,
-    needs_info: allRequests.filter(r => r.status === 'needs_info').length,
+    pending: allRequests.filter((r) => r.status === 'pending').length,
+    under_review: allRequests.filter((r) => r.status === 'under_review').length,
+    approved: allRequests.filter((r) => r.status === 'approved').length,
+    rejected: allRequests.filter((r) => r.status === 'rejected').length,
+    needs_info: allRequests.filter((r) => r.status === 'needs_info').length,
   };
 
   // Approve mutation
@@ -71,10 +71,12 @@ export default function AdminHostRequests() {
     mutationFn: async ({ request, approvalData }) => {
       // 1. Find the user by email to get their ID for update
       const allUsers = await base44.entities.User.list(); // Fetch all users to find by email
-      const user = allUsers.find(u => u.email.toLowerCase() === request.host_email.toLowerCase());
+      const user = allUsers.find((u) => u.email.toLowerCase() === request.host_email.toLowerCase());
 
       if (!user) {
-        throw new Error(`❌ User with email ${request.host_email} is not registered in the system. They must register first in the app before being approved as a host.`);
+        throw new Error(
+          ` User with email ${request.host_email} is not registered in the system. They must register first in the app before being approved as a host.`
+        );
       }
 
       // 2. Update HostRequest status
@@ -117,10 +119,11 @@ export default function AdminHostRequests() {
         recipient_email: request.host_email,
         recipient_type: 'host',
         type: 'host_approved',
-        title: '🎉 Congratulations! You\'re now a SAWA Host',
-        message: approvalData.host_type === 'office' && approvalData.office_id ?
-          `Your host application has been approved, and you've been assigned to an office. Welcome to the SAWA community!` :
-          `Your host application has been approved. Welcome to the SAWA community!`,
+        title: "🎉 Congratulations! You're now a SAWA Host",
+        message:
+          approvalData.host_type === 'office' && approvalData.office_id
+            ? `Your host application has been approved, and you've been assigned to an office. Welcome to the SAWA community!`
+            : `Your host application has been approved. Welcome to the SAWA community!`,
         link: '/host-dashboard', // Assuming a generic host dashboard
       });
 
@@ -130,13 +133,13 @@ export default function AdminHostRequests() {
       queryClient.invalidateQueries({ queryKey: ['hostRequests'] });
       queryClient.invalidateQueries({ queryKey: ['allUsers'] }); // Invalidate all users if a user was updated
       queryClient.invalidateQueries({ queryKey: ['hosts'] }); // If there's a dedicated hosts list
-      toast.success('✅ Host approved successfully!', {
+      toast.success(' Host approved successfully!', {
         description: `${data.user.full_name || data.user.email} is now a host.`,
       });
     },
     onError: (error) => {
       console.error('Approval error:', error);
-      toast.error('❌ Failed to approve host', {
+      toast.error(' Failed to approve host', {
         description: error.message,
         duration: 8000,
       });
@@ -172,8 +175,10 @@ export default function AdminHostRequests() {
         recipient_email: request.host_email,
         recipient_type: 'host', // Changed to 'host' as they applied to be a host
         type: 'host_rejection', // More specific type
-        title: '❌ Host Application Update',
-        message: `Unfortunately, your host application was not approved. Reason: ${rejectionData.rejection_details || rejectionData.rejection_reason}. You can reapply after reviewing your profile.`,
+        title: ' Host Application Update',
+        message: `Unfortunately, your host application was not approved. Reason: ${
+          rejectionData.rejection_details || rejectionData.rejection_reason
+        }. You can reapply after reviewing your profile.`,
         link: '/BecomeAHost',
       });
 
@@ -195,8 +200,8 @@ export default function AdminHostRequests() {
   if (isLoading) {
     return (
       <AdminLayout>
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-[var(--brand-primary)]" />
+        <div className='flex items-center justify-center py-12'>
+          <Loader2 className='w-8 h-8 animate-spin text-[var(--brand-primary)]' />
         </div>
       </AdminLayout>
     );
@@ -204,76 +209,76 @@ export default function AdminHostRequests() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className='space-y-6'>
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Host Requests</h1>
-            <p className="text-gray-600 mt-1">Review and approve host applications</p>
+            <h1 className='text-3xl font-bold text-gray-900'>Host Requests</h1>
+            <p className='text-gray-600 mt-1'>Review and approve host applications</p>
           </div>
-          <Badge className="bg-purple-100 text-purple-800 text-lg px-4 py-2">
+          <Badge className='bg-purple-100 text-purple-800 text-lg px-4 py-2'>
             {stats.pending + stats.under_review + stats.needs_info} Pending Review
           </Badge>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className='grid grid-cols-2 md:grid-cols-5 gap-4'>
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+            <CardContent className='p-4'>
+              <div className='flex items-center justify-between'>
                 <div>
-                  <p className="text-xs text-gray-500">Pending</p>
-                  <p className="text-2xl font-bold">{stats.pending}</p>
+                  <p className='text-xs text-gray-500'>Pending</p>
+                  <p className='text-2xl font-bold'>{stats.pending}</p>
                 </div>
-                <Clock className="w-8 h-8 text-yellow-500" />
+                <Clock className='w-8 h-8 text-yellow-500' />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+            <CardContent className='p-4'>
+              <div className='flex items-center justify-between'>
                 <div>
-                  <p className="text-xs text-gray-500">Under Review</p>
-                  <p className="text-2xl font-bold">{stats.under_review}</p>
+                  <p className='text-xs text-gray-500'>Under Review</p>
+                  <p className='text-2xl font-bold'>{stats.under_review}</p>
                 </div>
-                <Eye className="w-8 h-8 text-blue-500" />
+                <Eye className='w-8 h-8 text-blue-500' />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+            <CardContent className='p-4'>
+              <div className='flex items-center justify-between'>
                 <div>
-                  <p className="text-xs text-gray-500">Approved</p>
-                  <p className="text-2xl font-bold">{stats.approved}</p>
+                  <p className='text-xs text-gray-500'>Approved</p>
+                  <p className='text-2xl font-bold'>{stats.approved}</p>
                 </div>
-                <CheckCircle className="w-8 h-8 text-green-500" />
+                <CheckCircle className='w-8 h-8 text-green-500' />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+            <CardContent className='p-4'>
+              <div className='flex items-center justify-between'>
                 <div>
-                  <p className="text-xs text-gray-500">Rejected</p>
-                  <p className="text-2xl font-bold">{stats.rejected}</p>
+                  <p className='text-xs text-gray-500'>Rejected</p>
+                  <p className='text-2xl font-bold'>{stats.rejected}</p>
                 </div>
-                <XCircle className="w-8 h-8 text-red-500" />
+                <XCircle className='w-8 h-8 text-red-500' />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+            <CardContent className='p-4'>
+              <div className='flex items-center justify-between'>
                 <div>
-                  <p className="text-xs text-gray-500">Needs Info</p>
-                  <p className="text-2xl font-bold">{stats.needs_info}</p>
+                  <p className='text-xs text-gray-500'>Needs Info</p>
+                  <p className='text-2xl font-bold'>{stats.needs_info}</p>
                 </div>
-                <AlertCircle className="w-8 h-8 text-orange-500" />
+                <AlertCircle className='w-8 h-8 text-orange-500' />
               </div>
             </CardContent>
           </Card>
@@ -281,44 +286,44 @@ export default function AdminHostRequests() {
 
         {/* Filters */}
         <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <CardContent className='p-4'>
+            <div className='flex flex-col sm:flex-row gap-3'>
+              <div className='flex-1'>
+                <div className='relative'>
+                  <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
                   <Input
-                    placeholder="Search by name or email..."
+                    placeholder='Search by name or email...'
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
+                    className='pl-10'
                   />
                 </div>
               </div>
 
               <Select value={cityFilter} onValueChange={setCityFilter}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue placeholder="City" />
+                <SelectTrigger className='w-full sm:w-40'>
+                  <SelectValue placeholder='City' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Cities</SelectItem>
+                  <SelectItem value='all'>All Cities</SelectItem>
                   {/* Assuming cities need to be dynamically populated, this is a placeholder */}
-                  <SelectItem value="Damascus">Damascus</SelectItem>
-                  <SelectItem value="Amman">Amman</SelectItem>
-                  <SelectItem value="Istanbul">Istanbul</SelectItem>
-                  <SelectItem value="Cairo">Cairo</SelectItem>
+                  <SelectItem value='Damascus'>Damascus</SelectItem>
+                  <SelectItem value='Amman'>Amman</SelectItem>
+                  <SelectItem value='Istanbul'>Istanbul</SelectItem>
+                  <SelectItem value='Cairo'>Cairo</SelectItem>
                 </SelectContent>
               </Select>
 
               <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue placeholder="Priority" />
+                <SelectTrigger className='w-full sm:w-40'>
+                  <SelectValue placeholder='Priority' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Priorities</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="normal">Normal</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value='all'>All Priorities</SelectItem>
+                  <SelectItem value='urgent'>Urgent</SelectItem>
+                  <SelectItem value='high'>High</SelectItem>
+                  <SelectItem value='normal'>Normal</SelectItem>
+                  <SelectItem value='low'>Low</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -327,43 +332,43 @@ export default function AdminHostRequests() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-6 w-full">
-            <TabsTrigger value="all">
-              All ({allRequests.length})
-            </TabsTrigger>
-            <TabsTrigger value="pending">
-              Pending ({stats.pending})
-            </TabsTrigger>
-            <TabsTrigger value="under_review">
-              Review ({stats.under_review})
-            </TabsTrigger>
-            <TabsTrigger value="needs_info">
-              Needs Info ({stats.needs_info})
-            </TabsTrigger>
-            <TabsTrigger value="approved">
-              Approved ({stats.approved})
-            </TabsTrigger>
-            <TabsTrigger value="rejected">
-              Rejected ({stats.rejected})
-            </TabsTrigger>
+          <TabsList className='grid grid-cols-6 w-full'>
+            <TabsTrigger value='all'>All ({allRequests.length})</TabsTrigger>
+            <TabsTrigger value='pending'>Pending ({stats.pending})</TabsTrigger>
+            <TabsTrigger value='under_review'>Review ({stats.under_review})</TabsTrigger>
+            <TabsTrigger value='needs_info'>Needs Info ({stats.needs_info})</TabsTrigger>
+            <TabsTrigger value='approved'>Approved ({stats.approved})</TabsTrigger>
+            <TabsTrigger value='rejected'>Rejected ({stats.rejected})</TabsTrigger>
           </TabsList>
 
-          <TabsContent value={activeTab} className="mt-6">
+          <TabsContent value={activeTab} className='mt-6'>
             {filteredRequests.length === 0 ? (
               <Card>
-                <CardContent className="py-12 text-center">
-                  <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">No requests found for this category and filter combination.</p>
+                <CardContent className='py-12 text-center'>
+                  <Users className='w-12 h-12 text-gray-300 mx-auto mb-4' />
+                  <p className='text-gray-500'>
+                    No requests found for this category and filter combination.
+                  </p>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {filteredRequests.map(request => (
+              <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+                {filteredRequests.map((request) => (
                   <HostApprovalCard
                     key={request.id}
                     request={request}
-                    onApprove={(req, data) => approveMutation.mutate({ request: req, approvalData: data })}
-                    onReject={(req, data) => rejectMutation.mutate({ request: req, rejectionData: data })}
+                    onApprove={(req, data) =>
+                      approveMutation.mutate({
+                        request: req,
+                        approvalData: data,
+                      })
+                    }
+                    onReject={(req, data) =>
+                      rejectMutation.mutate({
+                        request: req,
+                        rejectionData: data,
+                      })
+                    }
                     isApproving={approveMutation.isPending}
                     isRejecting={rejectMutation.isPending}
                   />

@@ -26,7 +26,7 @@ export function useMarketingAuth() {
     isLoading,
     hasAccess,
     isMarketing: user?.role_type === 'marketing',
-    isAdmin: user?.role_type === 'admin'
+    isAdmin: user?.role_type === 'admin',
   };
 }
 
@@ -38,7 +38,7 @@ export default function MarketingGuard({ children }) {
     if (!isLoading && !hasAccess) {
       console.log('🚫 Unauthorized access to Marketing Dashboard');
       toast.error('Access Denied', {
-        description: 'You need Marketing or Admin role to access this area.'
+        description: 'You need Marketing or Admin role to access this area.',
       });
       navigate(createPageUrl('Home'), { replace: true });
     }
@@ -46,8 +46,8 @@ export default function MarketingGuard({ children }) {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+      <div className='flex justify-center items-center h-screen bg-gradient-to-br from-blue-50 to-purple-50'>
+        <Loader2 className='w-8 h-8 animate-spin text-purple-600' />
       </div>
     );
   }

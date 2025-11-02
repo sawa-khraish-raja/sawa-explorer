@@ -15,15 +15,14 @@ export async function createPaymentIntent({ bookingId, amount, currency = 'USD' 
     const response = await base44.functions.invoke('payments/createIntent', {
       bookingId,
       amount,
-      currency
+      currency,
     });
-    
+
     if (!response.data.ok) {
       throw new Error(response.data.error || 'Failed to create payment intent');
     }
-    
+
     return response.data;
-    
   } catch (error) {
     console.error('[PAYMENT] Create intent failed:', error);
     throw error;
@@ -38,9 +37,8 @@ export async function createPaymentIntent({ bookingId, amount, currency = 'USD' 
 export async function verifyPaymentSignature(signed) {
   try {
     const response = await base44.functions.invoke('actions/verifySignature', signed);
-    
+
     return response.data.ok === true;
-    
   } catch (error) {
     console.error('[PAYMENT] Signature verification failed:', error);
     return false;
@@ -57,16 +55,16 @@ export async function securePaymentFlow({ bookingId, amount, currency, cardEleme
   const { paymentIntent, signed } = await createPaymentIntent({
     bookingId,
     amount,
-    currency
+    currency,
   });
-  
+
   // Step 2: Verify signature
   const isValid = await verifyPaymentSignature(signed);
-  
+
   if (!isValid) {
     throw new Error('Payment signature verification failed');
   }
-  
+
   // Step 3: Confirm payment with Stripe (or your provider)
   // This should use your payment provider's client-side SDK
   // Example with Stripe:
@@ -74,10 +72,10 @@ export async function securePaymentFlow({ bookingId, amount, currency, cardEleme
   //   paymentIntent.clientSecret,
   //   { payment_method: { card: cardElement } }
   // );
-  
+
   // Demo return
   return {
     ok: true,
-    paymentIntentId: paymentIntent.id
+    paymentIntentId: paymentIntent.id,
   };
 }
