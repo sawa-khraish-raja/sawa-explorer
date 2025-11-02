@@ -1,4 +1,4 @@
-import { getFirestore } from '../config/firebase.js';
+import { getFirestore, getAuth } from '../config/firebase.js';
 
 const USERS_COLLECTION = 'users';
 
@@ -127,22 +127,41 @@ export const updateUser = async (req, res) => {
   }
 };
 
-// Delete user
+// Delete user from both Firebase Auth and Firestore
 export const deleteUser = async (req, res) => {
   try {
     const db = getFirestore();
+    const auth = getAuth();
     const { id } = req.params;
+
+    // Delete from Firebase Authentication first
+    try {
+      await auth.deleteUser(id);
+      console.log(`✓ Deleted user ${id} from Firebase Auth`);
+    } catch (authError) {
+      // If user doesn't exist in Auth, log but continue with Firestore deletion
+      if (authError.code === 'auth/user-not-found') {
+        console.log(`⚠️ User ${id} not found in Firebase Auth (may already be deleted)`);
+      } else {
+        // For other auth errors, throw to catch block
+        throw authError;
+      }
+    }
+
+    // Delete from Firestore
     await db.collection(USERS_COLLECTION).doc(id).delete();
+    console.log(`✓ Deleted user ${id} from Firestore`);
 
     res.status(200).json({
       success: true,
-      message: 'User deleted successfully',
+      message: 'User deleted successfully from both Auth and Firestore',
     });
   } catch (error) {
     console.error('Error deleting user:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to delete user',
+      details: error.message,
     });
   }
 };

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryDocuments, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAppContext } from '../components/context/AppContext';
+import PermissionGuard from '../components/admin/PermissionGuard';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import AdminLayout from '../components/admin/AdminLayout';
@@ -54,7 +55,7 @@ import { cn } from '@/lib/utils';
 export default function AdminAdventures() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { currentUser, userDoc } = useAuth(); //  Use Firebase Auth
+  const { user } = useAppContext();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingAdventure, setEditingAdventure] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
@@ -63,13 +64,6 @@ export default function AdminAdventures() {
   const [selectedCity, setSelectedCity] = useState('all');
   const [reviewingAdventure, setReviewingAdventure] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
-
-  //  Check if user is admin
-  React.useEffect(() => {
-    if (userDoc && userDoc.role_type !== 'admin') {
-      navigate(createPageUrl('Home'));
-    }
-  }, [userDoc, navigate]);
 
   //  Load all adventures from Firestore
   const { data: adventures = [], isLoading: adventuresLoading } = useQuery({
@@ -81,6 +75,9 @@ export default function AdminAdventures() {
       });
     },
     refetchInterval: 10000, // Refresh every 10 seconds for real-time updates
+    refetchOnMount: 'always', // Always refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    staleTime: 0, // Consider data stale immediately
   });
 
   //  Approve mutation using Firestore
@@ -93,9 +90,10 @@ export default function AdminAdventures() {
         is_active: true, // Make it active when approved
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allAdventures'] });
-      queryClient.invalidateQueries({ queryKey: ['adventures'] }); // Invalidate public adventures list
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ['allAdventures'] });
+      await queryClient.refetchQueries({ queryKey: ['adventures'] }); // Refetch public adventures list
+      await queryClient.refetchQueries({ queryKey: ['adminNotificationCounts'] }); // Update sidebar badge
       toast.success('Adventure approved!');
     },
     onError: (error) => {
@@ -114,9 +112,10 @@ export default function AdminAdventures() {
         is_active: false, // Deactivate when rejected
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allAdventures'] });
-      queryClient.invalidateQueries({ queryKey: ['adventures'] }); // Invalidate public adventures list
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ['allAdventures'] });
+      await queryClient.refetchQueries({ queryKey: ['adventures'] }); // Refetch public adventures list
+      await queryClient.refetchQueries({ queryKey: ['adminNotificationCounts'] }); // Update sidebar badge
       setReviewingAdventure(null);
       setRejectionReason('');
       toast.success('Adventure rejected');
@@ -132,9 +131,10 @@ export default function AdminAdventures() {
     mutationFn: async (id) => {
       return await deleteDocument('adventures', id);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allAdventures'] });
-      queryClient.invalidateQueries({ queryKey: ['adventures'] }); // Invalidate public adventures list
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ['allAdventures'] });
+      await queryClient.refetchQueries({ queryKey: ['adventures'] }); // Refetch public adventures list
+      await queryClient.refetchQueries({ queryKey: ['adminNotificationCounts'] }); // Update sidebar badge
       setDeleteConfirmId(null);
       toast.success('Adventure deleted');
     },
@@ -150,8 +150,8 @@ export default function AdminAdventures() {
       // Admin adventures are automatically approved
       const newAdventure = {
         ...adventureData,
-        host_id: currentUser?.uid || 'admin',
-        host_email: currentUser?.email || 'admin@sawa.com',
+        host_id: user?.id || 'admin',
+        host_email: user?.email || 'admin@sawa.com',
         added_by_type: 'admin',
         approval_status: 'approved',
         status: 'upcoming',
@@ -159,9 +159,10 @@ export default function AdminAdventures() {
       };
       return await addDocument('adventures', newAdventure);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allAdventures'] });
-      queryClient.invalidateQueries({ queryKey: ['adventures'] }); // Invalidate public adventures list
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ['allAdventures'] });
+      await queryClient.refetchQueries({ queryKey: ['adventures'] }); // Refetch public adventures list
+      await queryClient.refetchQueries({ queryKey: ['adminNotificationCounts'] }); // Update sidebar badge
       setShowCreateDialog(false);
       toast.success('Admin adventure created!');
     },
@@ -171,13 +172,15 @@ export default function AdminAdventures() {
     },
   });
 
-  if (adventuresLoading || !userDoc) {
+  if (adventuresLoading) {
     return (
-      <AdminLayout>
-        <div className='flex justify-center items-center h-96'>
-          <Loader2 className='w-8 h-8 animate-spin text-[var(--brand-primary)]' />
-        </div>
-      </AdminLayout>
+      <PermissionGuard pageId='adventures'>
+        <AdminLayout>
+          <div className='flex justify-center items-center h-96'>
+            <Loader2 className='w-8 h-8 animate-spin text-[var(--brand-primary)]' />
+          </div>
+        </AdminLayout>
+      </PermissionGuard>
     );
   }
 
@@ -214,8 +217,9 @@ export default function AdminAdventures() {
   const cities = [...new Set(adventures.map((a) => a.city_name || a.city))].filter(Boolean);
 
   return (
-    <AdminLayout currentPage='adventures'>
-      <div className='space-y-6'>
+    <PermissionGuard pageId='adventures'>
+      <AdminLayout currentPage='adventures'>
+        <div className='space-y-6'>
         {/* Header */}
         <Card className='border-2 border-[#E6E6FF]'>
           <CardHeader className='bg-gradient-to-r from-[#330066] to-[#9933CC] text-white p-6'>
@@ -622,5 +626,6 @@ export default function AdminAdventures() {
         </AlertDialog>
       </div>
     </AdminLayout>
+    </PermissionGuard>
   );
 }

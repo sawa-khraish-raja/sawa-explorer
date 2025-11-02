@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Star, ThumbsUp, Flag, MessageSquare, X, Send, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { base44 } from '@/api/base44Client';
+import { updateDocument } from '@/utils/firestore';
 import { toast } from 'sonner';
 
 const StarDisplay = ({ rating, showNumber = true }) => {
@@ -47,7 +47,7 @@ export default function ReviewCard({ review, currentUser, onUpdate }) {
         ? review.helpful_by.filter((email) => email !== currentUser.email)
         : [...(review.helpful_by || []), currentUser.email];
 
-      await base44.entities.Review.update(review.id, {
+      await updateDocument('reviews', review.id, {
         helpful_by: updatedHelpfulBy,
         helpful_count: updatedHelpfulBy.length,
       });
@@ -64,7 +64,7 @@ export default function ReviewCard({ review, currentUser, onUpdate }) {
 
     setIsSubmitting(true);
     try {
-      await base44.entities.Review.update(review.id, {
+      await updateDocument('reviews', review.id, {
         host_response: response.trim(),
         host_response_date: new Date().toISOString(),
       });

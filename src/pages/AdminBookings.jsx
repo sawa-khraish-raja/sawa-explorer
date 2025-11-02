@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments } from '@/utils/firestore';
+import PermissionGuard from '../components/admin/PermissionGuard';
 import AdminLayout from '../components/admin/AdminLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,7 +20,15 @@ export default function AdminBookings() {
 
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: ['allBookings'],
-    queryFn: () => base44.entities.Booking.list('-created_date'),
+    queryFn: async () => {
+      const allBookings = await getAllDocuments('bookings');
+      // Sort by created_date descending (newest first)
+      return allBookings.sort((a, b) => {
+        const dateA = new Date(a.created_date || a.created_at || 0);
+        const dateB = new Date(b.created_date || b.created_at || 0);
+        return dateB - dateA;
+      });
+    },
   });
 
   //  Separate service and adventure bookings
@@ -51,11 +60,13 @@ export default function AdminBookings() {
 
   if (isLoading) {
     return (
-      <AdminLayout>
-        <div className='flex justify-center items-center h-96'>
-          <Loader2 className='w-8 h-8 animate-spin text-[var(--brand-primary)]' />
-        </div>
-      </AdminLayout>
+      <PermissionGuard pageId='bookings'>
+        <AdminLayout>
+          <div className='flex justify-center items-center h-96'>
+            <Loader2 className='w-8 h-8 animate-spin text-[var(--brand-primary)]' />
+          </div>
+        </AdminLayout>
+      </PermissionGuard>
     );
   }
 
@@ -71,8 +82,9 @@ export default function AdminBookings() {
     .reduce((sum, b) => sum + (b.total_price || 0), 0);
 
   return (
-    <AdminLayout>
-      <div className='space-y-4 sm:space-y-6'>
+    <PermissionGuard pageId='bookings'>
+      <AdminLayout>
+        <div className='space-y-4 sm:space-y-6'>
         {/* Header */}
         <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
           <div>
@@ -483,5 +495,6 @@ export default function AdminBookings() {
         </Dialog>
       </div>
     </AdminLayout>
+    </PermissionGuard>
   );
 }

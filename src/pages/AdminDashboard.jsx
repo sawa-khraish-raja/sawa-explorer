@@ -1,6 +1,8 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments } from '@/utils/firestore';
+import { useAppContext } from '../components/context/AppContext';
+import PermissionGuard from '../components/admin/PermissionGuard';
 import AdminLayout from '../components/admin/AdminLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -32,59 +34,87 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const [showRevenueBreakdown, setShowRevenueBreakdown] = useState(false);
 
+  // Use AppContext for current user
+  const { user, userLoading: isUserLoading } = useAppContext();
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const { data: user, isLoading: isUserLoading } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: async () => {
-      try {
-        const currentUser = await base44.auth.me();
-        return currentUser;
-      } catch (error) {
-        console.warn('Failed to fetch current user:', error);
-        return null;
-      }
-    },
-    retry: false,
-    staleTime: 30 * 60 * 1000,
-    cacheTime: 60 * 60 * 1000,
-  });
-
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list('-created_date'),
+    queryFn: async () => {
+      const allUsers = await getAllDocuments('users');
+      // Sort by created_date/created_at descending (newest first)
+      return allUsers.sort((a, b) => {
+        const dateA = new Date(a.created_date || a.created_at || 0);
+        const dateB = new Date(b.created_date || b.created_at || 0);
+        return dateB - dateA;
+      });
+    },
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
     queryKey: ['allBookings'],
-    queryFn: () => base44.entities.Booking.list('-created_date'),
+    queryFn: async () => {
+      const allBookings = await getAllDocuments('bookings');
+      // Sort by created_date descending (newest first)
+      return allBookings.sort((a, b) => {
+        const dateA = new Date(a.created_date || a.created_at || 0);
+        const dateB = new Date(b.created_date || b.created_at || 0);
+        return dateB - dateA;
+      });
+    },
     staleTime: 2 * 60 * 1000,
   });
 
   const { data: conversations = [] } = useQuery({
     queryKey: ['allConversations'],
-    queryFn: () => base44.entities.Conversation.list('-last_message_timestamp'),
+    queryFn: async () => {
+      const allConversations = await getAllDocuments('conversations');
+      // Sort by last_message_timestamp descending (newest first)
+      return allConversations.sort((a, b) => {
+        const dateA = new Date(a.last_message_timestamp || 0);
+        const dateB = new Date(b.last_message_timestamp || 0);
+        return dateB - dateA;
+      });
+    },
     staleTime: 3 * 60 * 1000,
   });
 
   const { data: offers = [] } = useQuery({
     queryKey: ['allOffers'],
-    queryFn: () => base44.entities.Offer.list('-created_date'),
+    queryFn: async () => {
+      const allOffers = await getAllDocuments('offers');
+      // Sort by created_date descending (newest first)
+      return allOffers.sort((a, b) => {
+        const dateA = new Date(a.created_date || a.created_at || 0);
+        const dateB = new Date(b.created_date || b.created_at || 0);
+        return dateB - dateA;
+      });
+    },
     staleTime: 2 * 60 * 1000,
   });
 
   const { data: hosts = [] } = useQuery({
     queryKey: ['allHosts'],
-    queryFn: () => base44.entities.User.filter({ host_approved: true }),
+    queryFn: async () => {
+      // Get all users where host_approved is true
+      return await queryDocuments('users', [
+        ['host_approved', '==', true]
+      ]);
+    },
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: adventures = [] } = useQuery({
     queryKey: ['allAdventures'],
-    queryFn: () => base44.entities.Adventure.list('-created_date'),
+    queryFn: async () => {
+      // Adventures not migrated yet - return empty array for now
+      // TODO: Migrate adventures collection
+      return [];
+    },
     staleTime: 5 * 60 * 1000,
   });
 
@@ -205,16 +235,19 @@ export default function AdminDashboard() {
   //  NOW the early return (after all hooks)
   if (usersLoading || bookingsLoading || isUserLoading) {
     return (
-      <AdminLayout>
-        <div className='flex justify-center items-center h-96'>
-          <Loader2 className='w-8 h-8 animate-spin text-[var(--brand-primary)]' />
-        </div>
-      </AdminLayout>
+      <PermissionGuard pageId='dashboard'>
+        <AdminLayout>
+          <div className='flex justify-center items-center h-96'>
+            <Loader2 className='w-8 h-8 animate-spin text-[var(--brand-primary)]' />
+          </div>
+        </AdminLayout>
+      </PermissionGuard>
     );
   }
 
   return (
-    <AdminLayout currentPage='dashboard'>
+    <PermissionGuard pageId='dashboard'>
+      <AdminLayout currentPage='dashboard'>
       <div className='space-y-4 sm:space-y-6'>
         <div className='bg-gradient-to-r from-[#330066] via-[#9933CC] to-[#330066] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 text-white shadow-2xl'>
           <h1 className='text-slate-50 mb-1 text-xl font-bold sm:text-2xl lg:text-3xl xl:text-4xl sm:mb-2'>
@@ -424,6 +457,7 @@ export default function AdminDashboard() {
         )}
       </div>
     </AdminLayout>
+    </PermissionGuard>
   );
 }
 

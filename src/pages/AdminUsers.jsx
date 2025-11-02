@@ -2,6 +2,9 @@ import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { getAllDocuments } from '@/utils/firestore';
+import { useAppContext } from '../components/context/AppContext';
+import PermissionGuard from '../components/admin/PermissionGuard';
 import AdminLayout from '../components/admin/AdminLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -73,16 +76,20 @@ export default function AdminUsers() {
   const [selectedUserToDelete, setSelectedUserToDelete] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
-
+  const { user: currentUser } = useAppContext();
   const hasFullAccess = currentUser?.admin_access_type === 'full' || currentUser?.role === 'admin';
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list('-created_date'),
+    queryFn: async () => {
+      const allUsers = await getAllDocuments('users');
+      // Sort by created_date descending (most recent first)
+      return allUsers.sort((a, b) => {
+        const dateA = new Date(a.created_date || a.created_at || 0);
+        const dateB = new Date(b.created_date || b.created_at || 0);
+        return dateB - dateA;
+      });
+    },
   });
 
   const updateUserMutation = useMutation({
@@ -304,19 +311,37 @@ export default function AdminUsers() {
   const handleDeleteUser = async () => {
     if (!selectedUserToDelete) return;
     try {
-      await base44.entities.User.delete(selectedUserToDelete.id);
+      // Call server API to delete from both Firebase Auth and Firestore
+      // This uses Firebase Admin SDK on the server which has permission to delete other users
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/users/${selectedUserToDelete.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.details || 'Failed to delete user');
+      }
+
       await logAuditAction(currentUser?.email, 'delete_user', selectedUserToDelete.email, {
         userId: selectedUserToDelete.id,
       });
+
       toast.success(
-        `User ${selectedUserToDelete.full_name || selectedUserToDelete.email} has been deleted.`
+        `User ${selectedUserToDelete.full_name || selectedUserToDelete.email} deleted from both Auth and Firestore.`
       );
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
       setShowDeleteConfirm(false);
       setSelectedUserToDelete(null);
     } catch (error) {
       console.error('Failed to delete user:', error);
-      toast.error(`Failed to delete user: ${error.message || 'They may have related records.'}`);
+      toast.error(`Failed to delete user: ${error.message}`);
       setShowDeleteConfirm(false);
     }
   };
@@ -369,13 +394,14 @@ export default function AdminUsers() {
   }
 
   return (
-    <AdminLayout>
-      <div className='space-y-6'>
+    <PermissionGuard pageId='users'>
+      <AdminLayout>
+        <div className='space-y-6'>
         <Card className='bg-gradient-to-r from-[#330066] to-[#5C00B8] text-white shadow-2xl'>
           <CardHeader>
             <CardTitle className='text-slate-50 text-xl sm:text-2xl font-semibold tracking-tight flex items-center gap-3'>
               <Users className='w-6 h-6 sm:w-7 sm:h-7' />
-              Manage All Users ({users.length})
+              Manage All Users ({users?.length || 0})
             </CardTitle>
           </CardHeader>
         </Card>
@@ -751,12 +777,17 @@ export default function AdminUsers() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the user{' '}
-              <span className='font-semibold'>
-                {selectedUserToDelete?.full_name || selectedUserToDelete?.email}
-              </span>{' '}
-              and remove their data from our servers.
+            <AlertDialogDescription className='space-y-2'>
+              <p>
+                This will permanently delete{' '}
+                <span className='font-semibold'>
+                  {selectedUserToDelete?.full_name || selectedUserToDelete?.email}
+                </span>{' '}
+                from both Firebase Authentication and Firestore.
+              </p>
+              <p className='text-red-600 font-medium'>
+                ⚠️ This action cannot be undone. The user will be completely removed from the system.
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -777,6 +808,7 @@ export default function AdminUsers() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AdminLayout>
+      </AdminLayout>
+    </PermissionGuard>
   );
 }

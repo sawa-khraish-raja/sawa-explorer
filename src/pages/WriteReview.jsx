@@ -1,47 +1,60 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { queryDocuments } from '@/utils/firestore';
+import { useAppContext } from '../components/context/AppContext';
 import { createPageUrl } from '@/utils';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import ReviewForm from '../components/reviews/ReviewForm';
 
 export default function WriteReview() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user, userLoading } = useAppContext();
+  const [checked, setChecked] = useState(false);
 
   const bookingId = searchParams.get('bookingId');
   const adventureId = searchParams.get('adventureId');
   const reviewedEmail = searchParams.get('reviewedEmail');
   const reviewedName = searchParams.get('reviewedName');
+  const reviewedUserId = searchParams.get('reviewedUserId');
   const reviewType = searchParams.get('reviewType');
   const city = searchParams.get('city');
 
   useEffect(() => {
-    async function fetchUser() {
-      try {
-        const currentUser = await base44.auth.me();
-        setUser(currentUser);
+    async function checkExistingReview() {
+      if (userLoading) return;
 
+      if (!user) {
+        toast.info('Please sign in to write a review');
+        navigate(createPageUrl('Home'));
+        return;
+      }
+
+      try {
         // Check if already reviewed
-        const existingReviews = await base44.entities.Review.filter({
-          booking_id: bookingId || adventureId,
-          reviewer_email: currentUser.email,
-        });
+        const existingReviews = await queryDocuments('reviews', [
+          ['booking_id', '==', bookingId || adventureId],
+          ['reviewer_id', '==', user.id],
+        ]);
 
         if (existingReviews.length > 0) {
-          alert('You have already reviewed this booking');
+          toast.info('You have already reviewed this booking');
           navigate(-1);
+          return;
         }
-      } catch (e) {
-        base44.auth.redirectToLogin(window.location.href);
+
+        setChecked(true);
+      } catch (error) {
+        console.error('Error checking reviews:', error);
+        toast.error('Failed to load review data');
       }
     }
-    fetchUser();
-  }, [bookingId, adventureId, navigate]);
+    checkExistingReview();
+  }, [user, userLoading, bookingId, adventureId, navigate]);
 
-  if (!user) {
+  if (userLoading || !checked) {
     return (
       <div className='flex items-center justify-center min-h-screen'>
         <Loader2 className='w-8 h-8 animate-spin text-purple-600' />
@@ -63,6 +76,7 @@ export default function WriteReview() {
           adventureId={adventureId}
           reviewedEmail={reviewedEmail}
           reviewedName={reviewedName}
+          reviewedUserId={reviewedUserId}
           reviewType={reviewType}
           city={city}
           onSuccess={() => {

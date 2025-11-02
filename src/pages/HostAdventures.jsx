@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { queryDocuments, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { useAppContext } from '../components/context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -52,31 +53,36 @@ export default function HostAdventures() {
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
 
-  // Load current user
-  const { data: user, isLoading: userLoading } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: async () => {
-      const currentUser = await base44.auth.me();
-      if (!currentUser || !currentUser.host_approved) {
-        navigate(createPageUrl('Home'));
-        return null;
-      }
-      return currentUser;
-    },
-  });
+  // Use AppContext for user
+  const { user, userLoading, isHost } = useAppContext();
 
-  // Load host's adventures
+  // Redirect non-hosts
+  useEffect(() => {
+    if (!userLoading && (!user || !isHost)) {
+      toast.error('Only approved hosts can access this page');
+      navigate(createPageUrl('Home'));
+    }
+  }, [user, userLoading, isHost, navigate]);
+
+  // Load host's adventures from Firestore
   const { data: adventures = [], isLoading: adventuresLoading } = useQuery({
-    queryKey: ['hostAdventures', user?.email],
+    queryKey: ['hostAdventures', user?.id],
     queryFn: async () => {
-      if (!user?.email) return [];
-      const allAdventures = await base44.entities.Adventure.list('-created_date');
-      return allAdventures.filter(
-        (a) => a.host_email === user.email && a.added_by_type !== 'office'
+      if (!user?.id) return [];
+      // Get all adventures for this host, then filter out office adventures in JS
+      // (Can't use != with orderBy without a composite index)
+      const allHostAdventures = await queryDocuments(
+        'adventures',
+        [['host_id', '==', user.id]],
+        { orderBy: { field: 'created_at', direction: 'desc' } }
       );
+      // Filter out office-added adventures
+      return allHostAdventures.filter(a => a.added_by_type !== 'office');
     },
-    enabled: !!user?.email,
+    enabled: !!user?.id,
     refetchInterval: 10000,
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
 
   // Create/Update mutation
@@ -90,10 +96,12 @@ export default function HostAdventures() {
 
       const dataToSave = {
         ...adventureData,
+        host_id: user.id,
         host_email: user.email,
         added_by_type: 'freelance_host',
         approval_status: 'pending',
         status: 'pending',
+        is_active: false,
         sawa_commission_amount: commissions.sawaAmount,
         office_commission_amount: commissions.officeAmount || 0,
         traveler_total_price: commissions.travelerPays,
@@ -108,13 +116,23 @@ export default function HostAdventures() {
       };
 
       if (editingAdventure) {
-        return await base44.entities.Adventure.update(editingAdventure.id, dataToSave);
+        await updateDocument('adventures', editingAdventure.id, {
+          ...dataToSave,
+          updated_at: new Date().toISOString(),
+        });
+        return editingAdventure.id;
       } else {
-        return await base44.entities.Adventure.create(dataToSave);
+        return await addDocument('adventures', {
+          ...dataToSave,
+          created_at: new Date().toISOString(),
+          current_participants: 0,
+        });
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['hostAdventures'] });
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ['hostAdventures'] });
+      await queryClient.refetchQueries({ queryKey: ['adventures'] });
+      await queryClient.refetchQueries({ queryKey: ['allAdventures'] });
       setShowCreateDialog(false);
       setEditingAdventure(null);
       toast.success(
@@ -130,10 +148,12 @@ export default function HostAdventures() {
   // Delete mutation
   const deleteAdventureMutation = useMutation({
     mutationFn: async (id) => {
-      return await base44.entities.Adventure.delete(id);
+      return await deleteDocument('adventures', id);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['hostAdventures'] });
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ['hostAdventures'] });
+      await queryClient.refetchQueries({ queryKey: ['adventures'] });
+      await queryClient.refetchQueries({ queryKey: ['allAdventures'] });
       setDeleteConfirmId(null);
       toast.success('Adventure deleted');
     },

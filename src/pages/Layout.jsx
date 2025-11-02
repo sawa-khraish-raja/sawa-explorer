@@ -117,6 +117,17 @@ const DesktopNav = memo(
             {t('nav.my_dashboard')}
           </Link>
           <Link
+            to={createPageUrl('HostAdventures')}
+            className={cn(
+              'px-4 py-2.5 text-[15px] font-medium rounded-full transition-all duration-150',
+              isActivePage('HostAdventures')
+                ? 'text-gray-900'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            )}
+          >
+            My Adventures
+          </Link>
+          <Link
             to={createPageUrl('Adventures')}
             className={cn(
               'px-4 py-2.5 text-[15px] font-medium rounded-full transition-all duration-150',

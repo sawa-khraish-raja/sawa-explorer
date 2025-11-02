@@ -30,7 +30,7 @@ import { Button } from '@/components/ui/button';
 import { useAdminPermissions, ADMIN_PAGES } from './PermissionGuard';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { queryDocuments } from '@/utils/firestore';
 
 export default function AdminLayout({ children, currentPage = '' }) {
   const location = useLocation();
@@ -39,22 +39,21 @@ export default function AdminLayout({ children, currentPage = '' }) {
 
   const { hasFullAccess, hasPageAccess, user } = useAdminPermissions();
 
-  const { data: notificationCounts = {}, isLoading: countsLoading } = useQuery({
+  const { data: notificationCounts = {} } = useQuery({
     queryKey: ['adminNotificationCounts'],
     queryFn: async () => {
       try {
-        const [hostRequests, partnerRequests, adventures, cancellations] = await Promise.all([
-          base44.entities.HostRequest.filter({ status: 'pending' }),
-          base44.entities.PartnerRequest.filter({ status: 'new' }),
-          base44.entities.Adventure.filter({ approval_status: 'pending' }),
-          base44.entities.CancellationRequest.filter({ status: 'pending' }),
+        // Get pending adventures from Firestore
+        const pendingAdventures = await queryDocuments('adventures', [
+          ['approval_status', '==', 'pending']
         ]);
 
+        // TODO: Add host requests, partner requests, and cancellations when those collections are migrated
         return {
-          hostRequests: hostRequests.length,
-          partnerRequests: partnerRequests.length,
-          pendingAdventures: adventures.length,
-          pendingCancellations: cancellations.length,
+          hostRequests: 0,
+          partnerRequests: 0,
+          pendingAdventures: pendingAdventures.length,
+          pendingCancellations: 0,
         };
       } catch (error) {
         console.error('Error loading notification counts:', error);
@@ -66,7 +65,7 @@ export default function AdminLayout({ children, currentPage = '' }) {
         };
       }
     },
-    refetchInterval: 30000,
+    refetchInterval: 30000, // Refetch every 30 seconds
     staleTime: 10000,
   });
 

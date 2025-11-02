@@ -5,7 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Star, Upload, X, Loader2, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { base44 } from '@/api/base44Client';
+import { addDocument, queryDocuments, updateDocument, getAllDocuments } from '@/utils/firestore';
+import { useAppContext } from '../context/AppContext';
 import { toast } from 'sonner';
 
 const StarRating = ({ value, onChange, label, required = false }) => {
@@ -57,10 +58,12 @@ export default function ReviewForm({
   adventureId,
   reviewedEmail,
   reviewedName,
+  reviewedUserId, // Add this prop for Firestore user ID
   reviewType, // 'traveler_to_host', 'host_to_traveler', 'adventure_review'
   city,
   onSuccess,
 }) {
+  const { user } = useAppContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     overall_rating: 0,
@@ -82,15 +85,15 @@ export default function ReviewForm({
 
     setIsSubmitting(true);
     try {
-      const uploadPromises = files.map((file) => base44.integrations.Core.UploadFile({ file }));
-      const results = await Promise.all(uploadPromises);
-      const urls = results.map((r) => r.file_url);
-
-      setFormData((prev) => ({
-        ...prev,
-        photos: [...prev.photos, ...urls],
-      }));
-      toast.success('Photos uploaded');
+      // TODO: Migrate to Firebase Storage
+      // For now, disable photo uploads until Firebase Storage is set up
+      toast.info('Photo uploads coming soon!');
+      // const uploadPromises = files.map((file) => uploadToFirebaseStorage(file));
+      // const urls = await Promise.all(uploadPromises);
+      // setFormData((prev) => ({
+      //   ...prev,
+      //   photos: [...prev.photos, ...urls],
+      // }));
     } catch (error) {
       toast.error('Failed to upload photos');
     } finally {
@@ -108,6 +111,11 @@ export default function ReviewForm({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!user) {
+      toast.error('Please sign in to submit a review');
+      return;
+    }
+
     if (formData.overall_rating === 0) {
       toast.error('Please provide an overall rating');
       return;
@@ -120,14 +128,14 @@ export default function ReviewForm({
 
     setIsSubmitting(true);
     try {
-      const user = await base44.auth.me();
-
       const reviewData = {
         booking_id: bookingId,
         adventure_id: adventureId,
+        reviewer_id: user.id,
         reviewer_email: user.email,
         reviewer_name: user.full_name || user.email.split('@')[0],
         reviewer_photo: user.profile_photo,
+        reviewed_user_id: reviewedUserId,
         reviewed_email: reviewedEmail,
         reviewed_name: reviewedName,
         review_type: reviewType,
@@ -137,6 +145,7 @@ export default function ReviewForm({
         photos: formData.photos,
         is_verified: true,
         status: 'published',
+        created_at: new Date().toISOString(),
       };
 
       // Add sub-ratings based on review type
@@ -153,12 +162,12 @@ export default function ReviewForm({
         reviewData.cleanliness_rating = formData.cleanliness_rating;
       }
 
-      await base44.entities.Review.create(reviewData);
+      await addDocument('reviews', reviewData);
 
       // Update reviewed user's rating
-      await updateUserRating(reviewedEmail);
+      await updateUserRating(reviewedUserId);
 
-      toast.success(' Review submitted successfully!');
+      toast.success('Review submitted successfully!');
       if (onSuccess) onSuccess();
     } catch (error) {
       console.error('Review submission error:', error);
@@ -168,25 +177,22 @@ export default function ReviewForm({
     }
   };
 
-  const updateUserRating = async (email) => {
+  const updateUserRating = async (userId) => {
     try {
-      // Get all reviews for this user
-      const allReviews = await base44.entities.Review.filter({
-        reviewed_email: email,
-        status: 'published',
-      });
+      // Get all published reviews for this user
+      const allReviews = await queryDocuments('reviews', [
+        ['reviewed_user_id', '==', userId],
+        ['status', '==', 'published'],
+      ]);
 
       if (allReviews.length > 0) {
         const avgRating =
           allReviews.reduce((sum, r) => sum + r.overall_rating, 0) / allReviews.length;
 
         // Update user's rating
-        const users = await base44.entities.User.filter({ email });
-        if (users.length > 0) {
-          await base44.entities.User.update(users[0].id, {
-            rating: parseFloat(avgRating.toFixed(2)),
-          });
-        }
+        await updateDocument('users', userId, {
+          rating: parseFloat(avgRating.toFixed(2)),
+        });
       }
     } catch (error) {
       console.error('Failed to update user rating:', error);
