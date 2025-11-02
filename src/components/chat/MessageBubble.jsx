@@ -613,7 +613,7 @@ export default function MessageBubble({
                 {displayText}
               </p>
             ) : (
-              <ReactMarkdown
+              <div
                 className={cn(
                   'text-sm prose prose-sm max-w-none',
                   '[&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
@@ -621,7 +621,9 @@ export default function MessageBubble({
                   'prose-a:text-purple-600 hover:prose-a:text-purple-700',
                   'prose-strong:text-gray-900 prose-code:text-purple-700'
                 )}
-                components={{
+              >
+                <ReactMarkdown
+                  components={{
                   code: ({ inline, className, children, ...props }) => {
                     const match = /language-(\w+)/.exec(className || '');
                     return !inline && match ? (
@@ -671,9 +673,10 @@ export default function MessageBubble({
                     </blockquote>
                   ),
                 }}
-              >
-                {displayText}
-              </ReactMarkdown>
+                >
+                  {displayText}
+                </ReactMarkdown>
+              </div>
             )}
           </div>
         )}

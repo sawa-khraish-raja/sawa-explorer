@@ -1,12 +1,22 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import {
   Loader2,
   Calendar,
@@ -18,7 +28,15 @@ import {
   Check,
   Users,
   Building2,
+  Send,
 } from 'lucide-react';
+import {
+  getAllDocuments,
+  queryDocuments,
+  addDocument,
+  updateDocument,
+  getOrCreateConversation,
+} from '@/utils/firestore';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -34,6 +52,13 @@ export default function HostDashboard() {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('requests');
+  const [showOfferDialog, setShowOfferDialog] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [offerForm, setOfferForm] = useState({
+    price: '',
+    inclusions: '',
+    message: '',
+  });
 
   //  FIXED: Use shared user from AppContext
   const { user, userLoading } = useAppContext();
@@ -54,30 +79,94 @@ export default function HostDashboard() {
     return Array.from(cities);
   }, [user]);
 
-  const acceptRequestMutation = useMutation({
-    mutationFn: async (booking) => {
-      //  FIXED: Use backend function instead of multiple API calls
-      const response = await base44.functions.invoke('createConversation', {
-        booking_id: booking.id,
-      });
+  const sendOfferMutation = useMutation({
+    mutationFn: async ({ booking, offerData }) => {
+      console.log('📤 Sending offer for booking:', booking.id);
+      console.log('📤 Offer data:', offerData);
 
-      if (!response.data?.ok) {
-        throw new Error(response.data?.error || 'Failed to accept request');
+      // Calculate fees (15% SAWA fee + 10% office fee = 25% total)
+      const basePrice = parseFloat(offerData.price);
+      const sawaFee = basePrice * 0.15;
+      const officeFee = basePrice * 0.10;
+      const totalPrice = basePrice + sawaFee + officeFee;
+
+      const offer = {
+        booking_id: booking.id,
+        host_id: user.id,
+        host_email: user.email,
+        host_name: user.full_name || user.email,
+        traveler_email: booking.traveler_email,
+        price: basePrice,
+        price_total: totalPrice,
+        price_breakdown: {
+          base_price: basePrice,
+          sawa_fee: sawaFee,
+          sawa_percent: 15,
+          office_fee: officeFee,
+          office_percent: 10,
+          total: totalPrice,
+        },
+        status: 'pending',
+        inclusions: offerData.inclusions,
+        message: offerData.message,
+        expiry_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days from now
+        created_date: new Date().toISOString(),
+        updated_date: new Date().toISOString(),
+      };
+
+      const offerId = await addDocument('offers', offer);
+      console.log('✅ Offer created with ID:', offerId);
+
+      // Create notification for traveler
+      const notificationData = {
+        recipient_email: booking.traveler_email,
+        type: 'offer_received',
+        title: 'New Offer Received',
+        message: `You received an offer for your booking in ${booking.city_name || booking.city}`,
+        booking_id: booking.id,
+        offer_id: offerId,
+        read: false,
+        created_date: new Date().toISOString(),
+      };
+
+      // Only add user_id if it exists
+      if (booking.traveler_id) {
+        notificationData.user_id = booking.traveler_id;
       }
 
-      return response.data;
+      await addDocument('notifications', notificationData);
+
+      return { offerId, booking };
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['availableBookings'] });
-      queryClient.invalidateQueries({ queryKey: ['myBookings'] });
-      queryClient.invalidateQueries({ queryKey: ['hostConversations'] });
-      toast.success('Request accepted! Start chatting with the traveler.');
-      navigate(createPageUrl(`Messages?conversation_id=${data.conversation_id}`));
+      queryClient.invalidateQueries({ queryKey: ['myOffers'] });
+      toast.success('Offer sent successfully! Opening chat...');
+      setShowOfferDialog(false);
+      setSelectedBooking(null);
+      setOfferForm({ price: '', inclusions: '', message: '' });
+
+      try {
+        // Create or get conversation for this booking
+        const conversation = await getOrCreateConversation({
+          id: data.booking.id,
+          traveler_email: data.booking.traveler_email,
+          host_email: user.email,
+          city_name: data.booking.city_name || data.booking.city,
+        });
+
+        console.log('💬 Conversation created/found:', conversation.id);
+
+        // Navigate to Messages page with conversation ID
+        navigate(createPageUrl(`Messages?conversation_id=${conversation.id}`));
+      } catch (error) {
+        console.error('❌ Error opening chat:', error);
+        toast.error('Offer sent, but failed to open chat. Please check Messages page.');
+      }
     },
     onError: (error) => {
-      console.error('Error accepting request:', error);
-      toast.error(error.message || 'Failed to accept request');
-      queryClient.invalidateQueries({ queryKey: ['availableBookings'] });
+      console.error('❌ Error sending offer:', error);
+      toast.error(error.message || 'Failed to send offer');
     },
   });
 
@@ -85,45 +174,58 @@ export default function HostDashboard() {
     queryKey: ['availableBookings', user?.email, hostCities],
     queryFn: async () => {
       if (!user?.email || !hostCities || hostCities.length === 0) {
+        console.log('⚠️ No user or host cities');
         return [];
       }
 
       try {
-        const allBookings = await base44.entities.Booking.list('-created_date');
-        const myConversations = await base44.entities.Conversation.filter({
-          conversation_type: 'service',
-        });
+        console.log('🔍 Fetching available bookings for host:', user.email);
+        console.log('🔍 Host cities:', hostCities);
 
-        const myBookingIds = new Set();
-        myConversations.forEach((conv) => {
-          if (
-            conv.host_emails &&
-            Array.isArray(conv.host_emails) &&
-            conv.host_emails.includes(user.email)
-          ) {
-            myBookingIds.add(conv.booking_id);
-          }
-        });
+        // Get all bookings
+        const allBookings = await getAllDocuments('bookings');
+        console.log('📦 Total bookings in database:', allBookings.length);
 
+        // Get all offers made by this host
+        const myOffers = await queryDocuments('offers', [
+          ['host_email', '==', user.email],
+        ]);
+        const myOfferedBookingIds = new Set(myOffers.map((o) => o.booking_id));
+        console.log('📋 My existing offers:', myOffers.length);
+
+        // Filter for available bookings
         const available = allBookings.filter((booking) => {
-          if (!hostCities.includes(booking.city)) return false;
+          // Filter by city
+          const bookingCity = booking.city_name || booking.city;
+          if (!hostCities.includes(bookingCity)) {
+            return false;
+          }
+
+          // Exclude adventure bookings
           if (booking.adventure_id) return false;
-          if (booking.status === 'cancelled' || booking.state === 'cancelled') return false;
-          if (booking.status === 'expired' || booking.state === 'expired') return false;
-          if (booking.status === 'confirmed' || booking.state === 'confirmed') return false;
-          if (myBookingIds.has(booking.id)) return false;
+
+          // Exclude cancelled, expired, or confirmed bookings
+          if (['cancelled', 'expired', 'confirmed'].includes(booking.status)) return false;
+
+          // Exclude bookings where host already sent an offer
+          if (myOfferedBookingIds.has(booking.id)) return false;
+
+          // Only show pending bookings
+          if (booking.status !== 'pending') return false;
+
           return true;
         });
 
+        console.log('✅ Available bookings:', available.length);
         return available.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
       } catch (error) {
-        console.error('Error fetching available bookings:', error);
+        console.error('❌ Error fetching available bookings:', error);
         return [];
       }
     },
     enabled: !!user?.email && hostCities.length > 0,
-    staleTime: 10 * 60 * 1000, //  INCREASED: 5 min -> 10 min
-    cacheTime: 20 * 60 * 1000, //  INCREASED: 10 min -> 20 min
+    staleTime: 10 * 60 * 1000,
+    cacheTime: 20 * 60 * 1000,
     refetchInterval: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
@@ -135,81 +237,57 @@ export default function HostDashboard() {
       if (!user?.email) return [];
 
       try {
-        const myConversations = await base44.entities.Conversation.filter({
-          conversation_type: 'service',
-        });
+        console.log('🔍 Fetching my bookings (where I sent offers)');
 
-        const relevantConvos = myConversations.filter(
-          (conv) =>
-            conv.host_emails &&
-            Array.isArray(conv.host_emails) &&
-            conv.host_emails.includes(user.email) &&
-            conv.conversation_status === 'active'
-        );
+        // Get all offers made by this host
+        const myOffers = await queryDocuments('offers', [
+          ['host_email', '==', user.email],
+        ]);
+        console.log('📋 My offers:', myOffers.length);
 
-        if (relevantConvos.length === 0) {
+        if (myOffers.length === 0) {
           return [];
         }
 
-        const bookingIds = [...new Set(relevantConvos.map((c) => c.booking_id))];
-        const allBookings = await base44.entities.Booking.list();
+        // Get the booking IDs
+        const bookingIds = [...new Set(myOffers.map((o) => o.booking_id))];
 
-        const bookingToConversation = {};
-        relevantConvos.forEach((conv) => {
-          bookingToConversation[conv.booking_id] = conv.id;
-        });
+        // Get all bookings
+        const allBookings = await getAllDocuments('bookings');
 
+        // Filter to only my offered bookings
         const myBookings = allBookings
           .filter((b) => bookingIds.includes(b.id))
-          .map((booking) => ({
-            ...booking,
-            conversation_id: bookingToConversation[booking.id],
-          }));
+          .map((booking) => {
+            // Find the offer for this booking
+            const offer = myOffers.find((o) => o.booking_id === booking.id);
+            return {
+              ...booking,
+              offer_id: offer?.id,
+              offer_status: offer?.status,
+              offer_price: offer?.price_total,
+            };
+          });
 
+        console.log('✅ My bookings:', myBookings.length);
         return myBookings.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
       } catch (error) {
-        console.error('Error fetching my bookings:', error);
+        console.error('❌ Error fetching my bookings:', error);
         return [];
       }
     },
     enabled: !!user?.email,
-    staleTime: 10 * 60 * 1000, //  INCREASED
-    cacheTime: 20 * 60 * 1000, //  INCREASED
+    staleTime: 10 * 60 * 1000,
+    cacheTime: 20 * 60 * 1000,
     refetchInterval: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
 
-  const { data: conversations = [], isLoading: isLoadingConversations } = useQuery({
-    queryKey: ['hostConversations', user?.email],
-    queryFn: async () => {
-      if (!user?.email) return [];
-
-      try {
-        const allConvos = await base44.entities.Conversation.list('-last_message_timestamp');
-        return allConvos.filter(
-          (conv) =>
-            conv.host_emails &&
-            Array.isArray(conv.host_emails) &&
-            conv.host_emails.includes(user.email) &&
-            conv.conversation_status === 'active'
-        );
-      } catch (error) {
-        console.error('Error fetching conversations:', error);
-        return [];
-      }
-    },
-    enabled: !!user?.email,
-    staleTime: 10 * 60 * 1000, //  INCREASED
-    cacheTime: 20 * 60 * 1000, //  INCREASED
-    refetchInterval: false,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-  });
-
-  const unreadCount = conversations.filter(
-    (c) => Array.isArray(c.unread_by_hosts) && c.unread_by_hosts.includes(user.email)
-  ).length;
+  // For now, we'll skip conversations since we're focusing on offers
+  // This can be re-added later when migrating the chat/messages feature
+  const conversations = [];
+  const unreadCount = 0;
 
   const stats = useMemo(() => {
     const confirmed = myBookings.filter(
@@ -449,21 +527,14 @@ export default function HostDashboard() {
                         )}
 
                         <Button
-                          onClick={() => acceptRequestMutation.mutate(booking)}
-                          disabled={acceptRequestMutation.isPending}
+                          onClick={() => {
+                            setSelectedBooking(booking);
+                            setShowOfferDialog(true);
+                          }}
                           className='w-full bg-gradient-to-r from-[#330066] to-[#9933CC] hover:from-[#47008F] hover:to-[#AD5CD6]'
                         >
-                          {acceptRequestMutation.isPending ? (
-                            <>
-                              <Loader2 className='w-4 h-4 mr-2 animate-spin' />
-                              Accepting...
-                            </>
-                          ) : (
-                            <>
-                              <Check className='w-4 h-4 mr-2' />
-                              Accept Request
-                            </>
-                          )}
+                          <Send className='w-4 h-4 mr-2' />
+                          Send Offer
                         </Button>
                       </CardContent>
                     </Card>
@@ -560,6 +631,107 @@ export default function HostDashboard() {
           </Tabs>
         </div>
       </section>
+
+      {/* Send Offer Dialog */}
+      <Dialog open={showOfferDialog} onOpenChange={setShowOfferDialog}>
+        <DialogContent className='max-w-lg'>
+          <DialogHeader>
+            <DialogTitle>Send Offer to Traveler</DialogTitle>
+            <DialogDescription>
+              {selectedBooking && (
+                <>
+                  Booking for {selectedBooking.city_name || selectedBooking.city} from{' '}
+                  {format(new Date(selectedBooking.start_date), 'MMM d')} to{' '}
+                  {format(new Date(selectedBooking.end_date), 'MMM d, yyyy')}
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className='space-y-4 py-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='price'>Base Price (USD)</Label>
+              <Input
+                id='price'
+                type='number'
+                placeholder='200'
+                value={offerForm.price}
+                onChange={(e) => setOfferForm({ ...offerForm, price: e.target.value })}
+              />
+              {offerForm.price && (
+                <p className='text-xs text-gray-500'>
+                  Total with fees (25%): ${(parseFloat(offerForm.price) * 1.25).toFixed(2)}
+                  <br />
+                  <span className='text-xs text-gray-400'>
+                    (SAWA 15% + Office 10%)
+                  </span>
+                </p>
+              )}
+            </div>
+
+            <div className='space-y-2'>
+              <Label htmlFor='inclusions'>What's Included</Label>
+              <Textarea
+                id='inclusions'
+                placeholder='e.g., Airport pickup, City tour, Guide services, Meals...'
+                value={offerForm.inclusions}
+                onChange={(e) => setOfferForm({ ...offerForm, inclusions: e.target.value })}
+                rows={3}
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <Label htmlFor='message'>Message to Traveler</Label>
+              <Textarea
+                id='message'
+                placeholder='Introduce yourself and explain your offer...'
+                value={offerForm.message}
+                onChange={(e) => setOfferForm({ ...offerForm, message: e.target.value })}
+                rows={4}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => {
+                setShowOfferDialog(false);
+                setSelectedBooking(null);
+                setOfferForm({ price: '', inclusions: '', message: '' });
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (!offerForm.price || !offerForm.inclusions || !offerForm.message) {
+                  toast.error('Please fill in all fields');
+                  return;
+                }
+                sendOfferMutation.mutate({
+                  booking: selectedBooking,
+                  offerData: offerForm,
+                });
+              }}
+              disabled={sendOfferMutation.isPending}
+              className='bg-gradient-to-r from-[#330066] to-[#9933CC]'
+            >
+              {sendOfferMutation.isPending ? (
+                <>
+                  <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className='w-4 h-4 mr-2' />
+                  Send Offer
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

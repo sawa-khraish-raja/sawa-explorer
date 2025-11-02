@@ -1,7 +1,16 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import {
+  getDocument,
+  getAllDocuments,
+  subscribeToMessages,
+  sendMessageToConversation,
+  markMessagesAsRead,
+  updateDocument,
+  queryDocuments,
+  addDocument,
+} from '@/utils/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -155,58 +164,96 @@ export default function ConversationView({ conversationId, currentUser, onBack }
     }
   }, [onBack, navigate]);
 
-  const { data: conversation } = useQuery({
+  const { data: conversation, isLoading: isLoadingConversation, error: conversationError } = useQuery({
     queryKey: ['conversation', conversationId],
     queryFn: async () => {
-      const conv = await base44.entities.Conversation.get(conversationId);
-      if (!conv) return null;
+      console.log('🔍 [ConversationView] Loading conversation:', conversationId);
+      console.log('🔍 [ConversationView] Current user email:', currentUser?.email);
 
-      return {
-        ...conv,
-        host_emails: Array.isArray(conv.host_emails) ? conv.host_emails : [],
-        traveler_email: conv.traveler_email || '',
-      };
+      try {
+        const conv = await getDocument('conversations', conversationId);
+        console.log('🔍 [ConversationView] Conversation loaded:', conv);
+        if (!conv) {
+          console.warn('⚠️ [ConversationView] Conversation not found!');
+          return null;
+        }
+
+        return {
+          ...conv,
+          host_emails: Array.isArray(conv.host_emails) ? conv.host_emails : [],
+          traveler_email: conv.traveler_email || '',
+        };
+      } catch (error) {
+        console.error('❌ [ConversationView] Error loading conversation:', error);
+        console.error('❌ Error details:', {
+          code: error.code,
+          message: error.message,
+          conversationId,
+          userEmail: currentUser?.email,
+        });
+        throw error;
+      }
     },
-    enabled: !!conversationId,
+    enabled: !!conversationId && !!currentUser?.email,
     staleTime: 60000,
+    retry: 3, // Retry up to 3 times for permission errors
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 
+  // Debug logging
+  useEffect(() => {
+    console.log('🔍 [ConversationView] Debug Info:', {
+      conversationId,
+      hasConversation: !!conversation,
+      hasCurrentUser: !!currentUser,
+      isLoadingConversation,
+      conversationError,
+    });
+  }, [conversationId, conversation, currentUser, isLoadingConversation, conversationError]);
+
   const [localMessages, setLocalMessages] = useState([]);
+  const [fetchedMessages, setFetchedMessages] = useState([]);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(true);
   const [lastMessageCount, setLastMessageCount] = useState(0);
 
-  const { data: fetchedMessages = [], isLoading: isLoadingMessages } = useQuery({
-    queryKey: ['messages', conversationId],
-    queryFn: async () => {
-      const msgs = await base44.entities.Message.filter(
-        { conversation_id: conversationId },
-        'created_date'
-      );
+  // Subscribe to messages in real-time
+  useEffect(() => {
+    if (!conversationId) {
+      setFetchedMessages([]);
+      setIsLoadingMessages(false);
+      return;
+    }
 
-      const messagesArray = Array.isArray(msgs) ? msgs : [];
+    console.log('📡 Setting up messages subscription for conversation:', conversationId);
+    setIsLoadingMessages(true);
 
-      const unreadMessages = messagesArray.filter(
+    const unsubscribe = subscribeToMessages(conversationId, async (messages) => {
+      console.log('📡 Received messages update:', messages.length);
+
+      // Mark unread messages as read
+      const unreadMessages = messages.filter(
         (msg) =>
           msg.sender_email !== currentUser.email &&
           (!msg.read_by || !msg.read_by.includes(currentUser.email))
       );
 
       if (unreadMessages.length > 0) {
-        Promise.all(
-          unreadMessages.map((msg) =>
-            base44.entities.Message.update(msg.id, {
-              read_by: [...(msg.read_by || []), currentUser.email],
-            })
-          )
-        ).catch(console.error);
+        await markMessagesAsRead(
+          unreadMessages.map((m) => m.id),
+          currentUser.email,
+          conversationId
+        );
       }
 
-      return messagesArray;
-    },
-    enabled: !!conversationId,
-    refetchInterval: 3000,
-    refetchIntervalInBackground: false,
-    staleTime: 1000,
-  });
+      setFetchedMessages(messages);
+      setIsLoadingMessages(false);
+    });
+
+    return () => {
+      console.log('📡 Cleaning up messages subscription');
+      unsubscribe();
+    };
+  }, [conversationId, currentUser.email]);
 
   useEffect(() => {
     if (fetchedMessages.length > lastMessageCount && lastMessageCount > 0) {
@@ -262,9 +309,10 @@ export default function ConversationView({ conversationId, currentUser, onBack }
     queryKey: ['allUsersForConversation'],
     queryFn: async () => {
       try {
-        const users = await base44.entities.User.list();
+        const users = await getAllDocuments('users');
         return Array.isArray(users) ? users : [];
       } catch (error) {
+        console.error('Error loading users:', error);
         return [];
       }
     },
@@ -288,7 +336,10 @@ export default function ConversationView({ conversationId, currentUser, onBack }
 
   const { data: booking } = useQuery({
     queryKey: ['bookingForConvo', conversation?.booking_id],
-    queryFn: async () => base44.entities.Booking.get(conversation.booking_id),
+    queryFn: async () => {
+      if (!conversation?.booking_id) return null;
+      return await getDocument('bookings', conversation.booking_id);
+    },
     enabled: !!conversation?.booking_id,
   });
 
@@ -297,14 +348,14 @@ export default function ConversationView({ conversationId, currentUser, onBack }
   const canSendMessages = !isConversationClosed && !isBookingCancelled;
 
   const { data: cityData } = useQuery({
-    queryKey: ['cityData', booking?.city],
+    queryKey: ['cityData', booking?.city_name],
     queryFn: async () => {
-      if (!booking?.city) return null;
+      if (!booking?.city_name) return null;
 
-      const cities = await base44.entities.City.filter({ name: booking.city });
+      const cities = await queryDocuments('cities', [['name', '==', booking.city_name]]);
       return cities && cities.length > 0 ? cities[0] : null;
     },
-    enabled: !!booking?.city,
+    enabled: !!booking?.city_name,
     staleTime: 10 * 60 * 1000,
   });
 
@@ -312,9 +363,10 @@ export default function ConversationView({ conversationId, currentUser, onBack }
     queryKey: ['offers', booking?.id],
     queryFn: async () => {
       if (!booking?.id) return [];
-      const allOffers = await base44.entities.Offer.filter(
-        { booking_id: booking.id },
-        '-created_date'
+      const allOffers = await queryDocuments(
+        'offers',
+        [['booking_id', '==', booking.id]],
+        { orderBy: { field: 'created_date', direction: 'desc' } }
       );
       return Array.isArray(allOffers) ? allOffers : [];
     },
@@ -399,29 +451,24 @@ export default function ConversationView({ conversationId, currentUser, onBack }
     }, 100);
 
     try {
-      const response = await base44.functions.invoke('chatRelay', {
-        conversation_id: conversation.id,
+      const messageId = await sendMessageToConversation(conversation.id, {
+        sender_email: currentUser.email,
         original_text: tempMessage.original_text,
         source_lang: tempMessage.source_lang,
         attachments: tempMessage.attachments,
-        is_voice_message: false,
       });
 
-      if (response.data?.ok) {
-        setLocalMessages((prev) =>
-          (prev || []).map((msg) =>
-            msg.id === tempId ? { ...response.data.message, _isPending: false } : msg
-          )
-        );
+      console.log('✅ Message sent:', messageId);
 
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        queryClient.invalidateQueries({
-          queryKey: ['messages', conversationId],
-        });
-        queryClient.invalidateQueries({ queryKey: ['rawConversations'] });
-      } else {
-        throw new Error(response.data?.reason || 'Failed to send message');
-      }
+      // Update local state with the message ID
+      setLocalMessages((prev) =>
+        (prev || []).map((msg) =>
+          msg.id === tempId ? { ...msg, id: messageId, _isPending: false } : msg
+        )
+      );
+
+      // Real-time subscription will handle updates automatically
+      queryClient.invalidateQueries({ queryKey: ['rawConversations'] });
     } catch (error) {
       console.error(' [ConversationView] Failed to send message:', error);
       setLocalMessages((prev) => (prev || []).filter((msg) => msg.id !== tempId));
@@ -503,32 +550,49 @@ export default function ConversationView({ conversationId, currentUser, onBack }
         };
       }
 
-      const offer = await base44.entities.Offer.create(offerData);
+      // Create offer in Firestore
+      const offerId = await addDocument('offers', {
+        ...offerData,
+        host_id: currentUser.id,
+        host_name: currentUser.full_name || currentUser.email,
+        traveler_email: booking.traveler_email,
+        created_date: new Date().toISOString(),
+        updated_date: new Date().toISOString(),
+      });
 
-      await base44.functions.invoke('chatRelay', {
-        conversation_id: conversation.id,
+      console.log('✅ Offer created:', offerId);
+
+      // Send message about the offer
+      await sendMessageToConversation(conversation.id, {
+        sender_email: currentUser.email,
         original_text:
           offerType === 'rental'
             ? `I'm sending you a rental offer for $${priceBase.toFixed(2)}`
             : `I'm sending you a service offer for $${offerData.price_total.toFixed(2)}`,
         source_lang: userPreferredLang,
         attachments: [],
-        is_voice_message: false,
-        offer_data: { ...offerData, id: offer.id },
       });
 
-      await base44.entities.Notification.create({
+      // Create notification for traveler
+      const notificationData = {
         recipient_email: booking.traveler_email,
-        recipient_type: 'traveler',
-        title: `New ${offerType} offer for ${booking.city}`,
-        message: `You received a ${offerType} offer for $${offerData.price_total.toFixed(2)}`,
-        link: `/MyOffers`,
-        related_booking_id: booking.id,
-        related_offer_id: offer.id,
         type: 'offer_received',
-      });
+        title: `New ${offerType} offer for ${booking.city_name || booking.city}`,
+        message: `You received a ${offerType} offer for $${offerData.price_total.toFixed(2)}`,
+        booking_id: booking.id,
+        offer_id: offerId,
+        read: false,
+        created_date: new Date().toISOString(),
+      };
 
-      return offer;
+      // Only add traveler_id if it exists
+      if (booking.traveler_id) {
+        notificationData.user_id = booking.traveler_id;
+      }
+
+      await addDocument('notifications', notificationData);
+
+      return { id: offerId, ...offerData };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['offers'] });
@@ -561,35 +625,54 @@ export default function ConversationView({ conversationId, currentUser, onBack }
         );
       }
 
-      const latestOffers = await base44.entities.Offer.filter(
-        { booking_id: booking.id },
-        '-created_date'
-      );
+      // Get the offer
+      const offer = await getDocument('offers', offerId);
 
-      const latestOffer = latestOffers.find((o) => o.id === offerId);
-
-      if (!latestOffer) {
+      if (!offer) {
         throw new Error('Offer not found');
       }
 
-      if (latestOffer.status === 'accepted') {
+      if (offer.status === 'accepted') {
         throw new Error('This offer has already been accepted');
       }
 
-      console.log('💬 [ConversationView] Found offer:', latestOffer);
+      console.log('💬 [ConversationView] Found offer:', offer);
 
-      const response = await base44.functions.invoke('confirmBooking', {
-        booking_id: latestOffer.booking_id,
-        offer_id: offerId,
+      // Update offer status to accepted
+      await updateDocument('offers', offerId, {
+        status: 'accepted',
+        accepted_date: new Date().toISOString(),
       });
 
-      console.log('💬 [ConversationView] Response:', response.data);
+      // Update booking status to confirmed
+      await updateDocument('bookings', booking.id, {
+        status: 'confirmed',
+        confirmed_date: new Date().toISOString(),
+        confirmed_offer_id: offerId,
+      });
 
-      if (!response.data || !response.data.ok) {
-        throw new Error(response.data?.error || 'Failed to accept offer');
+      // Create notification for host
+      const hostNotificationData = {
+        recipient_email: offer.host_email,
+        type: 'offer_accepted',
+        title: 'Offer Accepted!',
+        message: `Your offer for ${booking.city_name || booking.city} has been accepted`,
+        booking_id: booking.id,
+        offer_id: offerId,
+        read: false,
+        created_date: new Date().toISOString(),
+      };
+
+      // Only add host_id if it exists
+      if (offer.host_id) {
+        hostNotificationData.user_id = offer.host_id;
       }
 
-      return response.data;
+      await addDocument('notifications', hostNotificationData);
+
+      console.log('✅ Offer accepted successfully');
+
+      return { ok: true, offer_id: offerId };
     },
     onSuccess: async () => {
       console.log(' [ConversationView] Offer accepted successfully');
@@ -625,7 +708,16 @@ export default function ConversationView({ conversationId, currentUser, onBack }
             : 'This conversation is closed'
         );
       }
-      return base44.entities.Offer.update(offerId, { status: 'declined' });
+
+      console.log('❌ Declining offer:', offerId);
+
+      // Update offer status to declined
+      await updateDocument('offers', offerId, {
+        status: 'declined',
+        declined_date: new Date().toISOString(),
+      });
+
+      return { ok: true, offer_id: offerId };
     },
     onSuccess: async () => {
       toast.success('Offer declined');
@@ -662,10 +754,71 @@ export default function ConversationView({ conversationId, currentUser, onBack }
     navigate(createPageUrl('MyOffers'));
   };
 
-  if (!conversation || !currentUser) {
+  // Show loading state
+  if (isLoadingConversation) {
     return (
-      <div className='flex items-center justify-center h-full'>
+      <div className='flex flex-col items-center justify-center h-full gap-4'>
         <Loader2 className='w-8 h-8 animate-spin text-purple-600' />
+        <p className='text-sm text-gray-500'>Loading conversation...</p>
+      </div>
+    );
+  }
+
+  // Show error if there was a problem loading the conversation
+  if (conversationError) {
+    return (
+      <div className='flex flex-col items-center justify-center h-full gap-4 p-8 text-center'>
+        <MessageSquare className='w-16 h-16 text-red-300' />
+        <div>
+          <h3 className='text-lg font-semibold text-gray-900 mb-2'>Error Loading Conversation</h3>
+          <p className='text-sm text-gray-600 mb-2'>
+            {conversationError.message || 'Failed to load conversation'}
+          </p>
+          <p className='text-xs text-gray-500 mb-4'>
+            Conversation ID: {conversationId}
+          </p>
+          <div className='flex gap-2'>
+            <Button onClick={() => window.location.reload()} variant='default'>
+              Retry
+            </Button>
+            <Button onClick={handleBack} variant='outline'>
+              <ArrowLeft className='w-4 h-4 mr-2' />
+              Back to Messages
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if conversation not found
+  if (!conversation) {
+    return (
+      <div className='flex flex-col items-center justify-center h-full gap-4 p-8 text-center'>
+        <MessageSquare className='w-16 h-16 text-gray-300' />
+        <div>
+          <h3 className='text-lg font-semibold text-gray-900 mb-2'>Conversation Not Found</h3>
+          <p className='text-sm text-gray-600 mb-2'>
+            This conversation doesn't exist or you don't have access to it.
+          </p>
+          <p className='text-xs text-gray-500 mb-4'>
+            Conversation ID: {conversationId}
+          </p>
+          <Button onClick={handleBack} variant='outline'>
+            <ArrowLeft className='w-4 h-4 mr-2' />
+            Back to Messages
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if user not loaded
+  if (!currentUser) {
+    return (
+      <div className='flex flex-col items-center justify-center h-full gap-4'>
+        <Loader2 className='w-8 h-8 animate-spin text-purple-600' />
+        <p className='text-sm text-gray-500'>Loading user data...</p>
       </div>
     );
   }
@@ -751,7 +904,9 @@ export default function ConversationView({ conversationId, currentUser, onBack }
             <div className='absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/60' />
 
             <div className='absolute bottom-4 left-4 right-4 text-white'>
-              <h2 className='text-2xl font-bold drop-shadow-lg mb-1'>{booking.city}</h2>
+              <h2 className='text-2xl font-bold drop-shadow-lg mb-1'>
+                {booking.city_name || booking.city}
+              </h2>
               {cityData?.country && (
                 <p className='text-sm opacity-90 drop-shadow-md flex items-center gap-1'>
                   <MapPin className='w-3 h-3' />
@@ -870,7 +1025,7 @@ export default function ConversationView({ conversationId, currentUser, onBack }
                     </h3>
                     {booking && (
                       <p className='text-xs text-gray-500 truncate'>
-                        {booking.city}
+                        {booking.city_name || booking.city}
                         {booking.start_date && booking.end_date && (
                           <>
                             {' '}
@@ -981,7 +1136,9 @@ export default function ConversationView({ conversationId, currentUser, onBack }
                     <div className='relative z-10 p-5 text-white'>
                       <div className='flex items-start justify-between mb-4'>
                         <div>
-                          <h3 className='text-2xl font-bold drop-shadow-lg mb-1'>{booking.city}</h3>
+                          <h3 className='text-2xl font-bold drop-shadow-lg mb-1'>
+                            {booking.city_name || booking.city}
+                          </h3>
                           {cityData?.country && (
                             <p className='text-sm text-white/90 flex items-center gap-1 drop-shadow-md'>
                               <MapPin className='w-3 h-3' />

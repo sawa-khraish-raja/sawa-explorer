@@ -134,7 +134,7 @@ export default function ConversationList({
                     )}
                   >
                     {isClosed && '🔒 '}
-                    {conversation.last_message_preview || 'No messages yet'}
+                    {conversation.last_message_text || 'No messages yet'}
                   </p>
 
                   {/*  Unread Badge */}

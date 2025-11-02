@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { queryDocuments } from '@/utils/firestore';
+import { getAllDocuments } from '@/utils/firestore';
 import { createPageUrl } from '@/utils';
 import { Loader2, MapPin, ArrowRight } from 'lucide-react';
 
@@ -11,20 +11,24 @@ export default function DestinationIcons() {
   const { data: cities = [], isLoading } = useQuery({
     queryKey: ['destinationCities'],
     queryFn: async () => {
-      // Get active cities from Firestore
-      const allCities = await queryDocuments('cities', [['is_active', '==', true]], {
-        orderBy: { field: 'name', direction: 'asc' },
-      });
+      // Get all cities from Firestore
+      const allCities = await getAllDocuments('cities');
+
+      // Filter active cities
+      const activeCities = Array.isArray(allCities)
+        ? allCities.filter((city) => city.is_active === true)
+        : [];
 
       // Remove duplicates by name
-      const uniqueCities = Array.isArray(allCities)
-        ? allCities.reduce((acc, city) => {
-            if (city.name && !acc.find((c) => c.name === city.name)) {
-              acc.push(city);
-            }
-            return acc;
-          }, [])
-        : [];
+      const uniqueCities = activeCities.reduce((acc, city) => {
+        if (city.name && !acc.find((c) => c.name === city.name)) {
+          acc.push(city);
+        }
+        return acc;
+      }, []);
+
+      // Sort by name
+      uniqueCities.sort((a, b) => a.name.localeCompare(b.name));
 
       return uniqueCities;
     },

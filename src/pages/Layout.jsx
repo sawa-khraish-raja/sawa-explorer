@@ -42,6 +42,7 @@ import {
 import NotificationBell from '@/components/notifications/NotificationBell';
 import NotificationPrompt from '@/components/notifications/NotificationPrompt';
 import NotificationWelcomePrompt from '@/components/notifications/NotificationWelcomePrompt';
+import MessagesBadge from '@/components/chat/MessagesBadge';
 import { cn } from '@/lib/utils';
 import { LanguageProvider, useTranslation } from '@/components/i18n/LanguageContext';
 import ChatLauncher from '@/components/chat/ChatLauncher';
@@ -631,15 +632,7 @@ const AppContent = memo(({ children, currentPageName }) => {
                   ) : user ? (
                     <>
                       <NotificationBell className='w-10 h-10' />
-                      <Link to={createPageUrl('Messages')}>
-                        <Button
-                          variant='ghost'
-                          className='relative rounded-full w-10 h-10 hover:bg-gray-100 transition-colors'
-                          aria-label='Messages'
-                        >
-                          <MessageSquare className='w-5 h-5 text-gray-700' />
-                        </Button>
-                      </Link>
+                      <MessagesBadge />
                       {!isHost && !isOfficeOnly && !isMarketing && (
                         <Link to={createPageUrl('MyOffers')} className='hidden lg:block'>
                           <Button
@@ -899,16 +892,7 @@ const AppContent = memo(({ children, currentPageName }) => {
                       </Link>
                     )}
 
-                    <Link to={createPageUrl('Messages')}>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        className='rounded-full w-10 h-10 hover:bg-gray-100 transition-colors'
-                        aria-label='Messages'
-                      >
-                        <MessageSquare className='w-5 h-5 text-gray-700' />
-                      </Button>
-                    </Link>
+                    <MessagesBadge />
 
                     <NotificationBell className='w-10 h-10' />
 

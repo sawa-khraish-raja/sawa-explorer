@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { queryDocuments } from '@/utils/firestore';
+import { getAllDocuments } from '@/utils/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,21 +29,26 @@ export default function AdventuresHomeSection() {
   } = useQuery({
     queryKey: ['featuredAdventures'],
     queryFn: async () => {
-      // Get all approved and active adventures
-      const allAdventures = await queryDocuments(
-        'adventures',
-        [
-          ['is_active', '==', true],
-          ['approval_status', '==', 'approved'],
-        ],
-        { orderBy: { field: 'created_at', direction: 'desc' } }
+      // Get all adventures (avoid composite index requirement)
+      const allAdventures = await getAllDocuments('adventures');
+
+      // Filter in JavaScript for approved and active adventures
+      const approvedAdventures = (allAdventures || []).filter(
+        (a) => a.is_active === true && a.approval_status === 'approved'
       );
 
+      // Sort by created_at in JavaScript
+      approvedAdventures.sort((a, b) => {
+        const dateA = a.created_at?.toDate?.() || new Date(a.created_at);
+        const dateB = b.created_at?.toDate?.() || new Date(b.created_at);
+        return dateB - dateA; // desc order
+      });
+
       // Filter for future adventures with available spots
-      const filteredAdventures = (allAdventures || [])
+      const filteredAdventures = approvedAdventures
         .filter((a) => {
           const hasSpace = (a.current_participants || 0) < (a.max_guests || 0);
-          const isFuture = new Date(a.date) > new Date();
+          const isFuture = a.date && new Date(a.date) > new Date();
 
           return hasSpace && isFuture;
         })

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { addDocument, queryDocuments } from '@/utils/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Calendar, Users, Send, Loader2, Plus, Minus, Package } from 'lucide-react';
+import { Calendar, Users, Send, Loader2, Plus, Minus, Package, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -25,13 +25,26 @@ export default function SimpleBookingForm({ city, onSuccess }) {
   const { user, userLoading } = useAppContext();
   const requiresLogin = !user && !userLoading;
 
+  // Query to check for available hosts in this city
+  const { data: cityHosts = [] } = useQuery({
+    queryKey: ['cityHosts', city?.name],
+    queryFn: async () => {
+      if (!city?.name) return [];
+      const allUsers = await queryDocuments('users', [['host_approved', '==', true]]);
+      const hostsInCity = allUsers.filter((host) => host.city === city.name);
+      console.log(`📍 Found ${hostsInCity.length} hosts in ${city.name}`);
+      return hostsInCity;
+    },
+    enabled: !!city?.name,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const createBookingMutation = useMutation({
     mutationFn: async () => {
       console.log('🔍 Starting booking creation...');
 
       //  Validate user
       if (!user) {
-        await base44.auth.redirectToLogin(window.location.href);
         throw new Error('Please login to create a booking');
       }
 
@@ -55,7 +68,8 @@ export default function SimpleBookingForm({ city, onSuccess }) {
 
       console.log('📝 Booking data:', {
         traveler_email: user.email,
-        city: city.name,
+        traveler_id: user.id,
+        city_name: city.name,
         start_date: formattedStartDate,
         end_date: formattedEndDate,
         number_of_adults: adults,
@@ -64,26 +78,47 @@ export default function SimpleBookingForm({ city, onSuccess }) {
         notes: notes || '',
       });
 
-      //  Create booking with proper format
-      const booking = await base44.entities.Booking.create({
+      //  Create booking in Firestore
+      const bookingId = await addDocument('bookings', {
         traveler_email: user.email,
-        city: city.name,
+        traveler_id: user.id,
+        city_name: city.name,
         start_date: formattedStartDate,
         end_date: formattedEndDate,
         number_of_adults: adults,
         number_of_children: children,
         selected_services: selectedServices,
         notes: notes || '',
-        state: 'open',
         status: 'pending',
+        created_date: new Date().toISOString(),
+        updated_date: new Date().toISOString(),
       });
 
-      console.log(' Booking created:', booking.id);
+      console.log('✅ Booking created with ID:', bookingId);
 
-      // TODO: replace with Firebase-based host notification trigger
-      console.log('Skipping Base44 host notification; implement Firebase functions later.');
+      // Send notifications to hosts in this city
+      for (const host of cityHosts) {
+        const notificationData = {
+          recipient_email: host.email,
+          type: 'booking_request',
+          title: 'New Booking Request',
+          message: `New booking request for ${city.name} from ${formattedStartDate} to ${formattedEndDate}`,
+          booking_id: bookingId,
+          read: false,
+          created_date: new Date().toISOString(),
+        };
 
-      return booking;
+        // Only add user_id if it exists
+        if (host.id) {
+          notificationData.user_id = host.id;
+        }
+
+        await addDocument('notifications', notificationData);
+      }
+
+      console.log(`✅ Sent notifications to ${cityHosts.length} host(s)`);
+
+      return { id: bookingId };
     },
     onSuccess: (booking) => {
       toast.success('Booking Submitted!', {
@@ -149,6 +184,25 @@ export default function SimpleBookingForm({ city, onSuccess }) {
           </CardContent>
         </Card>
       )}
+
+      {/* No Hosts Warning */}
+      {!userLoading && cityHosts.length === 0 && (
+        <Card className='border-orange-300 bg-orange-50'>
+          <CardContent className='py-4'>
+            <div className='flex items-start gap-3'>
+              <AlertCircle className='w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5' />
+              <div className='text-sm text-orange-800'>
+                <p className='font-semibold mb-1'>No Hosts Available Yet</p>
+                <p>
+                  We're working on adding new hosts in {city.name} soon. You can still submit
+                  your request, and we'll notify you when hosts become available.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Dates */}
       <Card>
         <CardHeader>

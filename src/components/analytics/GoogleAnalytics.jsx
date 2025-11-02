@@ -200,7 +200,9 @@ async function trackConversionBackend(data) {
     const sessionId = getSessionId();
     const utm = getUTMParameters();
 
-    await base44.functions.invoke('Track_Conversion', {
+    // TODO: Migrate conversion tracking to Firestore
+    // Previously used Base44 function 'Track_Conversion'
+    console.log('📊 Conversion tracked:', {
       ...data,
       session_id: sessionId,
       ...utm,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { base44 } from '@/api/base44Client';
+import { subscribeToConversations, getAllDocuments } from '@/utils/firestore';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Loader2, MessageSquare, Search, Briefcase, Sparkles, ArrowLeft } from 'lucide-react';
@@ -25,48 +25,45 @@ export default function Messages() {
   //  FIXED: Use shared user from AppContext
   const { user, userLoading: isUserLoading } = useAppContext();
 
-  //  Load conversations
-  const {
-    data: rawConversations = [],
-    isLoading: conversationsLoading,
-    refetch: refetchConversations,
-  } = useQuery({
-    queryKey: ['rawConversations', user?.email],
-    queryFn: async () => {
-      if (!user?.email) return [];
+  // State for conversations (updated via real-time subscription)
+  const [rawConversations, setRawConversations] = useState([]);
+  const [conversationsLoading, setConversationsLoading] = useState(true);
 
-      let fetchedConversations = [];
-      const isHost = user?.host_approved;
+  //  Subscribe to conversations in real-time
+  useEffect(() => {
+    if (!user?.email) {
+      setRawConversations([]);
+      setConversationsLoading(false);
+      return;
+    }
 
-      if (isHost) {
-        fetchedConversations = await base44.entities.Conversation.list('-last_message_timestamp');
-        fetchedConversations = (fetchedConversations || []).filter(
-          (convo) => Array.isArray(convo.host_emails) && convo.host_emails.includes(user.email)
-        );
-      } else {
-        fetchedConversations = await base44.entities.Conversation.filter(
-          { traveler_email: user.email },
-          '-last_message_timestamp'
-        );
+    console.log('📡 Setting up conversation subscription for:', user.email);
+    setConversationsLoading(true);
+
+    const isHost = user?.host_approved;
+
+    // Subscribe to conversations
+    const unsubscribe = subscribeToConversations(
+      user.email,
+      isHost,
+      (conversations) => {
+        console.log('📡 Received conversations update:', conversations.length);
+        setRawConversations(conversations);
+        setConversationsLoading(false);
       }
+    );
 
-      return fetchedConversations.sort((a, b) => {
-        const timeA = a.last_message_timestamp
-          ? new Date(a.last_message_timestamp)
-          : new Date(a.created_date);
-        const timeB = b.last_message_timestamp
-          ? new Date(b.last_message_timestamp)
-          : new Date(b.created_date);
-        return timeB.getTime() - timeA.getTime();
-      });
-    },
-    enabled: !!user,
-    staleTime: 10 * 60 * 1000, //  INCREASED: 3 min -> 10 min
-    cacheTime: 20 * 60 * 1000, //  INCREASED: 10 min -> 20 min
-    refetchInterval: false, //  FIXED: No auto-refetch
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-  });
+    return () => {
+      console.log('📡 Cleaning up conversation subscription');
+      unsubscribe();
+    };
+  }, [user?.email, user?.host_approved]);
+
+  // Refetch function for compatibility
+  const refetchConversations = useCallback(() => {
+    // Real-time subscription handles updates automatically
+    console.log('📡 Refetch requested (handled by real-time subscription)');
+  }, []);
 
   //  Load users
   const userEmails = useMemo(() => {
@@ -86,9 +83,10 @@ export default function Messages() {
     queryFn: async () => {
       if (userEmails.length === 0) return [];
       try {
-        const allUsers = await base44.entities.User.list();
+        const allUsers = await getAllDocuments('users');
         return allUsers.filter((u) => u && userEmails.includes(u.email));
       } catch (error) {
+        console.error('Error loading users:', error);
         return userEmails.map((email) => ({
           email,
           display_name: email.split('@')[0],
@@ -179,12 +177,13 @@ export default function Messages() {
     const params = new URLSearchParams(location.search);
     const convoId = params.get('conversation_id');
 
-    if (convoId && conversations.some((c) => c.id === convoId)) {
+    if (convoId) {
+      console.log('🔗 [Messages] Opening conversation from URL:', convoId);
       setActiveConversationId(convoId);
-    } else if (!convoId) {
+    } else {
       setActiveConversationId(null);
     }
-  }, [location.search, conversations]);
+  }, [location.search]);
 
   if (isUserLoading) {
     return (

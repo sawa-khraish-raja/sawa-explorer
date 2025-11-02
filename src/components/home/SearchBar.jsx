@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { queryDocuments } from '@/utils/firestore';
+import { getAllDocuments } from '@/utils/firestore';
 import { createPageUrl } from '@/utils';
 import { Users, MapPin, Search, Loader2, X, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -32,29 +32,49 @@ export default function SearchBar() {
   const today = new Date().toISOString().split('T')[0];
   const scrollPositionRef = useRef(0);
 
+  // Debug: Log state changes to identify why button is disabled
+  useEffect(() => {
+    console.log('🔍 Search Form State:', {
+      destination,
+      checkIn,
+      checkOut,
+      isSearching,
+      buttonShouldBeEnabled: !!(destination && checkIn && checkOut && !isSearching),
+    });
+  }, [destination, checkIn, checkOut, isSearching]);
+
   //  Cache cities query (using Firestore)
   const { data: cities = [], isLoading: isLoadingCities } = useQuery({
     queryKey: ['activeCities'],
     queryFn: async () => {
-      // Get active cities from Firestore
-      const allCities = await queryDocuments('cities', [['is_active', '==', true]], {
-        orderBy: { field: 'name', direction: 'asc' },
-      });
+      console.log('🔍 SearchBar: Fetching cities...');
+      // Get all cities from Firestore (no complex query to avoid index requirement)
+      const allCities = await getAllDocuments('cities');
+      console.log('📦 SearchBar: Fetched cities:', allCities.length, allCities);
 
-      // Filter for valid cities
-      const validCities = (Array.isArray(allCities) ? allCities : []).filter(
+      // Filter for active cities
+      const activeCities = (Array.isArray(allCities) ? allCities : []).filter(
         (city) =>
-          city && typeof city === 'object' && city.name && typeof city.name === 'string' && city.id
+          city &&
+          typeof city === 'object' &&
+          city.name &&
+          typeof city.name === 'string' &&
+          city.id &&
+          city.is_active === true
       );
 
       // Remove duplicates by name
-      const uniqueCities = validCities.reduce((acc, city) => {
+      const uniqueCities = activeCities.reduce((acc, city) => {
         if (!acc.some((existingCity) => existingCity.name === city.name)) {
           acc.push(city);
         }
         return acc;
       }, []);
 
+      // Sort by name in JavaScript
+      uniqueCities.sort((a, b) => a.name.localeCompare(b.name));
+
+      console.log('✅ SearchBar: Active & unique cities:', uniqueCities.length, uniqueCities);
       return uniqueCities;
     },
     staleTime: 15 * 60 * 1000,
@@ -103,7 +123,10 @@ export default function SearchBar() {
 
   //  Handle search submission
   const handleSearch = async () => {
+    console.log('🔍 handleSearch called!', { destination, checkIn, checkOut });
+
     const errors = validateSearch();
+    console.log('✅ Validation errors:', errors);
 
     if (errors.length > 0) {
       showError(language === 'ar' ? 'خطأ في البحث' : 'Search Error', errors[0]);
@@ -111,7 +134,17 @@ export default function SearchBar() {
     }
 
     const city = cities.find((c) => c.name === destination);
-    if (!city || !city.page_slug) return;
+    console.log('🏙️ Found city:', city);
+
+    if (!city) {
+      console.log('❌ City not found!');
+      return;
+    }
+
+    // Create page name for routing - format: "BookingCityName"
+    // If city has page_slug, use it; otherwise create from city name
+    const pageName = city.page_slug || `Booking${city.name.replace(/\s+/g, '')}`;
+    console.log('📍 Using page name:', pageName);
 
     //  Save to recent searches
     saveToRecentSearches({
@@ -133,7 +166,7 @@ export default function SearchBar() {
     params.append('children', children.toString());
     params.append('fromSearch', 'true');
 
-    const url = createPageUrl(city.page_slug);
+    const url = createPageUrl(pageName);
 
     //  Small delay for UX
     setTimeout(() => {
@@ -317,10 +350,26 @@ export default function SearchBar() {
                   className='block text-sm font-bold text-gray-900 mb-2'
                 >
                   {t('search.where')}
+                  {cities.length > 0 && (
+                    <span className='ml-2 text-xs font-normal text-gray-500'>
+                      ({cities.length} cities available)
+                    </span>
+                  )}
                 </label>
+
+                {/* Debug info */}
+                {cities.length === 0 && !isLoadingCities && (
+                  <div className='mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800'>
+                    ⚠️ No cities found. Please go to DevTools and click "Seed Cities" to add cities to the database.
+                  </div>
+                )}
+
                 <Select
                   value={destination}
-                  onValueChange={setDestination}
+                  onValueChange={(value) => {
+                    console.log('🎯 Selected city:', value);
+                    setDestination(value);
+                  }}
                   disabled={isLoadingCities || isSearching}
                 >
                   <SelectTrigger
@@ -329,22 +378,32 @@ export default function SearchBar() {
                   >
                     <SelectValue
                       placeholder={
-                        isLoadingCities ? t('common.loading') : t('search.destination_placeholder')
+                        isLoadingCities
+                          ? t('common.loading')
+                          : cities.length === 0
+                          ? 'No cities available - Seed cities first'
+                          : t('search.destination_placeholder')
                       }
                     />
                   </SelectTrigger>
-                  <SelectContent>
-                    {cities.map((city) => (
-                      <SelectItem key={city.id} value={city.name}>
-                        <div className='flex items-center gap-2'>
-                          <MapPin className='w-4 h-4 text-gray-500' />
-                          <span className='font-semibold'>{city.name}</span>
-                          {city.country && (
-                            <span className='text-sm text-gray-500'>• {city.country}</span>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
+                  <SelectContent className='max-h-[300px]'>
+                    {cities.length === 0 ? (
+                      <div className='p-4 text-center text-sm text-gray-500'>
+                        No cities available
+                      </div>
+                    ) : (
+                      cities.map((city) => (
+                        <SelectItem key={city.id} value={city.name}>
+                          <div className='flex items-center gap-2'>
+                            <MapPin className='w-4 h-4 text-gray-500' />
+                            <span className='font-semibold'>{city.name}</span>
+                            {city.country && (
+                              <span className='text-sm text-gray-500'>• {city.country}</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -354,7 +413,10 @@ export default function SearchBar() {
                 <SimpleDatePicker
                   label={t('search.checkin')}
                   value={checkIn}
-                  onChange={setCheckIn}
+                  onChange={(date) => {
+                    console.log('📅 Check-in date selected:', date);
+                    setCheckIn(date);
+                  }}
                   minDate={today}
                   placeholder={t('search.add_date')}
                   required
@@ -363,7 +425,10 @@ export default function SearchBar() {
                 <SimpleDatePicker
                   label={t('search.checkout')}
                   value={checkOut}
-                  onChange={setCheckOut}
+                  onChange={(date) => {
+                    console.log('📅 Check-out date selected:', date);
+                    setCheckOut(date);
+                  }}
                   minDate={checkIn || today}
                   placeholder={t('search.add_date')}
                   required

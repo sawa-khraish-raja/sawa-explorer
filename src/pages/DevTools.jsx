@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Database, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, Database, CheckCircle, XCircle, Bug } from 'lucide-react';
 import { seedAllData, seedCities, seedAdventures, seedServices, seedNotifications, clearAdventures, seedBookingsAndOffers } from '@/utils/seedDatabase';
-import { getAllDocuments } from '@/utils/firestore';
+import { getAllDocuments, queryDocuments, updateDocument, setDocument, getDocument } from '@/utils/firestore';
 import { useAppContext } from '@/components/context/AppContext';
 
 export default function DevTools() {
@@ -133,6 +133,110 @@ export default function DevTools() {
       loadStats();
     } catch (error) {
       console.error('❌ Seed bookings/offers error:', error);
+      setStatus({ type: 'error', message: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDebugMyBookings = async () => {
+    setLoading(true);
+    setStatus(null);
+    try {
+      if (!user?.email) {
+        setStatus({ type: 'error', message: 'Please login first!' });
+        setLoading(false);
+        return;
+      }
+
+      console.log('🔍 =================================');
+      console.log('🔍 DEBUG: Current User Info');
+      console.log('🔍 User ID:', user.id);
+      console.log('🔍 User Email:', user.email);
+      console.log('🔍 Full User Object:', user);
+      console.log('🔍 =================================');
+
+      // Check all bookings in database
+      const allBookings = await getAllDocuments('bookings');
+      console.log('🔍 Total bookings in database:', allBookings.length);
+      console.log('🔍 All bookings:', allBookings);
+
+      // Filter bookings by user email
+      const myBookings = await queryDocuments('bookings', [
+        ['traveler_email', '==', user.email],
+      ]);
+      console.log('🔍 My bookings (by email):', myBookings.length);
+      console.log('🔍 My bookings data:', myBookings);
+
+      // Check if there's a mismatch in email casing or whitespace
+      const manualFilter = allBookings.filter(b =>
+        b.traveler_email?.toLowerCase().trim() === user.email?.toLowerCase().trim()
+      );
+      console.log('🔍 Manual filter (case-insensitive):', manualFilter.length);
+
+      // Check offers
+      const allOffers = await getAllDocuments('offers');
+      console.log('🔍 Total offers in database:', allOffers.length);
+      console.log('🔍 All offers:', allOffers);
+
+      console.log('🔍 =================================');
+
+      setStatus({
+        type: 'success',
+        message: `Found ${myBookings.length} booking(s) for ${user.email}. Check console for details.`
+      });
+    } catch (error) {
+      console.error('❌ Debug error:', error);
+      setStatus({ type: 'error', message: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMakeMeHost = async () => {
+    setLoading(true);
+    setStatus(null);
+    try {
+      if (!user?.id) {
+        setStatus({ type: 'error', message: 'Please login first!' });
+        setLoading(false);
+        return;
+      }
+
+      console.log('👨‍💼 Making user a host:', user.id);
+
+      // Check if user document exists
+      const existingUser = await getDocument('users', user.id);
+
+      if (existingUser) {
+        // Update existing user
+        await updateDocument('users', user.id, {
+          host_approved: true,
+          role_type: 'host',
+          city: 'Damascus', // Default city for testing
+          bio: 'Local guide and host',
+        });
+        console.log('✅ Updated existing user to host');
+      } else {
+        // Create new user document
+        await setDocument('users', user.id, {
+          email: user.email,
+          full_name: user.full_name || user.email,
+          profile_photo: user.profile_photo || '',
+          host_approved: true,
+          role_type: 'host',
+          city: 'Damascus',
+          bio: 'Local guide and host',
+        });
+        console.log('✅ Created new user document as host');
+      }
+
+      setStatus({
+        type: 'success',
+        message: 'You are now a host! Refresh the page and visit /HostDashboard to see booking requests.'
+      });
+    } catch (error) {
+      console.error('❌ Make host error:', error);
       setStatus({ type: 'error', message: error.message });
     } finally {
       setLoading(false);
@@ -390,14 +494,34 @@ export default function DevTools() {
               <CardTitle className='text-lg'>📋 Bookings & Offers</CardTitle>
               <CardDescription>1 booking with pending offer</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className='space-y-3'>
               <Button onClick={handleSeedBookingsAndOffers} disabled={loading || !user} className='w-full bg-orange-600 hover:bg-orange-700'>
                 Seed Booking & Offer
+              </Button>
+              <Button onClick={handleDebugMyBookings} disabled={loading || !user} className='w-full bg-red-600 hover:bg-red-700'>
+                <Bug className='w-4 h-4 mr-2' />
+                Debug My Bookings
               </Button>
               {!user && (
                 <p className='text-xs text-orange-600 mt-2'>Login required</p>
               )}
               <p className='text-xs text-gray-500 mt-2'>Creates a service booking with a pending offer to test accepting offers</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className='text-lg'>👨‍💼 Host Access</CardTitle>
+              <CardDescription>Become a host to test host features</CardDescription>
+            </CardHeader>
+            <CardContent className='space-y-3'>
+              <Button onClick={handleMakeMeHost} disabled={loading || !user} className='w-full bg-indigo-600 hover:bg-indigo-700'>
+                Make Me a Host
+              </Button>
+              {!user && (
+                <p className='text-xs text-orange-600 mt-2'>Login required</p>
+              )}
+              <p className='text-xs text-gray-500 mt-2'>Sets host_approved=true so you can access /HostDashboard</p>
             </CardContent>
           </Card>
         </div>

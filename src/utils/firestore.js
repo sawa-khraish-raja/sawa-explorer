@@ -12,6 +12,7 @@ import {
   orderBy,
   limit,
   serverTimestamp,
+  onSnapshot,
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { notificationEntity } from '@/services/firebaseEntities/notificationEntity';
@@ -606,4 +607,266 @@ export const searchAdventures = async (searchParams) => {
     orderBy: { field: searchParams.sortBy || 'rating', direction: 'desc' },
     limit: searchParams.limit || 20,
   });
+};
+
+// ========== BOOKING-BASED CONVERSATION HELPERS ==========
+
+/**
+ * Get or create a conversation for a booking
+ * @param {object} bookingData - Booking data { id, traveler_email, host_email, city_name }
+ * @returns {Promise<object>} - Conversation object with id
+ */
+export const getOrCreateConversation = async (bookingData) => {
+  try {
+    console.log('💬 getOrCreateConversation:', bookingData);
+
+    // Try to find existing conversation for this booking
+    const existing = await queryDocuments('conversations', [
+      ['booking_id', '==', bookingData.id],
+    ]);
+
+    if (existing.length > 0) {
+      console.log('💬 Found existing conversation:', existing[0].id);
+      return existing[0];
+    }
+
+    // Create new conversation
+    const conversationData = {
+      booking_id: bookingData.id,
+      traveler_email: bookingData.traveler_email,
+      host_emails: [bookingData.host_email],
+      city_name: bookingData.city_name || '',
+      conversation_status: 'open',
+      last_message_text: '',
+      last_message_sender: '',
+      last_message_timestamp: new Date().toISOString(),
+      unread_by_traveler: false,
+      unread_by_hosts: [],
+    };
+
+    console.log('💬 Creating conversation with data:', {
+      booking_id: conversationData.booking_id,
+      traveler_email: conversationData.traveler_email,
+      host_emails: conversationData.host_emails,
+    });
+
+    const conversationId = await addDocument('conversations', conversationData);
+    console.log('💬 Created new conversation:', conversationId);
+
+    // Verify we can read it back before returning
+    try {
+      const verifyDoc = await getDocument('conversations', conversationId);
+      console.log('✅ Verified conversation is readable:', verifyDoc.id);
+      return verifyDoc;
+    } catch (verifyError) {
+      console.warn('⚠️ Could not verify conversation read, returning created data:', verifyError.message);
+      return { id: conversationId, ...conversationData };
+    }
+  } catch (error) {
+    console.error('❌ Error creating conversation:', error);
+    throw error;
+  }
+};
+
+/**
+ * Subscribe to user's conversations (real-time)
+ * @param {string} userEmail - User's email
+ * @param {boolean} isHost - Whether user is a host
+ * @param {function} callback - Callback function to receive updates
+ * @returns {function} - Unsubscribe function
+ */
+export const subscribeToConversations = (userEmail, isHost, callback) => {
+  try {
+    console.log('📡 Subscribing to conversations for:', userEmail, 'isHost:', isHost);
+
+    const conversationsRef = collection(db, 'conversations');
+    let q;
+
+    if (isHost) {
+      // Host sees conversations where they are in host_emails array
+      q = query(
+        conversationsRef,
+        where('host_emails', 'array-contains', userEmail),
+        orderBy('last_message_timestamp', 'desc')
+      );
+    } else {
+      // Traveler sees conversations where they are the traveler
+      q = query(
+        conversationsRef,
+        where('traveler_email', '==', userEmail),
+        orderBy('last_message_timestamp', 'desc')
+      );
+    }
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const conversations = [];
+        snapshot.forEach((doc) => {
+          conversations.push({ id: doc.id, ...doc.data() });
+        });
+        console.log('📡 Conversations updated:', conversations.length);
+        callback(conversations);
+      },
+      (error) => {
+        console.error('❌ Error in conversations subscription:', error);
+        callback([]);
+      }
+    );
+
+    return unsubscribe;
+  } catch (error) {
+    console.error('❌ Error subscribing to conversations:', error);
+    return () => {};
+  }
+};
+
+/**
+ * Subscribe to messages in a conversation (real-time)
+ * @param {string} conversationId - Conversation ID
+ * @param {function} callback - Callback function to receive updates
+ * @returns {function} - Unsubscribe function
+ */
+export const subscribeToMessages = (conversationId, callback) => {
+  try {
+    console.log('📡 Subscribing to messages for conversation:', conversationId);
+
+    const messagesRef = collection(db, 'messages');
+    const q = query(
+      messagesRef,
+      where('conversation_id', '==', conversationId),
+      orderBy('created_date', 'asc')
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const messages = [];
+        snapshot.forEach((doc) => {
+          messages.push({ id: doc.id, ...doc.data() });
+        });
+        console.log('📡 Messages updated:', messages.length);
+        callback(messages);
+      },
+      (error) => {
+        console.error('❌ Error in messages subscription:', error);
+        callback([]);
+      }
+    );
+
+    return unsubscribe;
+  } catch (error) {
+    console.error('❌ Error subscribing to messages:', error);
+    return () => {};
+  }
+};
+
+/**
+ * Send a message in a conversation
+ * @param {string} conversationId - Conversation ID
+ * @param {object} messageData - Message data { sender_email, original_text, source_lang }
+ * @returns {Promise<string>} - Message ID
+ */
+export const sendMessageToConversation = async (conversationId, messageData) => {
+  try {
+    console.log('💬 Sending message to conversation:', conversationId);
+
+    // Get conversation to determine sender role
+    const conversation = await getDocument('conversations', conversationId);
+    if (!conversation) {
+      throw new Error('Conversation not found');
+    }
+
+    // Create message
+    const message = {
+      conversation_id: conversationId,
+      sender_email: messageData.sender_email,
+      original_text: messageData.original_text,
+      source_lang: messageData.source_lang || 'en',
+      attachments: messageData.attachments || [],
+      read_by: [messageData.sender_email],
+      delivered_to: [],
+      created_date: new Date().toISOString(),
+    };
+
+    const messageId = await addDocument('messages', message);
+    console.log('💬 Message created:', messageId);
+
+    // Determine if sender is host or traveler
+    const isHost = conversation.host_emails?.includes(messageData.sender_email);
+    const isTraveler = conversation.traveler_email === messageData.sender_email;
+
+    // Prepare unread flags
+    const unreadUpdates = {};
+    if (isHost) {
+      // Host sent message → mark as unread for traveler
+      unreadUpdates.unread_by_traveler = true;
+    } else if (isTraveler) {
+      // Traveler sent message → mark as unread for all hosts
+      unreadUpdates.unread_by_hosts = conversation.host_emails || [];
+    }
+
+    // Update conversation's last message and unread status
+    await updateDocument('conversations', conversationId, {
+      last_message_text: messageData.original_text.substring(0, 100),
+      last_message_sender: messageData.sender_email,
+      last_message_timestamp: new Date().toISOString(),
+      ...unreadUpdates,
+    });
+
+    return messageId;
+  } catch (error) {
+    console.error('❌ Error sending message:', error);
+    throw error;
+  }
+};
+
+/**
+ * Mark messages as read
+ * @param {Array} messageIds - Array of message IDs to mark as read
+ * @param {string} userEmail - User's email
+ * @param {string} conversationId - Conversation ID (optional, for updating unread flags)
+ * @returns {Promise<void>}
+ */
+export const markMessagesAsRead = async (messageIds, userEmail, conversationId = null) => {
+  try {
+    console.log('✅ Marking messages as read:', messageIds.length);
+
+    const updates = messageIds.map(async (messageId) => {
+      const message = await getDocument('messages', messageId);
+      if (message && !message.read_by?.includes(userEmail)) {
+        const readBy = [...(message.read_by || []), userEmail];
+        await updateDocument('messages', messageId, { read_by: readBy });
+      }
+    });
+
+    await Promise.all(updates);
+    console.log('✅ Messages marked as read');
+
+    // Update conversation unread flags
+    if (conversationId && messageIds.length > 0) {
+      const conversation = await getDocument('conversations', conversationId);
+      if (conversation) {
+        const isHost = conversation.host_emails?.includes(userEmail);
+        const isTraveler = conversation.traveler_email === userEmail;
+
+        const unreadUpdates = {};
+        if (isTraveler) {
+          // Traveler read messages → clear unread_by_traveler
+          unreadUpdates.unread_by_traveler = false;
+        } else if (isHost) {
+          // Host read messages → remove from unread_by_hosts array
+          const unreadHosts = (conversation.unread_by_hosts || []).filter(
+            (email) => email !== userEmail
+          );
+          unreadUpdates.unread_by_hosts = unreadHosts;
+        }
+
+        await updateDocument('conversations', conversationId, unreadUpdates);
+        console.log('✅ Updated conversation unread flags');
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error marking messages as read:', error);
+  }
 };
