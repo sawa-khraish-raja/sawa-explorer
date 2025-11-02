@@ -43,8 +43,6 @@ export function trackPageView(path, title) {
     page_title: title || document.title,
     page_location: window.location.href,
   });
-
-  console.log('📊 GA4 Page View:', path);
 }
 
 //  Track event
@@ -202,13 +200,6 @@ async function trackConversionBackend(data) {
 
     // TODO: Migrate conversion tracking to Firestore
     // Previously used Base44 function 'Track_Conversion'
-    console.log('📊 Conversion tracked:', {
-      ...data,
-      session_id: sessionId,
-      ...utm,
-      page_url: window.location.href,
-      referrer: document.referrer,
-    });
   } catch (error) {
     console.error('Failed to track conversion to backend:', error);
   }

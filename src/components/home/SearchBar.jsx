@@ -32,25 +32,12 @@ export default function SearchBar() {
   const today = new Date().toISOString().split('T')[0];
   const scrollPositionRef = useRef(0);
 
-  // Debug: Log state changes to identify why button is disabled
-  useEffect(() => {
-    console.log('🔍 Search Form State:', {
-      destination,
-      checkIn,
-      checkOut,
-      isSearching,
-      buttonShouldBeEnabled: !!(destination && checkIn && checkOut && !isSearching),
-    });
-  }, [destination, checkIn, checkOut, isSearching]);
-
   //  Cache cities query (using Firestore)
   const { data: cities = [], isLoading: isLoadingCities } = useQuery({
     queryKey: ['activeCities'],
     queryFn: async () => {
-      console.log('🔍 SearchBar: Fetching cities...');
       // Get all cities from Firestore (no complex query to avoid index requirement)
       const allCities = await getAllDocuments('cities');
-      console.log('📦 SearchBar: Fetched cities:', allCities.length, allCities);
 
       // Filter for active cities
       const activeCities = (Array.isArray(allCities) ? allCities : []).filter(
@@ -74,7 +61,6 @@ export default function SearchBar() {
       // Sort by name in JavaScript
       uniqueCities.sort((a, b) => a.name.localeCompare(b.name));
 
-      console.log('✅ SearchBar: Active & unique cities:', uniqueCities.length, uniqueCities);
       return uniqueCities;
     },
     staleTime: 15 * 60 * 1000,
@@ -360,7 +346,8 @@ export default function SearchBar() {
                 {/* Debug info */}
                 {cities.length === 0 && !isLoadingCities && (
                   <div className='mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800'>
-                    ⚠️ No cities found. Please go to DevTools and click "Seed Cities" to add cities to the database.
+                    ⚠️ No cities found. Please go to DevTools and click "Seed Cities" to add cities
+                    to the database.
                   </div>
                 )}
 
@@ -381,8 +368,8 @@ export default function SearchBar() {
                         isLoadingCities
                           ? t('common.loading')
                           : cities.length === 0
-                          ? 'No cities available - Seed cities first'
-                          : t('search.destination_placeholder')
+                            ? 'No cities available - Seed cities first'
+                            : t('search.destination_placeholder')
                       }
                     />
                   </SelectTrigger>

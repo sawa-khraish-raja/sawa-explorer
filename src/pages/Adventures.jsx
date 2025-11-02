@@ -57,11 +57,21 @@ export default function Adventures() {
         return dateB - dateA; // desc order
       });
 
-      console.log('🔍 Found adventures:', sorted.length, sorted);
+      console.log('🔍 Found adventures:', sorted.length);
+      // Log image data for debugging
+      sorted.forEach((adv, idx) => {
+        console.log(`🖼️ Adventure ${idx + 1} (${adv.title}):`, {
+          id: adv.id,
+          images: adv.images,
+          image_url: adv.image_url,
+          has_images_array: !!adv.images,
+          has_image_url: !!adv.image_url
+        });
+      });
       return sorted;
     },
-    staleTime: 600000,
-    cacheTime: 900000,
+    staleTime: 0, // Disable cache during testing
+    cacheTime: 0, // Force fresh data
   });
 
   // Note: AdventurePost is a separate feature (forum/social) - keeping Base44 for now
@@ -288,6 +298,7 @@ export default function Adventures() {
                       {/*  Optimized Image */}
                       <img
                         src={
+                          (adventure.images && adventure.images[0]) ||
                           adventure.image_url ||
                           'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'
                         }

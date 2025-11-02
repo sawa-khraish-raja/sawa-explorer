@@ -143,7 +143,6 @@ export default function ConversationView({ conversationId, currentUser, onBack }
   }, [messageText]);
 
   const handleLanguageChange = useCallback((langCode) => {
-    console.log('🌍 [ConversationView] CHANGING LANGUAGE:', langCode);
     setDisplayLanguage(langCode);
     localStorage.setItem('chat_display_lang', langCode);
     setTranslationVersion((prev) => prev + 1);
@@ -153,63 +152,37 @@ export default function ConversationView({ conversationId, currentUser, onBack }
   }, []);
 
   const handleBack = useCallback(() => {
-    console.log('🔙 [ConversationView] Back button clicked');
-
     if (onBack && typeof onBack === 'function') {
-      console.log(' [ConversationView] Calling onBack callback');
       onBack();
     } else {
-      console.log('⚠️ [ConversationView] No onBack callback, using navigate');
       navigate('/Messages', { replace: true });
     }
   }, [onBack, navigate]);
 
-  const { data: conversation, isLoading: isLoadingConversation, error: conversationError } = useQuery({
+  const {
+    data: conversation,
+    isLoading: isLoadingConversation,
+    error: conversationError,
+  } = useQuery({
     queryKey: ['conversation', conversationId],
     queryFn: async () => {
-      console.log('🔍 [ConversationView] Loading conversation:', conversationId);
-      console.log('🔍 [ConversationView] Current user email:', currentUser?.email);
+      const conv = await getDocument('conversations', conversationId);
 
-      try {
-        const conv = await getDocument('conversations', conversationId);
-        console.log('🔍 [ConversationView] Conversation loaded:', conv);
-        if (!conv) {
-          console.warn('⚠️ [ConversationView] Conversation not found!');
-          return null;
-        }
-
-        return {
-          ...conv,
-          host_emails: Array.isArray(conv.host_emails) ? conv.host_emails : [],
-          traveler_email: conv.traveler_email || '',
-        };
-      } catch (error) {
-        console.error('❌ [ConversationView] Error loading conversation:', error);
-        console.error('❌ Error details:', {
-          code: error.code,
-          message: error.message,
-          conversationId,
-          userEmail: currentUser?.email,
-        });
-        throw error;
+      if (!conv) {
+        return null;
       }
+
+      return {
+        ...conv,
+        host_emails: Array.isArray(conv.host_emails) ? conv.host_emails : [],
+        traveler_email: conv.traveler_email || '',
+      };
     },
     enabled: !!conversationId && !!currentUser?.email,
     staleTime: 60000,
     retry: 3, // Retry up to 3 times for permission errors
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
-
-  // Debug logging
-  useEffect(() => {
-    console.log('🔍 [ConversationView] Debug Info:', {
-      conversationId,
-      hasConversation: !!conversation,
-      hasCurrentUser: !!currentUser,
-      isLoadingConversation,
-      conversationError,
-    });
-  }, [conversationId, conversation, currentUser, isLoadingConversation, conversationError]);
 
   const [localMessages, setLocalMessages] = useState([]);
   const [fetchedMessages, setFetchedMessages] = useState([]);
@@ -224,12 +197,9 @@ export default function ConversationView({ conversationId, currentUser, onBack }
       return;
     }
 
-    console.log('📡 Setting up messages subscription for conversation:', conversationId);
     setIsLoadingMessages(true);
 
     const unsubscribe = subscribeToMessages(conversationId, async (messages) => {
-      console.log('📡 Received messages update:', messages.length);
-
       // Mark unread messages as read
       const unreadMessages = messages.filter(
         (msg) =>
@@ -360,17 +330,34 @@ export default function ConversationView({ conversationId, currentUser, onBack }
   });
 
   const { data: offers = [], refetch: refetchOffers } = useQuery({
-    queryKey: ['offers', booking?.id],
+    queryKey: ['offers', booking?.id, currentUser?.email, conversation?.traveler_email],
     queryFn: async () => {
-      if (!booking?.id) return [];
-      const allOffers = await queryDocuments(
-        'offers',
-        [['booking_id', '==', booking.id]],
-        { orderBy: { field: 'created_date', direction: 'desc' } }
-      );
-      return Array.isArray(allOffers) ? allOffers : [];
+      if (!booking?.id || !currentUser?.email || !conversation) return [];
+      try {
+        // Determine if current user is the traveler or host for this conversation
+        const isTraveler = conversation.traveler_email === currentUser.email;
+
+        // Query offers by booking_id AND user's role (traveler or host)
+        // This satisfies the security rules which check host_email or traveler_email
+        const constraints = [['booking_id', '==', booking.id]];
+
+        if (isTraveler) {
+          constraints.push(['traveler_email', '==', currentUser.email]);
+        } else {
+          constraints.push(['host_email', '==', currentUser.email]);
+        }
+
+        const bookingOffers = await queryDocuments('offers', constraints, {
+          orderBy: { field: 'created_date', direction: 'desc' },
+        });
+
+        return Array.isArray(bookingOffers) ? bookingOffers : [];
+      } catch (error) {
+        console.warn('⚠️ Could not fetch offers for booking:', error.message);
+        return [];
+      }
     },
-    enabled: !!booking?.id,
+    enabled: !!booking?.id && !!currentUser?.email && !!conversation,
     refetchInterval: 3000,
     staleTime: 1000,
   });
@@ -470,12 +457,11 @@ export default function ConversationView({ conversationId, currentUser, onBack }
       // Real-time subscription will handle updates automatically
       queryClient.invalidateQueries({ queryKey: ['rawConversations'] });
     } catch (error) {
-      console.error(' [ConversationView] Failed to send message:', error);
       setLocalMessages((prev) => (prev || []).filter((msg) => msg.id !== tempId));
       setMessageText(currentText);
       setAttachments(currentAttachments);
 
-      toast.error('Failed to send message. Please try again.');
+      toast.error('Failed to send message. Please try again.', error);
     } finally {
       setIsSendingMessage(false);
       setTimeout(() => {
@@ -612,8 +598,6 @@ export default function ConversationView({ conversationId, currentUser, onBack }
 
   const acceptOfferMutation = useMutation({
     mutationFn: async (offerId) => {
-      console.log('💬 [ConversationView] Accepting offer:', offerId);
-
       if (!offerId || typeof offerId !== 'string') {
         throw new Error('Invalid offer ID');
       }
@@ -635,8 +619,6 @@ export default function ConversationView({ conversationId, currentUser, onBack }
       if (offer.status === 'accepted') {
         throw new Error('This offer has already been accepted');
       }
-
-      console.log('💬 [ConversationView] Found offer:', offer);
 
       // Update offer status to accepted
       await updateDocument('offers', offerId, {
@@ -670,13 +652,9 @@ export default function ConversationView({ conversationId, currentUser, onBack }
 
       await addDocument('notifications', hostNotificationData);
 
-      console.log('✅ Offer accepted successfully');
-
       return { ok: true, offer_id: offerId };
     },
     onSuccess: async () => {
-      console.log(' [ConversationView] Offer accepted successfully');
-
       toast.success('Offer accepted! 🎉', { duration: 3000 });
 
       await Promise.all([
@@ -688,11 +666,8 @@ export default function ConversationView({ conversationId, currentUser, onBack }
         queryClient.invalidateQueries({ queryKey: ['travelerBookings'] }),
         queryClient.invalidateQueries({ queryKey: ['myOffers'] }),
       ]);
-
-      console.log(' [ConversationView] All queries refetched');
     },
     onError: (error) => {
-      console.error(' [ConversationView] Accept error:', error);
       toast.error(error.message || 'Failed to accept offer', {
         duration: 5000,
       });
@@ -774,9 +749,7 @@ export default function ConversationView({ conversationId, currentUser, onBack }
           <p className='text-sm text-gray-600 mb-2'>
             {conversationError.message || 'Failed to load conversation'}
           </p>
-          <p className='text-xs text-gray-500 mb-4'>
-            Conversation ID: {conversationId}
-          </p>
+          <p className='text-xs text-gray-500 mb-4'>Conversation ID: {conversationId}</p>
           <div className='flex gap-2'>
             <Button onClick={() => window.location.reload()} variant='default'>
               Retry
@@ -801,9 +774,7 @@ export default function ConversationView({ conversationId, currentUser, onBack }
           <p className='text-sm text-gray-600 mb-2'>
             This conversation doesn't exist or you don't have access to it.
           </p>
-          <p className='text-xs text-gray-500 mb-4'>
-            Conversation ID: {conversationId}
-          </p>
+          <p className='text-xs text-gray-500 mb-4'>Conversation ID: {conversationId}</p>
           <Button onClick={handleBack} variant='outline'>
             <ArrowLeft className='w-4 h-4 mr-2' />
             Back to Messages
@@ -1271,10 +1242,7 @@ export default function ConversationView({ conversationId, currentUser, onBack }
                     isHostInConversation={isHost}
                     offers={offers}
                     onAcceptOffer={(offerId) => {
-                      console.log(
-                        '🎯 [ConversationView] MessageBubble triggered accept for:',
-                        offerId
-                      );
+                      console.log(offerId);
                       acceptOfferMutation.mutate(offerId);
                     }}
                     onDeclineOffer={(offerId) => declineOfferMutation.mutate(offerId)}

@@ -65,6 +65,19 @@ export default function AdventureDetails() {
         throw new Error('Please login to book this adventure');
       }
 
+      console.log('Creating booking with user:', {
+        uid: currentUser.uid,
+        email: currentUser.email,
+        displayName: currentUser.displayName,
+      });
+
+      console.log('Adventure details:', {
+        id: adventure.id,
+        title: adventure.title,
+        host_id: adventure.host_id,
+        price: adventure.traveler_total_price || adventure.price,
+      });
+
       // Create booking in Firestore
       const bookingData = {
         user_id: currentUser.uid,
@@ -85,7 +98,18 @@ export default function AdventureDetails() {
         payment_status: 'pending', // pending, paid, refunded
       };
 
-      const bookingId = await addDocument('bookings', bookingData);
+      console.log('📋 Booking data to be saved:', bookingData);
+
+      try {
+        const bookingId = await addDocument('bookings', bookingData);
+        console.log('Booking created successfully! ID:', bookingId);
+        return bookingId;
+      } catch (error) {
+        console.error('❌ Booking creation failed:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        throw error;
+      }
 
       //  Track adventure booking
       trackEvent('add_to_cart', {
@@ -219,7 +243,7 @@ export default function AdventureDetails() {
                 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200'
               }
               alt={adventure.title}
-              className='w-full h-full object-cover'
+              className='main-adventure-image w-full h-full object-cover'
               onError={(e) => {
                 e.target.src =
                   'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200';
@@ -234,6 +258,26 @@ export default function AdventureDetails() {
           </div>
 
           <CardContent className='p-6 space-y-6'>
+            {/* Image Gallery */}
+            {adventure.images && adventure.images.length > 1 && (
+              <div className='grid grid-cols-4 gap-2'>
+                {adventure.images.slice(1).map((img, idx) => (
+                  <div key={idx} className='relative aspect-square rounded-lg overflow-hidden'>
+                    <img
+                      src={img}
+                      alt={`${adventure.title} - Image ${idx + 2}`}
+                      className='w-full h-full object-cover hover:scale-110 transition-transform cursor-pointer'
+                      onClick={(e) => {
+                        // Show full image in main view
+                        const mainImg = document.querySelector('.main-adventure-image');
+                        if (mainImg) mainImg.src = img;
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div>
               <h1 className='text-3xl font-bold mb-2'>{adventure.title}</h1>
               <p className='text-gray-600'>{adventure.description}</p>

@@ -1,0 +1,59 @@
+rules_version = '2';
+
+// ========== FIREBASE STORAGE RULES ==========
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper function to check if file is an image
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    // Helper function to check file size (max 5MB)
+    function isValidSize() {
+      return request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // Adventure images
+    match /adventures/images/{imageId} {
+      // Anyone can read adventure images (public)
+      allow read: if true;
+
+      // Only authenticated users can upload images
+      allow write: if request.auth != null && isImage() && isValidSize();
+    }
+
+    // Review photos
+    match /reviews/photos/{photoId} {
+      // Anyone can read review photos (public)
+      allow read: if true;
+
+      // Only authenticated users can upload photos
+      allow write: if request.auth != null && isImage() && isValidSize();
+    }
+
+    // User profile photos
+    match /users/photos/{userId}/{photoId} {
+      // Anyone can read profile photos (public)
+      allow read: if true;
+
+      // Users can only upload their own profile photos
+      allow write: if request.auth != null &&
+                     request.auth.uid == userId &&
+                     isImage() &&
+                     isValidSize();
+    }
+
+    // General uploads folder (fallback)
+    match /uploads/{imageId} {
+      // Anyone can read
+      allow read: if true;
+
+      // Only authenticated users can upload
+      allow write: if request.auth != null && isImage() && isValidSize();
+    }
+
+    // All other paths are denied by default (no explicit rule needed)
+  }
+}

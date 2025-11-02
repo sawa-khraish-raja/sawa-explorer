@@ -37,9 +37,8 @@ export default function NotificationBell({ className }) {
         console.log('No user ID - cannot fetch notifications');
         return [];
       }
-      console.log('Fetching notifications for:', { userId: user.id, email: user.email });
       const allNotifications = await getUserNotifications(user.id, false, user.email);
-      console.log('Found notifications:', allNotifications.length, allNotifications);
+
       return allNotifications.sort(
         (a, b) =>
           new Date(b.created_at?.toDate?.() || b.created_at) -

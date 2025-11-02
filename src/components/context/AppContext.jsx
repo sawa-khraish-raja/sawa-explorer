@@ -20,8 +20,6 @@ export const AppProvider = ({ children }) => {
         return;
       }
 
-      console.log('🟢 Firebase user found:', firebaseUser.email);
-
       // Fetch user data from Firestore before setting loading to false
       // This ensures role_type and permissions are loaded before routing decisions
       try {
@@ -30,7 +28,6 @@ export const AppProvider = ({ children }) => {
         const userDoc = await getDoc(userDocRef);
 
         if (userDoc.exists()) {
-          console.log('✅ User document found in Firestore');
           const userData = {
             id: firebaseUser.uid,
             email: firebaseUser.email,
@@ -38,7 +35,7 @@ export const AppProvider = ({ children }) => {
             profile_photo: firebaseUser.photoURL || userDoc.data().profile_photo,
             ...userDoc.data(),
           };
-          console.log('👤 User data with role:', userData.role_type);
+
           setUser(userData);
         } else {
           console.log('⚠️ No Firestore document found - using basic data');

@@ -35,6 +35,7 @@ import {
   queryDocuments,
   addDocument,
   updateDocument,
+  getDocument,
   getOrCreateConversation,
 } from '@/utils/firestore';
 import { cn } from '@/lib/utils';
@@ -182,9 +183,11 @@ export default function HostDashboard() {
         console.log('🔍 Fetching available bookings for host:', user.email);
         console.log('🔍 Host cities:', hostCities);
 
-        // Get all bookings
-        const allBookings = await getAllDocuments('bookings');
-        console.log('📦 Total bookings in database:', allBookings.length);
+        // Get only pending bookings (hosts can only read pending bookings per Firestore rules)
+        const allBookings = await queryDocuments('bookings', [
+          ['status', '==', 'pending'],
+        ]);
+        console.log('📦 Total pending bookings in database:', allBookings.length);
 
         // Get all offers made by this host
         const myOffers = await queryDocuments('offers', [
@@ -252,12 +255,21 @@ export default function HostDashboard() {
         // Get the booking IDs
         const bookingIds = [...new Set(myOffers.map((o) => o.booking_id))];
 
-        // Get all bookings
-        const allBookings = await getAllDocuments('bookings');
+        // Get bookings for each offer (fetch individually since we can't query by ID list)
+        const myBookings = [];
+        for (const bookingId of bookingIds) {
+          try {
+            const booking = await getDocument('bookings', bookingId);
+            if (booking) {
+              myBookings.push(booking);
+            }
+          } catch (error) {
+            console.warn(`Could not fetch booking ${bookingId}:`, error.message);
+          }
+        }
 
-        // Filter to only my offered bookings
-        const myBookings = allBookings
-          .filter((b) => bookingIds.includes(b.id))
+        // Add offer details to bookings
+        const bookingsWithOffers = myBookings
           .map((booking) => {
             // Find the offer for this booking
             const offer = myOffers.find((o) => o.booking_id === booking.id);
@@ -269,8 +281,8 @@ export default function HostDashboard() {
             };
           });
 
-        console.log('✅ My bookings:', myBookings.length);
-        return myBookings.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+        console.log('✅ My bookings:', bookingsWithOffers.length);
+        return bookingsWithOffers.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
       } catch (error) {
         console.error('❌ Error fetching my bookings:', error);
         return [];

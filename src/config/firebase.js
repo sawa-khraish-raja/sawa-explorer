@@ -3,6 +3,7 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getAnalytics } from 'firebase/analytics';
 import { getMessaging } from 'firebase/messaging';
+import { getStorage } from 'firebase/storage';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -23,6 +24,9 @@ export const auth = getAuth(app);
 
 const databaseId = import.meta.env.VITE_FIRESTORE_DATABASE_ID || 'test';
 export const db = getFirestore(app, databaseId);
+
+// Initialize Firebase Storage
+export const storage = getStorage(app);
 
 export const messaging =
   typeof window !== 'undefined'

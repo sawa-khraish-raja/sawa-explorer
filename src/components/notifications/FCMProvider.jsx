@@ -56,7 +56,6 @@ export function FCMProvider({ children }) {
         if (token && fetchedTokenRef.current !== token) {
           await saveDeviceToken(user.id, user.email, token);
           fetchedTokenRef.current = token;
-          console.log('FCM token registered');
         }
 
         unsubscribeOnMessage = onMessage(messaging, (payload) => {
