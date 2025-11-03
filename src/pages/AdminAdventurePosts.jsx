@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import AdminLayout from '../components/admin/AdminLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,7 +27,7 @@ export default function AdminAdventurePosts() {
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ['allAdventurePosts'],
-    queryFn: () => base44.entities.AdventurePost.list('-created_date'),
+    queryFn: () => getAllDocuments('adventureposts'),
   });
 
   const pendingPosts = posts.filter((p) => p.status === 'pending');
@@ -35,15 +36,15 @@ export default function AdminAdventurePosts() {
 
   const moderationMutation = useMutation({
     mutationFn: async ({ postId, status, notes }) => {
-      await base44.entities.AdventurePost.update(postId, {
+      await updateDocument('adventureposts', postId, { ...{
         status,
         admin_notes: notes,
-      });
+      }, updated_date: new Date().toISOString() });
 
       // Notify host
       const post = posts.find((p) => p.id === postId);
       if (post) {
-        await base44.entities.Notification.create({
+        await addDocument('notifications', { ...{
           recipient_email: post.host_email,
           recipient_type: 'host',
           type: status === 'approved' ? 'post_approved' : 'post_rejected',
@@ -53,7 +54,7 @@ export default function AdminAdventurePosts() {
               ? `Your story "${post.title}" is now live!`
               : `Your story "${post.title}" was not approved. ${notes || ''}`,
           link: `/HostAdventures`,
-        });
+        }, created_date: new Date().toISOString() });
       }
     },
     onSuccess: () => {

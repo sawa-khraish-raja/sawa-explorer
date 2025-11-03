@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAppContext } from '../context/AppContext';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
@@ -18,7 +19,8 @@ import {
   Menu,
   Loader2,
 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { Button } from '@/components/ui/button';
 
 const navItems = [
@@ -34,6 +36,7 @@ const navItems = [
 ];
 
 export default function PartnerLayout({ children }) {
+  const { logout } = useAppContext();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [language, setLanguage] = useState('en');
@@ -44,7 +47,7 @@ export default function PartnerLayout({ children }) {
   useEffect(() => {
     async function checkAuth() {
       try {
-        const currentUser = await base44.auth.me();
+        const currentUser = await useAppContext().user;
         if (
           !currentUser.host_approved &&
           currentUser.role !== 'admin' &&
@@ -56,7 +59,7 @@ export default function PartnerLayout({ children }) {
         }
         setUser(currentUser);
       } catch (error) {
-        base44.auth.redirectToLogin(location.pathname);
+        navigate('/login');
       } finally {
         setLoading(false);
       }
@@ -160,7 +163,7 @@ export default function PartnerLayout({ children }) {
             </Button>
             <Button
               variant='ghost'
-              onClick={() => base44.auth.logout()}
+              onClick={() => logout()}
               className='flex items-center gap-2 text-gray-600 hover:text-gray-900'
             >
               <LogOut className='w-5 h-5' />

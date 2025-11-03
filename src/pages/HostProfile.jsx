@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useAppContext } from '../components/context/AppContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -64,7 +66,7 @@ export default function HostProfile() {
     queryKey: ['currentUser'],
     queryFn: async () => {
       try {
-        return await base44.auth.me();
+        return await useAppContext().user;
       } catch {
         return null;
       }
@@ -74,10 +76,8 @@ export default function HostProfile() {
   const { data: host, isLoading } = useQuery({
     queryKey: ['hostProfile', hostEmail],
     queryFn: async () => {
-      const hosts = await base44.entities.User.filter({
-        email: hostEmail,
-        host_approved: true,
-      });
+      const hosts = await queryDocuments('users', ['email', '==', hostEmail],
+            ['host_approved', '==', true]);
       if (!hosts || hosts.length === 0) {
         throw new Error('Host not found');
       }
@@ -89,11 +89,11 @@ export default function HostProfile() {
   const { data: reviews = [] } = useQuery({
     queryKey: ['hostReviews', hostEmail],
     queryFn: async () => {
-      const allReviews = await base44.entities.Review.filter({
-        reviewed_email: hostEmail,
-        status: 'published',
-        review_type: 'traveler_to_host',
-      });
+      const allReviews = await queryDocuments('reviews', [
+        ['reviewed_email', '==', hostEmail],
+        ['status', '==', 'published'],
+        ['review_type', '==', 'traveler_to_host']
+      ]);
       return allReviews.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
     enabled: !!hostEmail,
@@ -102,7 +102,7 @@ export default function HostProfile() {
   const handleContactHost = () => {
     if (!currentUser) {
       toast.error('Please login to contact host');
-      base44.auth.redirectToLogin(window.location.pathname);
+      navigate('/login');
       return;
     }
     navigate(createPageUrl(`Messages?contact=${host.email}`));

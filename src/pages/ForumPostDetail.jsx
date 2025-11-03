@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getDocument, updateDocument, queryDocuments, addDocument } from '@/utils/firestore';
+import { useAppContext } from '../components/context/AppContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
@@ -28,7 +29,7 @@ import ReactMarkdown from 'react-markdown';
 export default function ForumPostDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [user, setUser] = useState(null);
+  const { user } = useAppContext();
   const [newComment, setNewComment] = useState('');
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -36,25 +37,16 @@ export default function ForumPostDetail() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    async function fetchUser() {
-      try {
-        const currentUser = await base44.auth.me();
-        setUser(currentUser);
-      } catch (e) {
-        setUser(null);
-      }
-    }
-    fetchUser();
   }, []);
 
   // Fetch post
   const { data: post, isLoading: postLoading } = useQuery({
     queryKey: ['forumPost', postId],
     queryFn: async () => {
-      const fetchedPost = await base44.entities.ForumPost.get(postId);
+      const fetchedPost = await getDocument('forum_posts', postId);
 
       // Increment view count
-      await base44.entities.ForumPost.update(postId, {
+      await updateDocument('forum_posts', postId, {
         views_count: (fetchedPost.views_count || 0) + 1,
       });
 
@@ -67,13 +59,12 @@ export default function ForumPostDetail() {
   const { data: comments = [], isLoading: commentsLoading } = useQuery({
     queryKey: ['forumComments', postId],
     queryFn: async () => {
-      const allComments = await base44.entities.ForumComment.filter(
-        {
-          post_id: postId,
-          status: 'published',
-        },
-        '-created_date'
-      );
+      const allComments = await queryDocuments('forum_comments', [
+        ['post_id', '==', postId],
+        ['status', '==', 'published'],
+      ], {
+        orderBy: { field: 'created_date', direction: 'desc' }
+      });
       return allComments;
     },
     enabled: !!postId,
@@ -82,7 +73,7 @@ export default function ForumPostDetail() {
   // Fetch adventure details if this is an adventure post
   const { data: adventure } = useQuery({
     queryKey: ['adventure', post?.adventure_entity_id],
-    queryFn: () => base44.entities.Adventure.get(post.adventure_entity_id),
+    queryFn: () => getDocument('adventures', post.adventure_entity_id),
     enabled: !!post?.is_adventure_listing && !!post?.adventure_entity_id,
   });
 
@@ -90,7 +81,7 @@ export default function ForumPostDetail() {
   const likeMutation = useMutation({
     mutationFn: async () => {
       if (!user) {
-        base44.auth.redirectToLogin(window.location.href);
+        navigate('/login');
         return;
       }
 
@@ -101,8 +92,9 @@ export default function ForumPostDetail() {
         ? likes.filter((email) => email !== user.email)
         : [...likes, user.email];
 
-      await base44.entities.ForumPost.update(postId, {
+      await updateDocument('forum_posts', postId, {
         likes_by: updatedLikes,
+        updated_date: new Date().toISOString(),
       });
 
       return { hasLiked: !hasLiked };
@@ -117,7 +109,7 @@ export default function ForumPostDetail() {
   const addCommentMutation = useMutation({
     mutationFn: async (commentData) => {
       if (!user) {
-        base44.auth.redirectToLogin(window.location.href);
+        navigate('/login');
         return;
       }
 
@@ -128,13 +120,15 @@ export default function ForumPostDetail() {
         author_profile_photo: user.profile_photo,
         content: commentData.content,
         status: 'pending_review',
+        created_date: new Date().toISOString(),
       };
 
-      await base44.entities.ForumComment.create(newCommentData);
+      await addDocument('forum_comments', newCommentData);
 
       // Update comments count
-      await base44.entities.ForumPost.update(postId, {
+      await updateDocument('forum_posts', postId, {
         comments_count: (post.comments_count || 0) + 1,
+        updated_date: new Date().toISOString(),
       });
     },
     onSuccess: () => {
@@ -397,7 +391,7 @@ export default function ForumPostDetail() {
             ) : (
               <div className='mb-8 text-center py-8 bg-gray-50 rounded-xl'>
                 <p className='text-gray-600 mb-4'>Log in to add a comment</p>
-                <Button onClick={() => base44.auth.redirectToLogin(window.location.href)}>
+                <Button onClick={() => navigate('/login')}>
                   Log In
                 </Button>
               </div>

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useAppContext } from '../components/context/AppContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,7 +59,7 @@ export default function OfficeAdventures() {
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: async () => {
-      const currentUser = await base44.auth.me();
+      const currentUser = await useAppContext().user;
       if (!currentUser || currentUser.role_type !== 'office') {
         navigate(createPageUrl('Home'));
         return null;
@@ -71,7 +73,7 @@ export default function OfficeAdventures() {
     queryKey: ['userOffice', user?.email],
     queryFn: async () => {
       if (!user?.email) return null;
-      const allOffices = await base44.entities.Office.list();
+      const allOffices = await getAllDocuments('offices');
       return allOffices.find((o) => o.email?.toLowerCase() === user.email.toLowerCase());
     },
     enabled: !!user?.email,
@@ -82,7 +84,7 @@ export default function OfficeAdventures() {
     queryKey: ['officeAdventures', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
-      const allAdventures = await base44.entities.Adventure.list('-created_date');
+      const allAdventures = await getAllDocuments('adventures');
       return allAdventures.filter(
         (a) => a.host_email === user.email && a.added_by_type === 'office'
       );
@@ -121,9 +123,9 @@ export default function OfficeAdventures() {
       };
 
       if (editingAdventure) {
-        return await base44.entities.Adventure.update(editingAdventure.id, dataToSave);
+        return await updateDocument('adventures', editingAdventure.id, { ...dataToSave, updated_date: new Date().toISOString() });
       } else {
-        return await base44.entities.Adventure.create(dataToSave);
+        return await addDocument('adventures', { ...dataToSave, created_date: new Date().toISOString() });
       }
     },
     onSuccess: () => {
@@ -143,7 +145,7 @@ export default function OfficeAdventures() {
   // Delete mutation
   const deleteAdventureMutation = useMutation({
     mutationFn: async (id) => {
-      return await base44.entities.Adventure.delete(id);
+      return await deleteDocument('adventures', id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['officeAdventures'] });

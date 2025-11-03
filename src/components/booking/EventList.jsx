@@ -4,15 +4,15 @@ import { Loader2, Calendar, Sparkles, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 
 export default function EventList({ city, events = [], isLoading = false, filters = {} }) {
   const { data: lastSync } = useQuery({
     queryKey: ['eventsLastSync'],
     queryFn: async () => {
-      const meta = await base44.entities.SystemMeta.filter({
-        key: 'events_last_sync',
-      });
+      const meta = await queryDocuments('systemmetas', [['key', '==', 'events_last_sync',
+      ]]);
       return meta[0]?.value || null;
     },
     staleTime: 5 * 60 * 1000,

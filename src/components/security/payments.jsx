@@ -3,7 +3,8 @@
  * Integration with signed payment actions
  */
 
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 
 /**
  * Create secure payment intent
@@ -12,7 +13,7 @@ import { base44 } from '@/api/base44Client';
  */
 export async function createPaymentIntent({ bookingId, amount, currency = 'USD' }) {
   try {
-    const response = await base44.functions.invoke('payments/createIntent', {
+    const response = await createPaymentIntent( {
       bookingId,
       amount,
       currency,
@@ -36,7 +37,7 @@ export async function createPaymentIntent({ bookingId, amount, currency = 'USD' 
  */
 export async function verifyPaymentSignature(signed) {
   try {
-    const response = await base44.functions.invoke('actions/verifySignature', signed);
+    const response = await verifySignature( signed);
 
     return response.data.ok === true;
   } catch (error) {

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAppContext } from '../context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,8 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { showSuccess, showError } from '../utils/notifications';
 
@@ -31,7 +33,7 @@ export default function OfferCard({
     queryKey: ['currentUser'],
     queryFn: async () => {
       try {
-        return await base44.auth.me();
+        return await useAppContext().user;
       } catch {
         return null;
       }
@@ -55,7 +57,7 @@ export default function OfferCard({
       setIsProcessing(true);
 
       //  Use offer.booking_id directly
-      const response = await base44.functions.invoke('confirmBooking', {
+      const response = await confirmBooking( {
         booking_id: offer.booking_id,
         offer_id: offerId,
       });
@@ -110,9 +112,9 @@ export default function OfferCard({
 
       setIsProcessing(true);
 
-      await base44.entities.Offer.update(offerId, {
+      await updateDocument('offers', offerId, { ...{
         status: 'declined',
-      });
+      }, updated_date: new Date().toISOString() });
 
       return { success: true };
     },

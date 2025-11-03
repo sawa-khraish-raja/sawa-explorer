@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { queryDocuments, getAllDocuments, addDocument } from '@/utils/firestore';
+import { useAppContext } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -113,6 +114,7 @@ export default function BookingCity({ cityName }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t, language } = useTranslation();
+  const { user } = useAppContext();
   const [eventFilters, setEventFilters] = useState({
     featured: false,
     category: 'All',
@@ -135,19 +137,6 @@ export default function BookingCity({ cityName }) {
       });
     }
   }, []);
-
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: async () => {
-      try {
-        return await base44.auth.me();
-      } catch {
-        return null;
-      }
-    },
-    staleTime: 30 * 60 * 1000,
-    cacheTime: 60 * 60 * 1000,
-  });
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -191,16 +180,18 @@ export default function BookingCity({ cityName }) {
       if (!cityName) return [];
 
       try {
-        const response = await base44.functions.invoke('getCityHosts', {
-          city: cityName,
-        });
+        // Get all users who are approved hosts and visible in this city
+        const allUsers = await getAllDocuments('users');
+        const cityHosts = allUsers.filter(
+          (u) =>
+            u.host_approved === true &&
+            u.visible_in_city === true &&
+            u.city === cityName
+        );
 
-        if (!response || !response.data) return [];
-        if (!response.data.ok) return [];
-
-        return response.data.hosts || [];
+        return cityHosts;
       } catch (error) {
-        console.error('Error calling backend:', error);
+        console.error('Error fetching hosts:', error);
         return [];
       }
     },
@@ -216,7 +207,7 @@ export default function BookingCity({ cityName }) {
     queryKey: ['cityEvents', cityName],
     queryFn: async () => {
       if (!cityName) return [];
-      const allEvents = await base44.entities.Event.filter({ city: cityName });
+      const allEvents = await queryDocuments('events', [['city', '==', cityName]]);
 
       const now = new Date();
       now.setHours(0, 0, 0, 0);
@@ -238,7 +229,8 @@ export default function BookingCity({ cityName }) {
 
   const createBookingMutation = useMutation({
     mutationFn: async (bookingData) => {
-      const newBooking = await base44.entities.Booking.create({
+      const bookingId = await addDocument('bookings', {
+        user_id: user.uid,
         traveler_email: user.email,
         city: bookingData.city,
         start_date: bookingData.start_date,
@@ -250,17 +242,13 @@ export default function BookingCity({ cityName }) {
         notes: bookingData.notes,
         state: 'open',
         status: 'pending',
+        created_date: new Date().toISOString(),
       });
 
-      try {
-        await base44.functions.invoke('notifyHostsOfNewBooking', {
-          bookingId: newBooking.id,
-        });
-      } catch (error) {
-        console.error('Failed to notify hosts:', error);
-      }
+      // Note: Host notification would be handled by a Cloud Function trigger in production
+      console.log('Booking created:', bookingId);
 
-      return newBooking;
+      return { id: bookingId, ...bookingData };
     },
     onSuccess: (booking) => {
       queryClient.invalidateQueries({ queryKey: ['myBookings'] });
@@ -293,7 +281,7 @@ export default function BookingCity({ cityName }) {
         language === 'ar' ? 'تسجيل الدخول مطلوب' : 'Login Required',
         language === 'ar' ? 'يرجى تسجيل الدخول للمتابعة' : 'Please log in to continue'
       );
-      base44.auth.redirectToLogin();
+      navigate('/login');
       return;
     }
 

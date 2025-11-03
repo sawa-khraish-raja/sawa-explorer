@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { queryDocuments, getDocument } from '@/utils/firestore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -59,7 +59,7 @@ export default function BookingDetailsModal({
     queryKey: ['bookingOffers', booking?.id],
     queryFn: async () => {
       if (!booking?.id || isAdventureBooking) return []; // No offers for adventures
-      return await base44.entities.Offer.filter({ booking_id: booking.id });
+      return await queryDocuments('offers', [['booking_id', '==', booking.id]]);
     },
     enabled: queryEnabled && !isAdventureBooking,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -70,7 +70,7 @@ export default function BookingDetailsModal({
     queryKey: ['bookingConversations', booking?.id],
     queryFn: async () => {
       if (!booking?.id) return [];
-      return await base44.entities.Conversation.filter({ booking_id: booking.id });
+      return await queryDocuments('conversations', [['booking_id', '==', booking.id]]);
     },
     enabled: queryEnabled,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -80,7 +80,7 @@ export default function BookingDetailsModal({
     queryKey: ['travelerUser', booking?.traveler_email],
     queryFn: async () => {
       if (!booking?.traveler_email) return null;
-      const users = await base44.entities.User.filter({ email: booking.traveler_email });
+      const users = await queryDocuments('users', [['email', '==', booking.traveler_email]]);
       return users[0] || null;
     },
     enabled: queryEnabled && !!booking?.traveler_email,
@@ -91,7 +91,7 @@ export default function BookingDetailsModal({
     queryKey: ['hostUser', booking?.host_email],
     queryFn: async () => {
       if (!booking?.host_email) return null;
-      const users = await base44.entities.User.filter({ email: booking.host_email });
+      const users = await queryDocuments('users', [['email', '==', booking.host_email]]);
       return users[0] || null;
     },
     enabled: queryEnabled && !!booking?.host_email,
@@ -106,7 +106,7 @@ export default function BookingDetailsModal({
       if (hostEmails.length === 0) return [];
       const uniqueEmails = Array.from(new Set(hostEmails));
       const hostUserPromises = uniqueEmails.map((email) =>
-        base44.entities.User.filter({ email: email })
+        queryDocuments('users', [['email', '==', email]])
           .then((res) => res[0])
           .catch(() => null)
       );
@@ -121,7 +121,7 @@ export default function BookingDetailsModal({
     queryKey: ['adventure', booking?.adventure_id],
     queryFn: async () => {
       if (!booking?.adventure_id) return null;
-      return await base44.entities.Adventure.get(booking.adventure_id);
+      return await getDocument('adventures', booking.adventure_id);
     },
     enabled: queryEnabled && !!booking?.adventure_id,
     staleTime: 10 * 60 * 1000, // 10 minutes
@@ -131,7 +131,7 @@ export default function BookingDetailsModal({
     queryKey: ['cancellationRequest', booking?.id],
     queryFn: async () => {
       if (!booking?.id) return null;
-      const requests = await base44.entities.CancellationRequest.filter({ booking_id: booking.id });
+      const requests = await queryDocuments('cancellation_requests', [['booking_id', '==', booking.id]]);
       return requests[0] || null;
     },
     enabled: queryEnabled && ['cancelled', 'pending'].includes(booking?.status),

@@ -18,7 +18,8 @@ import {
   Send,
   Handshake,
 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -120,10 +121,10 @@ export default function Partner() {
   const submitPartnerRequestMutation = useMutation({
     mutationFn: async (data) => {
       // 1. Save to database
-      const partnerRequest = await base44.entities.PartnerRequest.create(data);
+      const partnerRequest = await addDocument('partnerrequests', { ...data, created_date: new Date().toISOString() });
 
       // 2. Send email to SAWA team
-      await base44.integrations.Core.SendEmail({
+      await invokeFunction('sendEmail', {
         to: 'notificationsawa@gmail.com',
         subject: `🤝 New Partnership Request from ${data.organization_name}`,
         body: `
@@ -162,7 +163,7 @@ export default function Partner() {
       });
 
       // 3. Send confirmation email to partner
-      await base44.integrations.Core.SendEmail({
+      await invokeFunction('sendEmail', {
         to: data.email,
         subject: 'Thank you for your partnership interest - SAWA',
         body: `

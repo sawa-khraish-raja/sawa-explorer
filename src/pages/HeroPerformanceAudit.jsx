@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import {
   AlertTriangle,
   CheckCircle,
@@ -27,10 +28,8 @@ export default function HeroPerformanceAudit() {
   const { data: slides = [], isLoading } = useQuery({
     queryKey: ['heroSlides', 'home'],
     queryFn: async () => {
-      const allSlides = await base44.entities.HeroSlide.filter({
-        page_type: 'home',
-        is_active: true,
-      });
+      const allSlides = await queryDocuments('heroslides', ['page_type', '==', 'home'],
+            ['is_active', '==', true]);
       return allSlides.filter((s) => s.video_url).sort((a, b) => (a.order || 0) - (b.order || 0));
     },
   });

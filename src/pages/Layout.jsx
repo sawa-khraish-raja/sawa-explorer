@@ -30,7 +30,6 @@ import {
   BarChart3,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { base44 } from '@/api/base44Client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   DropdownMenu,

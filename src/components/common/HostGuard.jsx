@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { Loader2 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 
@@ -12,7 +13,7 @@ export default function HostGuard({ children, requireHost = true }) {
     queryKey: ['currentUser'],
     queryFn: async () => {
       try {
-        return await base44.auth.me();
+        return await useAppContext().user;
       } catch (error) {
         return null;
       }

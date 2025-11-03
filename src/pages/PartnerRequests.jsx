@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useAppContext } from '../components/context/AppContext';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +16,7 @@ export default function PartnerRequests() {
   useEffect(() => {
     async function fetchUser() {
       try {
-        const currentUser = await base44.auth.me();
+        const currentUser = await useAppContext().user;
         setUser(currentUser);
       } catch (error) {
         console.error('Failed to fetch user');
@@ -26,7 +28,7 @@ export default function PartnerRequests() {
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['partnerRequests', user?.city],
     queryFn: () =>
-      base44.entities.Booking.filter(
+      queryDocuments('bookings', 
         {
           city: user?.city,
           status: 'pending',

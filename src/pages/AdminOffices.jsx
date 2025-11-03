@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import AdminLayout from '../components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,7 @@ export default function AdminOffices() {
 
   const { data: offices = [], isLoading } = useQuery({
     queryKey: ['allOffices'],
-    queryFn: () => base44.entities.Office.list('-created_date'),
+    queryFn: () => getAllDocuments('offices'),
     refetchOnWindowFocus: true,
   });
 

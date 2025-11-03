@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { useAppContext } from '../context/AppContext';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -174,9 +176,7 @@ export default function HostProfileSettings({ user, onProfileUpdated }) {
         //  Upload profile photo if changed
         if (profilePhoto) {
           console.log('📤 Uploading profile photo...');
-          const { file_url } = await base44.integrations.Core.UploadFile({
-            file: profilePhoto,
-          });
+          const { file_url } = await uploadImage(profilePhoto, 'uploads');
           uploadedProfilePhoto = file_url;
           console.log(' Profile photo uploaded:', file_url);
         }
@@ -185,9 +185,7 @@ export default function HostProfileSettings({ user, onProfileUpdated }) {
         if (coverPhotos.length > 0) {
           console.log('📤 Uploading cover photos...');
           for (const photo of coverPhotos) {
-            const { file_url } = await base44.integrations.Core.UploadFile({
-              file: photo,
-            });
+            const { file_url } = await uploadImage(photo, 'uploads');
             uploadedCoverPhotos.push(file_url);
             console.log(' Cover photo uploaded:', file_url);
           }
@@ -205,16 +203,15 @@ export default function HostProfileSettings({ user, onProfileUpdated }) {
         };
 
         console.log('💾 Updating User entity...');
-        await base44.auth.updateMe(updateData);
+        await updateMe(updateData);
 
         // Fetch the user again to get the latest state including admin-controlled fields
-        const freshUser = await base44.auth.me();
+        const freshUser = await useAppContext().user;
 
         //  Update or Create HostProfile for unified display
         console.log('💾 Syncing HostProfile...');
-        const hostProfiles = await base44.entities.HostProfile.filter({
-          user_email: freshUser.email,
-        });
+        const hostProfiles = await queryDocuments('hostprofiles', [['user_email', '==', freshUser.email,
+        ]]);
 
         const hostProfileData = {
           user_email: freshUser.email,
@@ -243,10 +240,10 @@ export default function HostProfileSettings({ user, onProfileUpdated }) {
         };
 
         if (hostProfiles && hostProfiles.length > 0) {
-          await base44.entities.HostProfile.update(hostProfiles[0].id, hostProfileData);
+          await updateDocument('hostprofiles', hostProfiles[0].id, { ...hostProfileData, updated_date: new Date().toISOString() });
           console.log(' HostProfile updated');
         } else if (freshUser.host_approved) {
-          await base44.entities.HostProfile.create(hostProfileData);
+          await addDocument('hostprofiles', { ...hostProfileData, created_date: new Date().toISOString() });
           console.log(' HostProfile created');
         } else {
           console.log('HostProfile not created: user is not host_approved.');

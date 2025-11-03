@@ -21,7 +21,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 
 export default function About() {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export default function About() {
   const { data: cities = [], isLoading: citiesLoading } = useQuery({
     queryKey: ['activeCities'],
     queryFn: async () => {
-      const allCities = await base44.entities.City.list();
+      const allCities = await getAllDocuments('citys');
       const activeCities = allCities.filter((city) => city.is_active !== false && city.page_slug);
       const uniqueCities = activeCities.reduce((acc, city) => {
         if (!acc.find((c) => c.name === city.name)) {

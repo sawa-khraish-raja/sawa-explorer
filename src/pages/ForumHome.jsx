@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useAppContext } from '../components/context/AppContext';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Compass, Plus, Sparkles } from 'lucide-react';
@@ -22,7 +24,7 @@ export default function ForumHome() {
     queryKey: ['currentUser'],
     queryFn: async () => {
       try {
-        return await base44.auth.me();
+        return await useAppContext().user;
       } catch (e) {
         return null;
       }

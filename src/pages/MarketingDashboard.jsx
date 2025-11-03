@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { invokeFunction } from '@/utils/functions';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -56,7 +58,7 @@ export default function MarketingDashboard() {
   const { data: analytics, isLoading: analyticsLoading } = useQuery({
     queryKey: ['analyticsData'],
     queryFn: async () => {
-      const data = await base44.entities.AnalyticsData.list('-sync_timestamp', 1);
+      const data = await getAllDocuments('analytics_data', '-sync_timestamp', 1);
       return data[0] || null;
     },
     refetchInterval: 60000, // Refresh every minute
@@ -65,7 +67,7 @@ export default function MarketingDashboard() {
   //  Fetch campaigns
   const { data: campaigns = [] } = useQuery({
     queryKey: ['smartCampaigns'],
-    queryFn: () => base44.entities.SmartCampaign.list('-created_date', 20),
+    queryFn: () => getAllDocuments('smart_campaigns', '-created_date', 20),
   });
 
   //  Fetch campaign performance
@@ -74,7 +76,7 @@ export default function MarketingDashboard() {
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      return base44.entities.CampaignPerformance.filter({
+      return queryDocuments('campaign_performance', {
         date: { $gte: weekAgo },
       });
     },
@@ -85,7 +87,7 @@ export default function MarketingDashboard() {
     queryKey: ['conversions'],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
-      return base44.entities.ConversionEvent.filter({
+      return queryDocuments('conversion_events', {
         created_date: { $gte: today },
       });
     },
@@ -94,7 +96,7 @@ export default function MarketingDashboard() {
   //  Fetch city data
   const { data: cityData = [] } = useQuery({
     queryKey: ['cityMarketingData'],
-    queryFn: () => base44.entities.CityMarketingData.list(),
+    queryFn: () => getAllDocuments('citymarketingdatas'),
   });
 
   //  Sync GA4 data
@@ -102,7 +104,7 @@ export default function MarketingDashboard() {
     setSyncing(true);
     try {
       toast.info('📊 Syncing with Google Analytics...');
-      const response = await base44.functions.invoke('GA4_Real_Sync', {});
+      const response = await invokeFunction('GA4_Real_Sync', {});
 
       if (response.data?.ok) {
         toast.success(' Analytics synced successfully!');

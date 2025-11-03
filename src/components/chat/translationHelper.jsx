@@ -1,4 +1,5 @@
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { normLang } from '../i18n/i18nLang';
 import { isFeatureEnabled } from '../config/featureFlags';
 import { isAIFeatureEnabled, AI_ALLOWED_CONTEXTS } from '../config/aiFlags';
@@ -94,7 +95,7 @@ async function translateMessageRaw(text, toLang) {
   }
 
   try {
-    const response = await base44.functions.invoke('translate', {
+    const response = await translateText( {
       text,
       from: 'auto',
       to: targetLang,
@@ -168,7 +169,7 @@ export async function batchTranslateMessages(messages, targetLang) {
             }
 
             //  إرسال Context مع الترجمة
-            const { data } = await base44.functions.invoke('translate', {
+            const { data } = await translateText( {
               text: originalText,
               from: 'auto',
               to: normalized,

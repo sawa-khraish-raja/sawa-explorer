@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+import { useAppContext } from '../components/context/AppContext';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { invokeFunction } from '@/utils/functions';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import AdminLayout from '../components/admin/AdminLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,13 +42,13 @@ export default function AdminBroadcast() {
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
+    queryFn: () => useAppContext().user,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: allUsers = [] } = useQuery({
     queryKey: ['allUsersCount'],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: () => getAllDocuments('users'),
     staleTime: 2 * 60 * 1000,
   });
 
@@ -55,7 +58,7 @@ export default function AdminBroadcast() {
         throw new Error('Title and message are required');
       }
 
-      const response = await base44.functions.invoke('sendBroadcastNotification', {
+      const response = await invokeFunction('sendBroadcastNotification', {
         title,
         message,
         link: link || '/Home',

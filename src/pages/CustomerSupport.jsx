@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import AdminLayout from '../components/admin/AdminLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -65,37 +66,37 @@ export default function CustomerSupport() {
   //  Fetch All Data
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list('-created_date'),
+    queryFn: () => getAllDocuments('users'),
   });
 
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
     queryKey: ['allBookings'],
-    queryFn: () => base44.entities.Booking.list('-created_date'),
+    queryFn: () => getAllDocuments('bookings'),
   });
 
   const { data: offers = [] } = useQuery({
     queryKey: ['allOffers'],
-    queryFn: () => base44.entities.Offer.list('-created_date'),
+    queryFn: () => getAllDocuments('offers'),
   });
 
   const { data: conversations = [] } = useQuery({
     queryKey: ['allConversations'],
-    queryFn: () => base44.entities.Conversation.list('-last_message_timestamp'),
+    queryFn: () => getAllDocuments('conversations', '-last_message_timestamp'),
   });
 
   const { data: cancellations = [] } = useQuery({
     queryKey: ['cancellationRequests'],
-    queryFn: () => base44.entities.CancellationRequest.list('-created_date'),
+    queryFn: () => getAllDocuments('cancellationrequests'),
   });
 
   const { data: adventures = [] } = useQuery({
     queryKey: ['allAdventures'],
-    queryFn: () => base44.entities.Adventure.list('-created_date'),
+    queryFn: () => getAllDocuments('adventures'),
   });
 
   const { data: reviews = [] } = useQuery({
     queryKey: ['allReviews'],
-    queryFn: () => base44.entities.Review.list('-created_date'),
+    queryFn: () => getAllDocuments('reviews'),
   });
 
   //  Comprehensive Metrics

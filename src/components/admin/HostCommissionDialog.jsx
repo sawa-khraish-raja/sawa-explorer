@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useAppContext } from '../context/AppContext';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import {
   Dialog,
   DialogContent,
@@ -22,7 +24,7 @@ export default function HostCommissionDialog({ host, isOpen, onClose }) {
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
+    queryFn: () => useAppContext().user,
   });
 
   const updateCommissionMutation = useMutation({
@@ -31,12 +33,13 @@ export default function HostCommissionDialog({ host, isOpen, onClose }) {
       if (sawaPercent) overrides.sawa = parseFloat(sawaPercent);
       if (officePercent) overrides.office = parseFloat(officePercent);
 
-      await base44.entities.User.update(host.id, {
+      await updateDocument('users', host.id, {
         commission_overrides: Object.keys(overrides).length > 0 ? overrides : null,
+        updated_date: new Date().toISOString()
       });
 
       // Audit log
-      await base44.entities.AuditLog.create({
+      await addDocument('auditlogs', {
         admin_email: currentUser.email,
         action: 'permissions_updated',
         affected_user_email: host.email,
@@ -45,6 +48,7 @@ export default function HostCommissionDialog({ host, isOpen, onClose }) {
           overrides,
           previousOverrides: host.commission_overrides,
         }),
+        created_date: new Date().toISOString()
       });
     },
     onSuccess: () => {

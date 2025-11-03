@@ -1,7 +1,8 @@
 import React from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import MarketingLayout from '../components/marketing/MarketingLayout';
 import MarketingGuard from '../components/marketing/MarketingGuard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,7 +36,7 @@ export default function ReportView() {
     queryKey: ['report_view', reportId],
     queryFn: async () => {
       if (!reportId) throw new Error('No report ID');
-      const reports = await base44.entities.AIReports.filter({ id: reportId });
+      const reports = await queryDocuments('aireportss', [['id', '==', reportId ]]);
       if (!reports || reports.length === 0) throw new Error('Report not found');
       return reports[0];
     },

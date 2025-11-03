@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import {
   Loader2,
   Send,
@@ -91,7 +92,7 @@ export default function HostConversationView({
     error: conversationError,
   } = useQuery({
     queryKey: ['hostConversation', conversationId],
-    queryFn: () => base44.conversations.get(conversationId),
+    queryFn: () => getDocument('conversations', conversationId),
     enabled: !!conversationId,
   });
 
@@ -101,7 +102,7 @@ export default function HostConversationView({
     error: bookingError,
   } = useQuery({
     queryKey: ['hostBooking', conversation?.booking_id],
-    queryFn: () => base44.bookings.get(conversation.booking_id),
+    queryFn: () => getDocument('bookings', conversation.booking_id),
     enabled: !!conversation?.booking_id,
     staleTime: Infinity, // Bookings usually don't change often in a chat context
   });
@@ -109,7 +110,7 @@ export default function HostConversationView({
   // Fetch all users to get traveler's full profile
   const { data: allUsers = [], isLoading: isLoadingAllUsers } = useQuery({
     queryKey: ['allUsers'],
-    queryFn: () => base44.users.getAll(),
+    queryFn: () => getAllDocuments('users'),
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
@@ -130,11 +131,7 @@ export default function HostConversationView({
   } = useQuery({
     queryKey: ['hostMessages', conversationId],
     queryFn: async ({ pageParam = 0 }) => {
-      const response = await base44.messages.getAll({
-        conversation_id: conversationId,
-        offset: pageParam,
-        limit: 20,
-      });
+      const response = await queryDocuments('messages', []);
       // Messages should be ordered oldest to newest from API for chat display
       return response.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
     },
@@ -187,7 +184,7 @@ export default function HostConversationView({
 
   const createMessageMutation = useMutation({
     mutationFn: async (messageData) => {
-      await base44.messages.create(messageData);
+      await addDocument('messages', { ...messageData, created_date: new Date().toISOString() });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -211,10 +208,10 @@ export default function HostConversationView({
 
   const createOfferMutation = useMutation({
     mutationFn: async (offerData) => {
-      const newOffer = await base44.offers.create({
+      const newOffer = await addDocument('offers', { ...{
         ...offerData,
         conversation_id: conversationId,
-      });
+      }, created_date: new Date().toISOString() });
       return newOffer;
     },
     onSuccess: (newOffer) => {
@@ -292,7 +289,7 @@ export default function HostConversationView({
     mutationFn: async ({ offerId, bookingId }) => {
       // In a real app, this would likely update the offer status to 'accepted' and maybe link to a booking
       // For this example, we'll simulate an update and notify
-      await base44.offers.update(offerId, { status: 'accepted' });
+      await updateDocument('offers', offerId, { ...{ status: 'accepted' }, updated_date: new Date().toISOString() });
       // If there's a booking associated, we might update it or redirect
     },
     onSuccess: (data, variables) => {
@@ -402,7 +399,8 @@ export default function HostConversationView({
     };
 
     // Subscribe to real-time updates for messages in this conversation
-    const unsubscribe = base44.subscribeToEntityUpdates(
+    const unsubscribe = // TODO: Firebase real-time listeners
+    // base44.subscribeToEntityUpdates(
       'Message',
       conversation.id,
       handleNewMessage
@@ -498,9 +496,8 @@ export default function HostConversationView({
       setUploadingImages(true);
       try {
         for (const imageObj of imagesToSend) {
-          const { file_url } = await base44.integrations.Core.UploadFile({
-            file: imageObj.file,
-          });
+          const { file_url } = await uploadImage(imageObj.file,
+          , 'uploads');
           uploadedUrls.push(file_url);
         }
       } catch (error) {

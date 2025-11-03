@@ -5,8 +5,10 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useAppContext } from '../context/AppContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Loader2, MapPin, Info, Users } from 'lucide-react';
@@ -63,7 +65,7 @@ export default function ImprovedBookingCity({ cityName }) {
     queryKey: ['currentUser'],
     queryFn: async () => {
       try {
-        return await base44.auth.me();
+        return await useAppContext().user;
       } catch {
         return null;
       }
@@ -76,10 +78,8 @@ export default function ImprovedBookingCity({ cityName }) {
     queryKey: ['city', cityName],
     queryFn: async () => {
       if (!cityName) return null;
-      const res = await base44.entities.City.filter({
-        name: cityName,
-        is_active: true,
-      });
+      const res = await queryDocuments('citys', ['name', '==', cityName],
+            ['is_active', '==', true]);
       return res?.[0] || null;
     },
     enabled: !!cityName,
@@ -94,7 +94,7 @@ export default function ImprovedBookingCity({ cityName }) {
 
       try {
         // Direct query - much faster!
-        const allUsers = await base44.entities.User.list();
+        const allUsers = await getAllDocuments('users');
 
         const cityHosts = allUsers.filter(
           (user) => user.host_approved && user.city === cityName && user.visible_in_city !== false
@@ -116,7 +116,7 @@ export default function ImprovedBookingCity({ cityName }) {
     queryKey: ['cityEvents', cityName],
     queryFn: async () => {
       if (!cityName) return [];
-      const allEvents = await base44.entities.Event.filter({ city: cityName });
+      const allEvents = await queryDocuments('events', [['city', '==', cityName ]]);
 
       const now = new Date();
       now.setHours(0, 0, 0, 0);
@@ -132,7 +132,7 @@ export default function ImprovedBookingCity({ cityName }) {
   //  Booking submission
   const createBookingMutation = useMutation({
     mutationFn: async (bookingData) => {
-      return await base44.entities.Booking.create({
+      return await addDocument('bookings', { ...{
         traveler_email: user.email,
         city: bookingData.city,
         start_date: bookingData.start_date,
@@ -144,14 +144,14 @@ export default function ImprovedBookingCity({ cityName }) {
         notes: bookingData.notes,
         state: 'open',
         status: 'pending',
-      });
+      }, created_date: new Date().toISOString() });
     },
     onSuccess: async (booking) => {
       queryClient.invalidateQueries({ queryKey: ['myBookings'] });
 
       // Notify hosts
       try {
-        await base44.functions.invoke('notifyHostsOfNewBooking', {
+        await notifyHostsOfNewBooking( {
           bookingId: booking.id,
         });
       } catch (error) {
@@ -178,7 +178,7 @@ export default function ImprovedBookingCity({ cityName }) {
         language === 'ar' ? 'تسجيل الدخول مطلوب' : 'Login Required',
         language === 'ar' ? 'يرجى تسجيل الدخول للمتابعة' : 'Please log in to continue'
       );
-      base44.auth.redirectToLogin();
+      navigate('/login');
       return;
     }
 

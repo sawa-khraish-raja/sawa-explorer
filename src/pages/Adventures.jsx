@@ -65,7 +65,7 @@ export default function Adventures() {
           images: adv.images,
           image_url: adv.image_url,
           has_images_array: !!adv.images,
-          has_image_url: !!adv.image_url
+          has_image_url: !!adv.image_url,
         });
       });
       return sorted;
@@ -74,7 +74,6 @@ export default function Adventures() {
     cacheTime: 0, // Force fresh data
   });
 
-  // Note: AdventurePost is a separate feature (forum/social) - keeping Base44 for now
   const { data: adventurePosts = [], isLoading: postsLoading } = useQuery({
     queryKey: ['adventurePosts'],
     queryFn: async () => {
@@ -347,7 +346,9 @@ export default function Adventures() {
                         <div className='flex items-center gap-2'>
                           <Calendar className='w-4 h-4 text-[#9933CC]' />
                           <span className='text-sm text-gray-600'>
-                            {adventure.date ? format(new Date(adventure.date), 'MMM d, yyyy') : 'Date TBA'}
+                            {adventure.date
+                              ? format(new Date(adventure.date), 'MMM d, yyyy')
+                              : 'Date TBA'}
                           </span>
                         </div>
                         <div className='text-right'>

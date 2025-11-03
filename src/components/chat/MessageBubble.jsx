@@ -19,7 +19,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -233,7 +234,7 @@ export default function MessageBubble({
     setTranslationError(false);
 
     try {
-      const response = await base44.functions.invoke('messageTranslator', {
+      const response = await messageTranslator( {
         text: message.original_text,
         toLang: normalizedDisplayLang,
         context: 'chat',
@@ -249,9 +250,9 @@ export default function MessageBubble({
             [normalizedDisplayLang]: response.data.translated,
           };
 
-          await base44.entities.Message.update(message.id, {
+          await updateDocument('messages', message.id, { ...{
             translations: updatedTranslations,
-          });
+          }, updated_date: new Date().toISOString() });
         } catch (e) {
           console.warn('⚠️ Failed to cache translation for message ID:', message.id, e);
         }

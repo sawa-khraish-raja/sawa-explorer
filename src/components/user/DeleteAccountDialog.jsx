@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import {
   Dialog,
   DialogContent,
@@ -62,7 +63,7 @@ export default function DeleteAccountDialog({ open, onClose, user }) {
     setIsDeleting(true);
 
     try {
-      const response = await base44.functions.invoke('deleteAccount', {
+      const response = await deleteAccount( {
         deletion_type: deletionType,
         reason: reason,
         feedback: feedback,
@@ -76,7 +77,7 @@ export default function DeleteAccountDialog({ open, onClose, user }) {
         });
 
         setTimeout(() => {
-          base44.auth.logout();
+          logout();
           navigate(createPageUrl('Home'));
         }, 2000);
       } else {

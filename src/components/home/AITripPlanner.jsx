@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { useAppContext } from '../context/AppContext';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -33,6 +35,7 @@ import { isAIFeatureEnabled } from '../config/aiFlags';
 import SimpleDatePicker from '../booking/SimpleDatePicker';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from '../i18n/LanguageContext';
+import { invokeLLM } from '@/utils/llm';
 import {
   showWarning,
   showError,
@@ -354,7 +357,7 @@ export default function AITripPlanner() {
   useEffect(() => {
     async function fetchUser() {
       try {
-        const currentUser = await base44.auth.me();
+        const currentUser = await useAppContext().user;
         setUser(currentUser);
       } catch (e) {
         setUser(null);
@@ -367,7 +370,7 @@ export default function AITripPlanner() {
     queryKey: ['cityEventsForPlanner', destination],
     queryFn: async () => {
       if (!destination) return [];
-      const events = await base44.entities.Event.filter({ city: destination });
+      const events = await queryDocuments('events', [['city', '==', destination ]]);
       return events.filter((e) => new Date(e.start_datetime) >= new Date());
     },
     enabled: !!destination,
@@ -442,7 +445,7 @@ export default function AITripPlanner() {
       });
 
       //  SIMPLIFIED PROMPT - More reliable JSON output
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await invokeLLM({
         prompt: `Create a detailed ${days}-day trip plan for ${destination}.
 Budget: ${budget} ${currency}. ${interestsPrompt}.
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import AdminLayout from '../components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,7 +15,7 @@ export default function AdminAuditLogs() {
 
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ['auditLogs'],
-    queryFn: () => base44.entities.AuditLog.list('-created_date', 100),
+    queryFn: () => getAllDocuments('auditlogs', '-created_date', 100),
     refetchInterval: 10000,
   });
 

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useAppContext } from '../components/context/AppContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,7 +39,7 @@ export default function OfficeAddHost() {
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: async () => {
-      const currentUser = await base44.auth.me();
+      const currentUser = await useAppContext().user;
       if (!currentUser || (currentUser.role_type !== 'office' && currentUser.role !== 'office')) {
         toast.error('Access denied');
         navigate(createPageUrl('Home'));
@@ -52,7 +54,7 @@ export default function OfficeAddHost() {
   const { data: office, isLoading: officeLoading } = useQuery({
     queryKey: ['office', user?.email],
     queryFn: async () => {
-      const offices = await base44.entities.Office.list();
+      const offices = await getAllDocuments('offices');
       const myOffice = offices.find((o) => o.email?.toLowerCase() === user.email.toLowerCase());
       if (!myOffice) {
         toast.error('Office profile not found');
@@ -68,7 +70,7 @@ export default function OfficeAddHost() {
   const { data: requests = [], isLoading: requestsLoading } = useQuery({
     queryKey: ['hostRequests', office?.name],
     queryFn: async () => {
-      const allRequests = await base44.entities.HostRequest.list('-created_date');
+      const allRequests = await getAllDocuments('hostrequests');
       return allRequests.filter((r) => r.office_name === office.name);
     },
     enabled: !!office?.name,
@@ -80,7 +82,7 @@ export default function OfficeAddHost() {
     mutationFn: async (formData) => {
       console.log('📝 Creating host request:', formData);
 
-      const newRequest = await base44.entities.HostRequest.create({
+      const newRequest = await addDocument('hostrequests', { ...{
         office_name: office.name,
         office_email: office.email,
         host_full_name: formData.host_full_name,
@@ -93,7 +95,7 @@ export default function OfficeAddHost() {
         languages: ['English', 'Arabic'],
         services_offered: [],
         status: 'pending',
-      });
+      }, created_date: new Date().toISOString() });
 
       console.log(' Request created:', newRequest.id);
       return newRequest;

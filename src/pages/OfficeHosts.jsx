@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments } from '@/utils/firestore';
+import { useAppContext } from '@/components/context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,16 +23,12 @@ export default function OfficeHosts() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
+  const { user } = useAppContext();
 
   const { data: office } = useQuery({
     queryKey: ['userOffice', user?.email],
     queryFn: async () => {
-      const allOffices = await base44.entities.Office.list();
+      const allOffices = await getAllDocuments('agencies');
       return allOffices.find(
         (o) => o.email?.toLowerCase().trim() === user.email.toLowerCase().trim()
       );
@@ -43,11 +40,10 @@ export default function OfficeHosts() {
     queryKey: ['officeHosts', office?.id],
     queryFn: async () => {
       if (!office?.id) return [];
-      const hosts = await base44.entities.User.filter({
-        office_id: office.id,
-        host_approved: true,
-      });
-      return hosts;
+      return await queryDocuments('users', [
+        ['office_id', '==', office.id],
+        ['host_approved', '==', true],
+      ]);
     },
     enabled: !!office?.id,
   });

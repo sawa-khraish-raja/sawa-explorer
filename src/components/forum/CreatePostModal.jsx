@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { queryDocuments, addDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import {
   Dialog,
   DialogContent,
@@ -50,12 +51,14 @@ export default function CreatePostModal({ open, onClose, user }) {
     queryKey: ['hostAdventures', user?.email],
     queryFn: async () => {
       if (!isHost || !user?.email) return [];
-      const allAdventures = await base44.entities.Adventure.list('-created_date');
+      const allAdventures = await queryDocuments('adventures', [
+        ['host_email', '==', user.email],
+        ['approval_status', '==', 'approved'],
+      ], {
+        orderBy: { field: 'created_date', direction: 'desc' }
+      });
       const myAdventures = allAdventures.filter(
-        (a) =>
-          a.host_email === user.email &&
-          a.approval_status === 'approved' &&
-          new Date(a.date) >= new Date()
+        (a) => new Date(a.date) >= new Date()
       );
       return myAdventures;
     },
@@ -64,7 +67,10 @@ export default function CreatePostModal({ open, onClose, user }) {
 
   const createPostMutation = useMutation({
     mutationFn: async (postData) => {
-      await base44.entities.ForumPost.create(postData);
+      await addDocument('forum_posts', {
+        ...postData,
+        created_date: new Date().toISOString(),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['forumPosts']);
@@ -85,10 +91,16 @@ export default function CreatePostModal({ open, onClose, user }) {
     try {
       const uploadedUrls = [];
       for (const file of files) {
-        const { file_url } = await base44.integrations.Core.UploadFile({
-          file,
-        });
-        uploadedUrls.push(file_url);
+        let fileUrl;
+        if (file.type.startsWith('video/')) {
+          fileUrl = await uploadVideo(file, 'forum-posts/videos');
+        } else if (file.type.startsWith('image/')) {
+          fileUrl = await uploadImage(file, 'forum-posts/images');
+        } else {
+          toast.error('Only images and videos are supported');
+          continue;
+        }
+        uploadedUrls.push(fileUrl);
       }
 
       if (postType === 'video' && files[0].type.startsWith('video/')) {

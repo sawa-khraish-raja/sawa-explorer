@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useAppContext } from '../context/AppContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 // createPageUrl is no longer used after the mutationFn update, so it's removed.
 import {
   Dialog,
@@ -29,7 +31,7 @@ export default function ManageCityAccessDialog({ user, isOpen, onClose, onSucces
   // although its usage in the original mutationFn (for audit logs) has been removed.
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
+    queryFn: () => useAppContext().user,
   });
 
   useEffect(() => {
@@ -47,25 +49,27 @@ export default function ManageCityAccessDialog({ user, isOpen, onClose, onSucces
       console.log(`🏙️ Updating cities for ${user.email}:`, selectedCities);
 
       // تحديث User entity
-      await base44.entities.User.update(user.id, {
+      await updateDocument('users', user.id, {
         assigned_cities: selectedCities,
         city: selectedCities[0] || null, // أول مدينة كـ primary
-        visible_in_city: true, // تأكد من الرؤية (as per outline, always true on save)
+        visible_in_city: true, // تأكد من الرؤية
+        updated_date: new Date().toISOString()
       });
 
       // تحديث HostProfile إذا موجود
       try {
-        const hostProfiles = await base44.entities.HostProfile.filter({
-          user_email: user.email,
-        });
+        const hostProfiles = await queryDocuments('hostprofiles', [
+          ['user_email', '==', user.email]
+        ]);
 
         if (hostProfiles && hostProfiles.length > 0) {
-          await base44.entities.HostProfile.update(hostProfiles[0].id, {
+          await updateDocument('hostprofiles', hostProfiles[0].id, {
             city: selectedCities[0] || null,
             cities: selectedCities,
             last_synced: new Date().toISOString(),
+            updated_date: new Date().toISOString()
           });
-          console.log(' HostProfile updated');
+          console.log('✅ HostProfile updated');
         }
       } catch (error) {
         console.log('⚠️ No HostProfile to update or error during update:', error);

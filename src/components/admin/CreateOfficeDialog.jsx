@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import {
   Dialog,
   DialogContent,
@@ -50,9 +51,9 @@ export default function CreateOfficeDialog({ isOpen, onClose, office }) {
   const mutation = useMutation({
     mutationFn: (officeData) => {
       if (isEditing) {
-        return base44.entities.Office.update(office.id, officeData);
+        return updateDocument('offices', office.id, { ...officeData, updated_date: new Date().toISOString() });
       } else {
-        return base44.entities.Office.create(officeData);
+        return addDocument('offices', { ...officeData, created_date: new Date().toISOString() });
       }
     },
     onSuccess: () => {

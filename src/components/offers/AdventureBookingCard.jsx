@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,16 +27,15 @@ export default function AdventureBookingCard({ booking }) {
 
   const { data: adventure, isLoading } = useQuery({
     queryKey: ['adventure', booking.adventure_id],
-    queryFn: () => base44.entities.Adventure.get(booking.adventure_id),
+    queryFn: () => getDocument('adventures', booking.adventure_id),
     enabled: !!booking.adventure_id,
   });
 
   const { data: conversation } = useQuery({
     queryKey: ['conversation', booking.id],
     queryFn: async () => {
-      const convos = await base44.entities.Conversation.filter({
-        booking_id: booking.id,
-      });
+      const convos = await queryDocuments('conversations', [['booking_id', '==', booking.id,
+      ]]);
       return convos[0];
     },
     enabled: !!booking.id,
@@ -44,9 +44,8 @@ export default function AdventureBookingCard({ booking }) {
   const { data: host } = useQuery({
     queryKey: ['adventureHost', adventure?.host_email],
     queryFn: async () => {
-      const users = await base44.entities.User.filter({
-        email: adventure.host_email,
-      });
+      const users = await queryDocuments('users', [['email', '==', adventure.host_email,
+      ]]);
       return users[0];
     },
     enabled: !!adventure?.host_email && booking.status === 'confirmed',

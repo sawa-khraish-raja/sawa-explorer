@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { addDocument } from '@/utils/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,7 +32,13 @@ export default function BecomeAHost() {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const createHostRequestMutation = useMutation({
-    mutationFn: (requestData) => base44.entities.HostRequest.create(requestData),
+    mutationFn: async (requestData) => {
+      await addDocument('host_requests', {
+        ...requestData,
+        status: 'pending',
+        created_date: new Date().toISOString(),
+      });
+    },
     onSuccess: () => {
       setIsSubmitted(true);
       toast.success('Your request has been sent successfully!');

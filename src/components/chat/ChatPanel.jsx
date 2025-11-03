@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { useAppContext } from '../context/AppContext';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { useQuery } from '@tanstack/react-query';
 import { X, Send, Loader2, Globe, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +10,7 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
+import { assistantChat, messageTranslator, translateText, confirmBooking, deleteAccount, notifyHostsOfNewBooking, createPaymentIntent, verifySignature } from '@/utils/functions';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,7 +41,7 @@ export default function ChatPanel({ onClose }) {
     queryKey: ['currentUser'],
     queryFn: async () => {
       try {
-        return await base44.auth.me();
+        return await useAppContext().user;
       } catch {
         return null;
       }
@@ -63,7 +66,7 @@ export default function ChatPanel({ onClose }) {
     setIsLoading(true);
 
     try {
-      const response = await base44.functions.invoke('assistantChat', {
+      const response = await assistantChat( {
         messages: [...messages, userMessage],
         language,
         userEmail: user?.email,

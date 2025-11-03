@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, updateDocument, addDocument } from '@/utils/firestore';
+import { useAppContext } from '../components/context/AppContext';
 import AdminLayout from '../components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,7 @@ import HostApprovalCard from '../components/admin/HostApprovalCard';
 
 export default function AdminHostRequests() {
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAppContext();
   const [activeTab, setActiveTab] = useState('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [cityFilter, setCityFilter] = useState('all');
@@ -40,7 +42,10 @@ export default function AdminHostRequests() {
   // Load host requests
   const { data: allRequests = [], isLoading } = useQuery({
     queryKey: ['hostRequests'],
-    queryFn: () => base44.entities.HostRequest.list('-created_date'),
+    queryFn: async () => {
+      const requests = await getAllDocuments('host_requests');
+      return requests.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+    },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
@@ -70,7 +75,7 @@ export default function AdminHostRequests() {
   const approveMutation = useMutation({
     mutationFn: async ({ request, approvalData }) => {
       // 1. Find the user by email to get their ID for update
-      const allUsers = await base44.entities.User.list(); // Fetch all users to find by email
+      const allUsers = await getAllDocuments('users');
       const user = allUsers.find((u) => u.email.toLowerCase() === request.host_email.toLowerCase());
 
       if (!user) {
@@ -80,29 +85,31 @@ export default function AdminHostRequests() {
       }
 
       // 2. Update HostRequest status
-      await base44.entities.HostRequest.update(request.id, {
+      await updateDocument('host_requests', request.id, {
         status: 'approved',
-        reviewed_by: (await base44.auth.me()).email,
+        reviewed_by: currentUser.email,
         reviewed_at: new Date().toISOString(),
         admin_notes: approvalData.admin_notes,
+        updated_date: new Date().toISOString(),
       });
 
       // 3. Update User entity - approve as host using user.id
-      await base44.entities.User.update(user.id, {
+      await updateDocument('users', user.id, {
         host_approved: true,
         host_type: approvalData.host_type,
-        office_id: approvalData.office_id || null, // Assuming office_id is derived from approvalData
-        city: request.host_city, // Keep city from request
-        assigned_cities: approvalData.assigned_cities || [request.host_city], // Use assigned_cities from approvalData or default
+        office_id: approvalData.office_id || null,
+        city: request.host_city,
+        assigned_cities: approvalData.assigned_cities || [request.host_city],
         visible_in_city: true,
         bio: request.host_bio || '',
         phone: request.host_phone,
         languages: request.languages || ['en'],
+        updated_date: new Date().toISOString(),
       });
 
       // 4. Create audit log
-      await base44.entities.AuditLog.create({
-        admin_email: (await base44.auth.me()).email,
+      await addDocument('audit_logs', {
+        admin_email: currentUser.email,
         action: 'approve_host',
         affected_user_email: request.host_email,
         details: JSON.stringify({
@@ -112,10 +119,11 @@ export default function AdminHostRequests() {
           admin_notes: approvalData.admin_notes,
         }),
         notes: approvalData.admin_notes,
+        created_date: new Date().toISOString(),
       });
 
       // 5. Send notification to host
-      await base44.entities.Notification.create({
+      await addDocument('notifications', {
         recipient_email: request.host_email,
         recipient_type: 'host',
         type: 'host_approved',
@@ -124,7 +132,9 @@ export default function AdminHostRequests() {
           approvalData.host_type === 'office' && approvalData.office_id
             ? `Your host application has been approved, and you've been assigned to an office. Welcome to the SAWA community!`
             : `Your host application has been approved. Welcome to the SAWA community!`,
-        link: '/host-dashboard', // Assuming a generic host dashboard
+        link: '/host-dashboard',
+        created_date: new Date().toISOString(),
+        read: false,
       });
 
       return { request, user };
@@ -150,17 +160,18 @@ export default function AdminHostRequests() {
   const rejectMutation = useMutation({
     mutationFn: async ({ request, rejectionData }) => {
       // 1. Update HostRequest
-      await base44.entities.HostRequest.update(request.id, {
+      await updateDocument('host_requests', request.id, {
         status: 'rejected',
         rejection_reason: rejectionData.rejection_reason,
         rejection_details: rejectionData.rejection_details,
-        reviewed_by: (await base44.auth.me()).email,
+        reviewed_by: currentUser.email,
         reviewed_at: new Date().toISOString(),
+        updated_date: new Date().toISOString(),
       });
 
       // 2. Create audit log
-      await base44.entities.AuditLog.create({
-        admin_email: (await base44.auth.me()).email,
+      await addDocument('audit_logs', {
+        admin_email: currentUser.email,
         action: 'reject_host',
         affected_user_email: request.host_email,
         details: JSON.stringify({
@@ -168,18 +179,21 @@ export default function AdminHostRequests() {
           request_id: request.id,
         }),
         notes: rejectionData.rejection_details,
+        created_date: new Date().toISOString(),
       });
 
       // 3. Send notification
-      await base44.entities.Notification.create({
+      await addDocument('notifications', {
         recipient_email: request.host_email,
-        recipient_type: 'host', // Changed to 'host' as they applied to be a host
-        type: 'host_rejection', // More specific type
+        recipient_type: 'host',
+        type: 'host_rejection',
         title: ' Host Application Update',
         message: `Unfortunately, your host application was not approved. Reason: ${
           rejectionData.rejection_details || rejectionData.rejection_reason
         }. You can reapply after reviewing your profile.`,
         link: '/BecomeAHost',
+        created_date: new Date().toISOString(),
+        read: false,
       });
 
       return { request, rejectionData };

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import AdminLayout from '../components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,7 +61,7 @@ export default function AdminPartnerRequests() {
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['partnerRequests'],
     queryFn: async () => {
-      const allRequests = await base44.entities.PartnerRequest.list('-created_date');
+      const allRequests = await getAllDocuments('partnerrequests');
       return allRequests;
     },
     refetchInterval: 10000,
@@ -69,10 +70,10 @@ export default function AdminPartnerRequests() {
   // Update request status mutation
   const updateStatusMutation = useMutation({
     mutationFn: async ({ requestId, status, notes }) => {
-      return await base44.entities.PartnerRequest.update(requestId, {
+      return await updateDocument('partnerrequests', requestId, { ...{
         status,
         admin_notes: notes,
-      });
+      }, updated_date: new Date().toISOString() });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['partnerRequests'] });

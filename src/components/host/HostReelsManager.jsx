@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,7 +37,7 @@ export default function HostReelsManager({ user }) {
   const { data: reels = [], isLoading } = useQuery({
     queryKey: ['hostReels', user?.email],
     queryFn: async () => {
-      const allReels = await base44.entities.HostReel.filter(
+      const allReels = await queryDocuments('host_reels', [
         {
           host_email: user.email,
         },
@@ -49,7 +50,7 @@ export default function HostReelsManager({ user }) {
 
   const createReelMutation = useMutation({
     mutationFn: async (reelData) => {
-      return await base44.entities.HostReel.create(reelData);
+      return await addDocument('hostreels', { ...reelData, created_date: new Date().toISOString() });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['hostReels'] });
@@ -66,7 +67,7 @@ export default function HostReelsManager({ user }) {
 
   const deleteReelMutation = useMutation({
     mutationFn: async (reelId) => {
-      await base44.entities.HostReel.delete(reelId);
+      await deleteDocument('hostreels', reelId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['hostReels'] });
@@ -129,9 +130,8 @@ export default function HostReelsManager({ user }) {
       console.log('📤 Starting upload...');
 
       // Upload file
-      const { file_url } = await base44.integrations.Core.UploadFile({
-        file: selectedFile,
-      });
+      const { file_url } = await uploadImage(selectedFile,
+      , 'uploads');
 
       console.log(' File uploaded:', file_url);
 

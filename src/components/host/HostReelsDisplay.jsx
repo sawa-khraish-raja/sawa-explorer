@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useAppContext } from '../context/AppContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { Card } from '@/components/ui/card';
 import { Heart, Play, Eye, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -18,7 +20,7 @@ export default function HostReelsDisplay({ hostEmail }) {
   useEffect(() => {
     async function loadUser() {
       try {
-        const user = await base44.auth.me();
+        const user = await useAppContext().user;
         console.log(' User loaded:', user?.email);
         setCurrentUser(user);
       } catch (error) {
@@ -35,7 +37,7 @@ export default function HostReelsDisplay({ hostEmail }) {
     queryKey: ['publicHostReels', hostEmail],
     queryFn: async () => {
       console.log('📥 Fetching reels for:', hostEmail);
-      const allReels = await base44.entities.HostReel.filter(
+      const allReels = await queryDocuments('host_reels', [
         {
           host_email: hostEmail,
           is_active: true,
@@ -59,13 +61,13 @@ export default function HostReelsDisplay({ hostEmail }) {
         console.log('⚠️ User not logged in, redirecting...');
         toast.error('Please login to like reels', { duration: 2000 });
         setTimeout(() => {
-          base44.auth.redirectToLogin(window.location.href);
+          navigate('/login');
         }, 1500);
         throw new Error('Not logged in');
       }
 
       // Get fresh reel data
-      const allReels = await base44.entities.HostReel.list();
+      const allReels = await getAllDocuments('hostreels');
       const reel = allReels.find((r) => r.id === reelId);
 
       if (!reel) {
@@ -102,10 +104,10 @@ export default function HostReelsDisplay({ hostEmail }) {
         liked_by_length: newLikedBy.length,
       });
 
-      await base44.entities.HostReel.update(reelId, {
+      await updateDocument('hostreels', reelId, { ...{
         likes_count: newLikesCount,
         liked_by: newLikedBy,
-      });
+      }, updated_date: new Date().toISOString() });
 
       console.log(' Like added successfully');
 

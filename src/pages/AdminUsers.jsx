@@ -189,7 +189,7 @@ export default function AdminUsers() {
       //  تحديث HostProfile
       if (updates.host_approved !== undefined) {
         console.log('⚠️ HostProfile update skipped - not yet migrated to Firestore');
-        // const hostProfiles = await base44.entities.HostProfile.filter({
+        // const hostProfiles = await queryDocuments('host_profiles', [{
         //   user_email: updatedUser.email,
         // });
         // if (updates.host_approved) {

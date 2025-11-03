@@ -193,8 +193,6 @@ export function getUTMParameters() {
 //  Track conversion to backend
 async function trackConversionBackend(data) {
   try {
-    const { base44 } = await import('@/api/base44Client');
-
     const sessionId = getSessionId();
     const utm = getUTMParameters();
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { queryDocuments, getAllDocuments } from '@/utils/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -29,7 +29,7 @@ export default function BookingPageTemplate({ city }) {
   const { data: events = [] } = useQuery({
     queryKey: ['cityEvents', city.name],
     queryFn: async () => {
-      const allEvents = await base44.entities.Event.filter({ city: city.name });
+      const allEvents = await queryDocuments('events', [['city', '==', city.name]]);
       const now = new Date();
       return allEvents.filter((e) => new Date(e.start_datetime) > now).slice(0, 3);
     },
@@ -43,19 +43,17 @@ export default function BookingPageTemplate({ city }) {
       console.log('🔍 [BookingPageTemplate] Fetching hosts for:', city.name);
 
       try {
-        const response = await base44.functions.invoke('getCityHosts', {
-          city: city.name,
-        });
+        // Get all users who are approved hosts and visible in this city
+        const allUsers = await getAllDocuments('users');
+        const cityHosts = allUsers.filter(
+          (u) =>
+            u.host_approved === true &&
+            u.visible_in_city === true &&
+            u.city === city.name
+        );
 
-        console.log('📡 [BookingPageTemplate] Response:', response);
-
-        if (response.data?.ok && response.data?.hosts) {
-          console.log(' [BookingPageTemplate] Found hosts:', response.data.hosts.length);
-          return response.data.hosts.slice(0, 6);
-        }
-
-        console.warn('⚠️ [BookingPageTemplate] No hosts found or response not OK.');
-        return [];
+        console.log(' [BookingPageTemplate] Found hosts:', cityHosts.length);
+        return cityHosts.slice(0, 6);
       } catch (error) {
         console.error(' [BookingPageTemplate] Error fetching hosts:', error);
         return [];
@@ -69,7 +67,7 @@ export default function BookingPageTemplate({ city }) {
   const { data: cityData } = useQuery({
     queryKey: ['cityData', city.name],
     queryFn: async () => {
-      const cities = await base44.entities.City.filter({ name: city.name });
+      const cities = await queryDocuments('cities', [['name', '==', city.name]]);
       return cities[0];
     },
     enabled: !!city.name,

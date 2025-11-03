@@ -4,8 +4,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { useQuery } from '@tanstack/react-query';
+import { invokeFunction } from '@/utils/functions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -39,7 +41,7 @@ export default function AdminAIMonitoring() {
     try {
       const currentMetrics = metricsCollector.snapshot();
 
-      const { data } = await base44.functions.invoke('ai/autoheal', {
+      const { data } = await invokeFunction('ai/autoheal', {
         metrics: currentMetrics,
       });
 
@@ -315,7 +317,7 @@ export default function AdminAIMonitoring() {
 function SystemLogsTable() {
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ['systemLogs'],
-    queryFn: () => base44.entities.SystemLog.list('-fixedAt', 20),
+    queryFn: () => getAllDocuments('system_logs', '-fixedAt', 20),
     refetchInterval: 30000,
   });
 

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { invokeFunction } from '@/utils/functions';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import MarketingLayout from '../components/marketing/MarketingLayout';
 import MarketingGuard from '../components/marketing/MarketingGuard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,9 +34,8 @@ export default function SmartGrowthPlan() {
   const { data: plan, isLoading: planLoading } = useQuery({
     queryKey: ['active_growth_plan'],
     queryFn: async () => {
-      const plans = await base44.entities.GrowthPlan.filter({
-        status: 'active',
-      });
+      const plans = await queryDocuments('growthplans', [['status', '==', 'active',
+      ]]);
       return plans.length > 0 ? plans[0] : null;
     },
     refetchInterval: 60000,
@@ -44,7 +45,7 @@ export default function SmartGrowthPlan() {
   const generatePlanMutation = useMutation({
     mutationFn: async () => {
       setGenerating(true);
-      const response = await base44.functions.invoke('AI_Smart_Growth_Planner', {});
+      const response = await invokeFunction('AI_Smart_Growth_Planner', {});
 
       if (!response?.data?.ok) {
         throw new Error(response?.data?.error || 'Generation failed');

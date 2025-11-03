@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,11 +36,11 @@ export default function PartnerRegisterHost() {
 
   const mutation = useMutation({
     mutationFn: (data) =>
-      base44.entities.User.create({
+      addDocument('users', { ...{
         ...data,
         host_status: 'Pending Review',
         show_on_website: false,
-      }),
+      }, created_date: new Date().toISOString() }),
     onSuccess: () => {
       setIsSubmitted(true);
     },

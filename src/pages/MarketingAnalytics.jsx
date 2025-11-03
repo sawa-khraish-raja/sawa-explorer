@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import MarketingLayout from '../components/marketing/MarketingLayout';
 import MarketingGuard from '../components/marketing/MarketingGuard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,25 +50,25 @@ export default function MarketingAnalytics() {
   //  Fetch admin analytics data (same as AdminAnalytics)
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: () => getAllDocuments('users'),
     refetchInterval: 30000, // Auto-refresh every 30s
   });
 
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
     queryKey: ['allBookings'],
-    queryFn: () => base44.entities.Booking.list('-created_date'),
+    queryFn: () => getAllDocuments('bookings'),
     refetchInterval: 30000,
   });
 
   const { data: conversations = [], isLoading: conversationsLoading } = useQuery({
     queryKey: ['allConversations'],
-    queryFn: () => base44.entities.Conversation.list(),
+    queryFn: () => getAllDocuments('conversations'),
     refetchInterval: 30000,
   });
 
   const { data: offers = [], isLoading: offersLoading } = useQuery({
     queryKey: ['allOffers'],
-    queryFn: () => base44.entities.Offer.list(),
+    queryFn: () => getAllDocuments('offers'),
     refetchInterval: 30000,
   });
 
@@ -75,7 +76,7 @@ export default function MarketingAnalytics() {
   const { data: analyticsData } = useQuery({
     queryKey: ['google_analytics_data'],
     queryFn: async () => {
-      const data = await base44.entities.AnalyticsData.list('-created_date', 1);
+      const data = await getAllDocuments('analytics_data', '-created_date', 1);
       return data.length > 0 ? data[0] : null;
     },
     refetchInterval: 60000, // Refresh every minute
