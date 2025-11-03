@@ -1,10 +1,10 @@
+import { getAnalytics } from 'firebase/analytics';
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import { getAnalytics } from 'firebase/analytics';
+import { getFunctions } from 'firebase/functions';
 import { getMessaging } from 'firebase/messaging';
 import { getStorage } from 'firebase/storage';
-import { getFunctions } from 'firebase/functions';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
