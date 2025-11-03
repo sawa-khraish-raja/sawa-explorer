@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, updateDocument, getDocument } from '@/utils/firestore';
+import { useAppContext } from '../components/context/AppContext';
+import PermissionGuard from '../components/admin/PermissionGuard';
 import AdminLayout from '../components/admin/AdminLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,18 +49,19 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-async function logAuditAction(adminEmail, action, affectedUserEmail, details = {}) {
-  try {
-    await base44.entities.AuditLog.create({
-      admin_email: adminEmail,
-      action: action,
-      affected_user_email: affectedUserEmail,
-      details: JSON.stringify(details),
-    });
-  } catch (error) {
-    console.error('Audit log failed:', error);
-  }
-}
+// TODO: Audit logging removed - AuditLog not yet migrated to Firestore
+// async function logAuditAction(adminEmail, action, affectedUserEmail, details = {}) {
+//   try {
+//     await base44.entities.AuditLog.create({
+//       admin_email: adminEmail,
+//       action: action,
+//       affected_user_email: affectedUserEmail,
+//       details: JSON.stringify(details),
+//     });
+//   } catch (error) {
+//     console.error('Audit log failed:', error);
+//   }
+// }
 
 export default function AdminUsers() {
   const queryClient = useQueryClient();
@@ -73,37 +76,43 @@ export default function AdminUsers() {
   const [selectedUserToDelete, setSelectedUserToDelete] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
-
+  const { user: currentUser } = useAppContext();
   const hasFullAccess = currentUser?.admin_access_type === 'full' || currentUser?.role === 'admin';
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list('-created_date'),
+    queryFn: async () => {
+      const allUsers = await getAllDocuments('users');
+      // Sort by created_date descending (most recent first)
+      return allUsers.sort((a, b) => {
+        const dateA = new Date(a.created_date || a.created_at || 0);
+        const dateB = new Date(b.created_date || b.created_at || 0);
+        return dateB - dateA;
+      });
+    },
   });
 
   const updateUserMutation = useMutation({
     mutationFn: async ({ userId, updates, city, officeData, action, affectedUserEmail }) => {
       const finalUpdates = { ...updates };
 
+      // TODO: Office updates removed - Offices collection not yet migrated to Firestore
       //  When removing office role
       if (updates.role_type === 'user' && updates.office_id === null) {
-        const currentUserData = users.find((u) => u.id === userId);
-        if (currentUserData?.office_id) {
-          const office = await base44.entities.Office.get(currentUserData.office_id);
-          if (office && office.assigned_hosts) {
-            const updatedHosts = office.assigned_hosts.filter(
-              (email) => email !== currentUserData.email
-            );
-            await base44.entities.Office.update(office.id, {
-              assigned_hosts: updatedHosts,
-              total_hosts: Math.max(0, (office.total_hosts || 0) - 1),
-            });
-          }
-        }
+        console.log('⚠️ Office host count update skipped - offices not yet migrated to Firestore');
+        // const currentUserData = users.find((u) => u.id === userId);
+        // if (currentUserData?.office_id) {
+        //   const office = await base44.entities.Office.get(currentUserData.office_id);
+        //   if (office && office.assigned_hosts) {
+        //     const updatedHosts = office.assigned_hosts.filter(
+        //       (email) => email !== currentUserData.email
+        //     );
+        //     await base44.entities.Office.update(office.id, {
+        //       assigned_hosts: updatedHosts,
+        //       total_hosts: Math.max(0, (office.total_hosts || 0) - 1),
+        //     });
+        //   }
+        // }
       }
 
       //  قاعدة 1: Admin حصرياً
@@ -161,88 +170,97 @@ export default function AdminUsers() {
         console.log('📊 Making user marketing');
       }
 
-      const updatedUser = await base44.entities.User.update(userId, finalUpdates);
+      await updateDocument('users', userId, {
+        ...finalUpdates,
+        updated_date: new Date().toISOString(),
+      });
+      const updatedUser = await getDocument('users', userId);
 
-      if (action) {
-        await logAuditAction(currentUser?.email, action, affectedUserEmail, {
-          updates,
-          city,
-          office: officeData?.name,
-        });
-      }
+      // TODO: Audit logging removed - not yet migrated to Firestore
+      // if (action) {
+      //   await logAuditAction(currentUser?.email, action, affectedUserEmail, {
+      //     updates,
+      //     city,
+      //     office: officeData?.name,
+      //   });
+      // }
 
+      // TODO: HostProfile updates removed - HostProfile collection not yet migrated to Firestore
       //  تحديث HostProfile
       if (updates.host_approved !== undefined) {
-        const hostProfiles = await base44.entities.HostProfile.filter({
-          user_email: updatedUser.email,
-        });
-        if (updates.host_approved) {
-          const hostProfileData = {
-            user_email: updatedUser.email,
-            user_id: updatedUser.id,
-            full_name: updatedUser.full_name,
-            display_name: updatedUser.display_name || updatedUser.full_name,
-            city: city || updatedUser.city,
-            cities: updatedUser.assigned_cities || (city ? [city] : []),
-            is_active: true,
-            bio: updatedUser.bio || '',
-            profile_photo: updatedUser.profile_photo || '',
-            languages: updatedUser.languages || ['English', 'Arabic'],
-            rating: updatedUser.rating || 5.0,
-            host_type: updatedUser.host_type || 'freelancer',
-            office_id: updatedUser.office_id,
-            company_name: updatedUser.company_name,
-            services_offered: updatedUser.services_offered || [],
-            completed_bookings: updatedUser.completed_bookings || 0,
-            response_time_hours: updatedUser.response_time_hours || 24,
-            last_synced: new Date().toISOString(),
-          };
-
-          if (hostProfiles && hostProfiles.length > 0) {
-            await base44.entities.HostProfile.update(hostProfiles[0].id, hostProfileData);
-          } else {
-            await base44.entities.HostProfile.create(hostProfileData);
-          }
-        } else {
-          if (hostProfiles && hostProfiles.length > 0) {
-            await base44.entities.HostProfile.update(hostProfiles[0].id, {
-              is_active: false,
-              city: null,
-              cities: [],
-              office_id: null,
-              company_name: null,
-            });
-          }
-        }
+        console.log('⚠️ HostProfile update skipped - not yet migrated to Firestore');
+        // const hostProfiles = await base44.entities.HostProfile.filter({
+        //   user_email: updatedUser.email,
+        // });
+        // if (updates.host_approved) {
+        //   const hostProfileData = {
+        //     user_email: updatedUser.email,
+        //     user_id: updatedUser.id,
+        //     full_name: updatedUser.full_name,
+        //     display_name: updatedUser.display_name || updatedUser.full_name,
+        //     city: city || updatedUser.city,
+        //     cities: updatedUser.assigned_cities || (city ? [city] : []),
+        //     is_active: true,
+        //     bio: updatedUser.bio || '',
+        //     profile_photo: updatedUser.profile_photo || '',
+        //     languages: updatedUser.languages || ['English', 'Arabic'],
+        //     rating: updatedUser.rating || 5.0,
+        //     host_type: updatedUser.host_type || 'freelancer',
+        //     office_id: updatedUser.office_id,
+        //     company_name: updatedUser.company_name,
+        //     services_offered: updatedUser.services_offered || [],
+        //     completed_bookings: updatedUser.completed_bookings || 0,
+        //     response_time_hours: updatedUser.response_time_hours || 24,
+        //     last_synced: new Date().toISOString(),
+        //   };
+        //
+        //   if (hostProfiles && hostProfiles.length > 0) {
+        //     await base44.entities.HostProfile.update(hostProfiles[0].id, hostProfileData);
+        //   } else {
+        //     await base44.entities.HostProfile.create(hostProfileData);
+        //   }
+        // } else {
+        //   if (hostProfiles && hostProfiles.length > 0) {
+        //     await base44.entities.HostProfile.update(hostProfiles[0].id, {
+        //       is_active: false,
+        //       city: null,
+        //       cities: [],
+        //       office_id: null,
+        //       company_name: null,
+        //     });
+        //   }
+        // }
       }
 
+      // TODO: Booking notifications removed - Bookings not fully migrated yet
       //  إرسال إشعارات عن جميع الحجوزات المفتوحة في المدينة
       if (updates.host_approved === true && city) {
-        try {
-          const openBookings = await base44.entities.Booking.filter({
-            city: city,
-            state: 'open',
-          });
-
-          console.log(`📢 Found ${openBookings.length} open bookings in ${city}`);
-
-          for (const booking of openBookings) {
-            await base44.entities.Notification.create({
-              recipient_email: updatedUser.email,
-              recipient_type: 'host',
-              type: 'booking_request',
-              title: `Booking Request in ${booking.city}`,
-              message: `A traveler needs help in ${booking.city} from ${booking.start_date} to ${booking.end_date}`,
-              link: `/HostDashboard`,
-              related_booking_id: booking.id,
-              read: false,
-            });
-          }
-
-          console.log(` Notified new host about ${openBookings.length} open bookings`);
-        } catch (error) {
-          console.error('⚠️ Failed to notify about existing bookings:', error);
-        }
+        console.log('⚠️ Booking notifications skipped - not yet migrated to Firestore');
+        // try {
+        //   const openBookings = await base44.entities.Booking.filter({
+        //     city: city,
+        //     state: 'open',
+        //   });
+        //
+        //   console.log(`📢 Found ${openBookings.length} open bookings in ${city}`);
+        //
+        //   for (const booking of openBookings) {
+        //     await base44.entities.Notification.create({
+        //       recipient_email: updatedUser.email,
+        //       recipient_type: 'host',
+        //       type: 'booking_request',
+        //       title: `Booking Request in ${booking.city}`,
+        //       message: `A traveler needs help in ${booking.city} from ${booking.start_date} to ${booking.end_date}`,
+        //       link: `/HostDashboard`,
+        //       related_booking_id: booking.id,
+        //       read: false,
+        //     });
+        //   }
+        //
+        //   console.log(` Notified new host about ${openBookings.length} open bookings`);
+        // } catch (error) {
+        //   console.error('⚠️ Failed to notify about existing bookings:', error);
+        // }
       }
 
       return updatedUser;
@@ -304,19 +322,37 @@ export default function AdminUsers() {
   const handleDeleteUser = async () => {
     if (!selectedUserToDelete) return;
     try {
-      await base44.entities.User.delete(selectedUserToDelete.id);
+      // Call server API to delete from both Firebase Auth and Firestore
+      // This uses Firebase Admin SDK on the server which has permission to delete other users
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/users/${selectedUserToDelete.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.details || 'Failed to delete user');
+      }
+
       await logAuditAction(currentUser?.email, 'delete_user', selectedUserToDelete.email, {
         userId: selectedUserToDelete.id,
       });
+
       toast.success(
-        `User ${selectedUserToDelete.full_name || selectedUserToDelete.email} has been deleted.`
+        `User ${selectedUserToDelete.full_name || selectedUserToDelete.email} deleted from both Auth and Firestore.`
       );
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
       setShowDeleteConfirm(false);
       setSelectedUserToDelete(null);
     } catch (error) {
       console.error('Failed to delete user:', error);
-      toast.error(`Failed to delete user: ${error.message || 'They may have related records.'}`);
+      toast.error(`Failed to delete user: ${error.message}`);
       setShowDeleteConfirm(false);
     }
   };
@@ -369,13 +405,14 @@ export default function AdminUsers() {
   }
 
   return (
-    <AdminLayout>
-      <div className='space-y-6'>
+    <PermissionGuard pageId='users'>
+      <AdminLayout>
+        <div className='space-y-6'>
         <Card className='bg-gradient-to-r from-[#330066] to-[#5C00B8] text-white shadow-2xl'>
           <CardHeader>
             <CardTitle className='text-slate-50 text-xl sm:text-2xl font-semibold tracking-tight flex items-center gap-3'>
               <Users className='w-6 h-6 sm:w-7 sm:h-7' />
-              Manage All Users ({users.length})
+              Manage All Users ({users?.length || 0})
             </CardTitle>
           </CardHeader>
         </Card>
@@ -751,12 +788,17 @@ export default function AdminUsers() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the user{' '}
-              <span className='font-semibold'>
-                {selectedUserToDelete?.full_name || selectedUserToDelete?.email}
-              </span>{' '}
-              and remove their data from our servers.
+            <AlertDialogDescription className='space-y-2'>
+              <p>
+                This will permanently delete{' '}
+                <span className='font-semibold'>
+                  {selectedUserToDelete?.full_name || selectedUserToDelete?.email}
+                </span>{' '}
+                from both Firebase Authentication and Firestore.
+              </p>
+              <p className='text-red-600 font-medium'>
+                ⚠️ This action cannot be undone. The user will be completely removed from the system.
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -777,6 +819,7 @@ export default function AdminUsers() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AdminLayout>
+      </AdminLayout>
+    </PermissionGuard>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, updateDocument } from '@/utils/firestore';
+import { useAppContext } from '../components/context/AppContext';
 import AdminLayout from '../components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,36 +38,41 @@ export default function AdminHosts() {
   const [isCityAccessDialogOpen, setIsCityAccessDialogOpen] = useState(false); // New state
   const [filterType, setFilterType] = useState('all'); // all, agency, freelancer
 
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
+  const { user: currentUser } = useAppContext();
 
   const { data: hosts = [], isLoading } = useQuery({
     queryKey: ['allHosts'],
     queryFn: async () => {
-      const allUsers = await base44.entities.User.list();
+      const allUsers = await getAllDocuments('users');
       return allUsers.filter((u) => u.host_approved);
     },
     refetchInterval: 5000,
   });
 
+  // TODO: Agencies not yet migrated to Firestore
   const { data: agencies = [] } = useQuery({
     queryKey: ['allAgencies'],
-    queryFn: () => base44.entities.Agency.list(),
+    queryFn: async () => {
+      // Return empty array until agencies are migrated
+      console.log('⚠️ Agencies query skipped - not yet migrated to Firestore');
+      return [];
+    },
   });
 
   const toggleHostMutation = useMutation({
     mutationFn: async ({ hostId, newStatus }) => {
-      await base44.entities.User.update(hostId, { host_approved: newStatus });
-
-      // Audit log
-      await base44.entities.AuditLog.create({
-        admin_email: currentUser.email,
-        action: newStatus ? 'approve_host' : 'revoke_host',
-        affected_user_email: hosts.find((h) => h.id === hostId)?.email,
-        details: JSON.stringify({ newStatus, reason: 'Admin action' }),
+      await updateDocument('users', hostId, {
+        host_approved: newStatus,
+        updated_date: new Date().toISOString(),
       });
+
+      // TODO: Audit log removed - not yet migrated to Firestore
+      // await base44.entities.AuditLog.create({
+      //   admin_email: currentUser.email,
+      //   action: newStatus ? 'approve_host' : 'revoke_host',
+      //   affected_user_email: hosts.find((h) => h.id === hostId)?.email,
+      //   details: JSON.stringify({ newStatus, reason: 'Admin action' }),
+      // });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allHosts'] });
@@ -93,9 +99,10 @@ export default function AdminHosts() {
 
       // إذا عنده city بس ما عنده assigned_cities
       if (host.city && (!host.assigned_cities || host.assigned_cities.length === 0)) {
-        await base44.entities.User.update(host.id, {
+        await updateDocument('users', host.id, {
           assigned_cities: [host.city],
           visible_in_city: true,
+          updated_date: new Date().toISOString(),
         });
 
         console.log(` Fixed ${host.email}: assigned to ${host.city}`);
@@ -117,6 +124,33 @@ export default function AdminHosts() {
       showNotification({
         title: ' Fix Failed',
         message: error.message || 'Failed to fix legacy host',
+        type: 'error',
+      });
+    },
+  });
+
+  const updateHostMutation = useMutation({
+    mutationFn: async ({ hostId, updates }) => {
+      await updateDocument('users', hostId, {
+        ...updates,
+        updated_date: new Date().toISOString(),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allHosts'] });
+      setIsEditDialogOpen(false);
+      setSelectedHost(null);
+      showNotification({
+        title: 'Host Updated',
+        message: 'Host information has been updated successfully',
+        type: 'success',
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating host:', error);
+      showNotification({
+        title: 'Update Failed',
+        message: error.message || 'Failed to update host',
         type: 'error',
       });
     },
@@ -523,11 +557,19 @@ export default function AdminHosts() {
         <>
           <EditHostDialog
             host={selectedHost}
-            isOpen={isEditDialogOpen}
-            onClose={() => {
-              setIsEditDialogOpen(false);
-              setSelectedHost(null);
+            onOpenChange={(open) => {
+              if (!open) {
+                setIsEditDialogOpen(false);
+                setSelectedHost(null);
+              }
             }}
+            onSave={(formData) => {
+              updateHostMutation.mutate({
+                hostId: selectedHost.id,
+                updates: formData,
+              });
+            }}
+            isSaving={updateHostMutation.isPending}
           />
 
           <AssignAgencyDialog

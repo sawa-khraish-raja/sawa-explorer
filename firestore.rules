@@ -48,6 +48,16 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ========== OFFICES COLLECTION ==========
+
+    match /offices/{officeId} {
+      // Anyone authenticated can read offices (needed for host assignment)
+      allow read: if isAuthenticated();
+
+      // Only admins can create/update/delete offices
+      allow write: if isAdmin();
+    }
+
     // ========== ADVENTURES COLLECTION ==========
 
     match /adventures/{adventureId} {
@@ -80,9 +90,11 @@ service cloud.firestore {
 
     match /bookings/{bookingId} {
       // Users can read their own bookings (as guest or host)
+      // Approved hosts can read pending bookings to send offers
       allow read: if isAuthenticated() &&
                     (resource.data.user_id == request.auth.uid ||
                      resource.data.host_id == request.auth.uid ||
+                     (isHost() && resource.data.status == 'pending') ||
                      isAdmin());
 
       // Authenticated users can create bookings for themselves
@@ -139,6 +151,52 @@ service cloud.firestore {
       }
     }
 
+    // ========== CONVERSATIONS COLLECTION ==========
+
+    match /conversations/{conversationId} {
+      // Travelers can read their own conversations, hosts can read conversations they're part of
+      allow read: if isAuthenticated() &&
+                    (resource.data.traveler_email == request.auth.token.email ||
+                     request.auth.token.email in resource.data.host_emails ||
+                     isAdmin());
+
+      // Authenticated users can create conversations they're part of
+      allow create: if isAuthenticated() &&
+                      (request.resource.data.traveler_email == request.auth.token.email ||
+                       request.auth.token.email in request.resource.data.host_emails);
+
+      // Participants can update conversations (last message, unread status)
+      allow update: if isAuthenticated() &&
+                      (resource.data.traveler_email == request.auth.token.email ||
+                       request.auth.token.email in resource.data.host_emails);
+
+      // Only admins can delete conversations
+      allow delete: if isAdmin();
+
+      // ========== MESSAGES SUBCOLLECTION ==========
+
+      match /messages/{messageId} {
+        // Participants can read messages
+        allow read: if isAuthenticated() &&
+                      (get(/databases/$(database)/documents/conversations/$(conversationId)).data.traveler_email == request.auth.token.email ||
+                       request.auth.token.email in get(/databases/$(database)/documents/conversations/$(conversationId)).data.host_emails);
+
+        // Participants can create messages
+        allow create: if isAuthenticated() &&
+                        (get(/databases/$(database)/documents/conversations/$(conversationId)).data.traveler_email == request.auth.token.email ||
+                         request.auth.token.email in get(/databases/$(database)/documents/conversations/$(conversationId)).data.host_emails) &&
+                        request.resource.data.sender_email == request.auth.token.email;
+
+        // Participants can update messages (mark as read)
+        allow update: if isAuthenticated() &&
+                        (get(/databases/$(database)/documents/conversations/$(conversationId)).data.traveler_email == request.auth.token.email ||
+                         request.auth.token.email in get(/databases/$(database)/documents/conversations/$(conversationId)).data.host_emails);
+
+        // Only admins can delete messages
+        allow delete: if isAdmin();
+      }
+    }
+
     // ========== REVIEWS COLLECTION ==========
 
     match /reviews/{reviewId} {
@@ -157,17 +215,68 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // ========== OFFERS COLLECTION ==========
+
+    match /offers/{offerId} {
+      // Hosts can read their own offers, travelers can read offers for their bookings
+      allow read: if isAuthenticated() &&
+                    (resource.data.host_email == request.auth.token.email ||
+                     resource.data.traveler_email == request.auth.token.email ||
+                     isAdmin());
+
+      // Approved hosts can create offers
+      allow create: if isHost() &&
+                      request.resource.data.host_email == request.auth.token.email;
+
+      // Host can update their offers, traveler can accept/decline offers
+      allow update: if isAuthenticated() &&
+                      (resource.data.host_email == request.auth.token.email ||
+                       resource.data.traveler_email == request.auth.token.email ||
+                       isAdmin());
+
+      // Only admins can delete offers
+      allow delete: if isAdmin();
+    }
+
+    // ========== MESSAGES COLLECTION (Top-level) ==========
+
+    match /messages/{messageId} {
+      // Users can read messages from conversations they're part of
+      allow read: if isAuthenticated();
+
+      // Authenticated users can create messages
+      allow create: if isAuthenticated() &&
+                      request.resource.data.sender_email == request.auth.token.email;
+
+      // Sender can update their messages (edit, mark as delivered)
+      // Recipients can also update to mark messages as read (add to read_by array)
+      allow update: if isAuthenticated() &&
+                      (resource.data.sender_email == request.auth.token.email ||
+                       request.auth.token.email in request.resource.data.read_by);
+
+      // Only admins can delete messages
+      allow delete: if isAdmin();
+    }
+
     // ========== NOTIFICATIONS COLLECTION ==========
 
     match /notifications/{notificationId} {
-      // Users can only read their own notifications
-      allow read: if isOwner(resource.data.user_id);
+      // Users can read their own notifications, admins can read all
+      allow read: if isAuthenticated() &&
+                    (resource.data.user_id == request.auth.uid ||
+                     resource.data.recipient_email == request.auth.token.email ||
+                     isAdmin());
 
       // Users can update their own notifications (mark as read)
-      allow update: if isOwner(resource.data.user_id);
+      allow update: if isAuthenticated() &&
+                      (resource.data.user_id == request.auth.uid ||
+                       resource.data.recipient_email == request.auth.token.email);
 
-      // Only system/admin can create and delete notifications
-      allow create, delete: if isAdmin();
+      // Authenticated users can create notifications (for booking requests, etc)
+      allow create: if isAuthenticated();
+
+      // Only admins can delete notifications
+      allow delete: if isAdmin();
     }
 
     // ========== PAYMENTS COLLECTION ==========
@@ -195,6 +304,37 @@ service cloud.firestore {
 
       // Users can delete their own favorites
       allow delete: if isOwner(resource.data.user_id);
+    }
+
+    // ========== DEVICE TOKENS COLLECTION (FCM Push Notifications) ==========
+
+    match /device_tokens/{tokenId} {
+      // Users can read their own device tokens, admins can read all
+      allow read: if isAuthenticated() &&
+                    (resource.data.user_id == request.auth.uid ||
+                     resource.data.user_email == request.auth.token.email ||
+                     isAdmin());
+
+      // Authenticated users can create/update their device tokens
+      allow create, update: if isAuthenticated() &&
+                              (request.resource.data.user_id == request.auth.uid ||
+                               request.resource.data.user_email == request.auth.token.email);
+
+      // Users can delete their own tokens, admins can delete any
+      allow delete: if isAuthenticated() &&
+                      (resource.data.user_id == request.auth.uid ||
+                       resource.data.user_email == request.auth.token.email ||
+                       isAdmin());
+    }
+
+    // ========== HERO SLIDES COLLECTION ==========
+
+    match /hero_slides/{slideId} {
+      // Anyone can read hero slides (public)
+      allow read: if true;
+
+      // Only admins can create/update/delete hero slides
+      allow write: if isAdmin();
     }
   }
 }

@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Database, CheckCircle, XCircle, Bug } from 'lucide-react';
-import { seedAllData, seedCities, seedAdventures, seedServices, seedNotifications, clearAdventures, seedBookingsAndOffers } from '@/utils/seedDatabase';
+import { Loader2, Database, CheckCircle, XCircle } from 'lucide-react';
+import { seedCities, seedAdventures, seedServices, seedNotifications, seedBookingsAndOffers } from '@/utils/seedDatabase';
 import { getAllDocuments, queryDocuments, updateDocument, setDocument, getDocument } from '@/utils/firestore';
 import { useAppContext } from '@/components/context/AppContext';
 
@@ -243,6 +243,55 @@ export default function DevTools() {
     }
   };
 
+  const handleMakeMeAdmin = async () => {
+    setLoading(true);
+    setStatus(null);
+    try {
+      if (!user?.id) {
+        setStatus({ type: 'error', message: 'Please login first!' });
+        setLoading(false);
+        return;
+      }
+
+      console.log('👨‍💼 Making user an admin:', user.id);
+
+      // Check if user document exists
+      const existingUser = await getDocument('users', user.id);
+
+      if (existingUser) {
+        // Update existing user
+        await updateDocument('users', user.id, {
+          role_type: 'admin',
+          admin_access_type: 'full',
+        });
+        console.log('✅ Updated existing user to admin');
+      } else {
+        // Create new user document
+        await setDocument('users', user.id, {
+          email: user.email,
+          full_name: user.full_name || user.email,
+          profile_photo: user.profile_photo || '',
+          role_type: 'admin',
+          admin_access_type: 'full',
+        });
+        console.log('✅ Created new user document as admin');
+      }
+
+      setStatus({
+        type: 'success',
+        message: 'You are now an admin! Refresh the page and visit /AdminDashboard to access admin panel.'
+      });
+
+      // Refresh stats after making admin
+      await loadStats();
+    } catch (error) {
+      console.error('❌ Make admin error:', error);
+      setStatus({ type: 'error', message: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const loadStats = async () => {
     try {
       const [
@@ -294,41 +343,23 @@ export default function DevTools() {
     <div className='min-h-screen bg-gray-50 py-12 px-4'>
       <div className='max-w-4xl mx-auto'>
         <div className='mb-8'>
-          <h1 className='text-3xl font-bold mb-2'>🛠️ Developer Tools</h1>
+          <h1 className='text-3xl font-bold mb-2'>Developer Tools</h1>
           <p className='text-gray-600'>Seed your database with sample data</p>
 
           {/* Auth Status Debug */}
           <div className='mt-4 p-4 bg-blue-50 rounded-lg'>
-            <p className='text-sm font-semibold mb-2'>🔐 Authentication Status:</p>
+            <p className='text-sm font-semibold mb-2'>Authentication Status:</p>
             {user ? (
               <div className='text-sm text-green-700'>
-                ✅ Logged in as: <strong>{user.email}</strong> (ID: {user.id})
+                Logged in as: <strong>{user.email}</strong> (ID: {user.id})
               </div>
             ) : (
               <div className='text-sm text-red-700'>
-                ❌ Not logged in - Please login to seed data!
+                Not logged in - Please login to seed data!
               </div>
             )}
           </div>
         </div>
-
-        {/* Firestore Rules Warning */}
-        <Alert className='mb-6 border-yellow-500 bg-yellow-50'>
-          <AlertDescription className='text-yellow-800'>
-            <strong>⚠️ Important:</strong> Before seeding, make sure you've deployed Firestore
-            security rules!
-            <br />
-            <a
-              href='https://console.firebase.google.com/project/sawa-explorer/firestore/rules'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-blue-600 hover:underline font-semibold'
-            >
-              → Update rules in Firebase Console
-            </a>{' '}
-            or use temporary development rules (allow all reads/writes).
-          </AlertDescription>
-        </Alert>
 
         {status && (
           <Alert
@@ -403,40 +434,15 @@ export default function DevTools() {
                   <div className='text-sm text-gray-600'>Favorites</div>
                 </div>
               </div>
-              <Button onClick={loadStats} variant='outline' className='mt-4 w-full'>
-                Refresh Stats
-              </Button>
             </CardContent>
           </Card>
         )}
-
-        {/* Seed All Button */}
-        <Card className='mb-6'>
-          <CardHeader>
-            <CardTitle>🌱 Seed All Data</CardTitle>
-            <CardDescription>
-              Populate the database with cities, adventures, and services
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={handleSeedAll} disabled={loading} className='w-full' size='lg'>
-              {loading ? (
-                <>
-                  <Loader2 className='mr-2 h-5 w-5 animate-spin' />
-                  Seeding Database...
-                </>
-              ) : (
-                'Seed All Data'
-              )}
-            </Button>
-          </CardContent>
-        </Card>
 
         {/* Individual Seed Buttons */}
         <div className='grid md:grid-cols-2 lg:grid-cols-4 gap-4'>
           <Card>
             <CardHeader>
-              <CardTitle className='text-lg'>📍 Cities</CardTitle>
+              <CardTitle className='text-lg'>Cities</CardTitle>
               <CardDescription>5 sample cities</CardDescription>
             </CardHeader>
             <CardContent>
@@ -448,23 +454,19 @@ export default function DevTools() {
 
           <Card>
             <CardHeader>
-              <CardTitle className='text-lg'>🎒 Adventures</CardTitle>
+              <CardTitle className='text-lg'>Adventures</CardTitle>
               <CardDescription>5 sample adventures</CardDescription>
             </CardHeader>
-            <CardContent className='space-y-2'>
-              <Button onClick={handleSeedAdventures} disabled={loading} className='w-full' variant='outline'>
+            <CardContent>
+              <Button onClick={handleSeedAdventures} disabled={loading} className='w-full'>
                 Seed Adventures
               </Button>
-              <Button onClick={handleClearAndReseedAdventures} disabled={loading} className='w-full bg-purple-600 hover:bg-purple-700'>
-                🗑️ Clear & Re-seed Adventures
-              </Button>
-              <p className='text-xs text-gray-500 mt-2'>Use "Clear & Re-seed" if you have old data without dates</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className='text-lg'>🛎️ Services</CardTitle>
+              <CardTitle className='text-lg'>Services</CardTitle>
               <CardDescription>5 sample services</CardDescription>
             </CardHeader>
             <CardContent>
@@ -476,7 +478,7 @@ export default function DevTools() {
 
           <Card>
             <CardHeader>
-              <CardTitle className='text-lg'>🔔 Notifications</CardTitle>
+              <CardTitle className='text-lg'>Notifications</CardTitle>
               <CardDescription>3 sample notifications</CardDescription>
             </CardHeader>
             <CardContent>
@@ -491,182 +493,49 @@ export default function DevTools() {
 
           <Card>
             <CardHeader>
-              <CardTitle className='text-lg'>📋 Bookings & Offers</CardTitle>
+              <CardTitle className='text-lg'>Bookings & Offers</CardTitle>
               <CardDescription>1 booking with pending offer</CardDescription>
             </CardHeader>
-            <CardContent className='space-y-3'>
-              <Button onClick={handleSeedBookingsAndOffers} disabled={loading || !user} className='w-full bg-orange-600 hover:bg-orange-700'>
+            <CardContent>
+              <Button onClick={handleSeedBookingsAndOffers} disabled={loading || !user} className='w-full'>
                 Seed Booking & Offer
-              </Button>
-              <Button onClick={handleDebugMyBookings} disabled={loading || !user} className='w-full bg-red-600 hover:bg-red-700'>
-                <Bug className='w-4 h-4 mr-2' />
-                Debug My Bookings
               </Button>
               {!user && (
                 <p className='text-xs text-orange-600 mt-2'>Login required</p>
               )}
-              <p className='text-xs text-gray-500 mt-2'>Creates a service booking with a pending offer to test accepting offers</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className='text-lg'>👨‍💼 Host Access</CardTitle>
+              <CardTitle className='text-lg'>Host Access</CardTitle>
               <CardDescription>Become a host to test host features</CardDescription>
             </CardHeader>
-            <CardContent className='space-y-3'>
-              <Button onClick={handleMakeMeHost} disabled={loading || !user} className='w-full bg-indigo-600 hover:bg-indigo-700'>
+            <CardContent>
+              <Button onClick={handleMakeMeHost} disabled={loading || !user} className='w-full'>
                 Make Me a Host
               </Button>
               {!user && (
                 <p className='text-xs text-orange-600 mt-2'>Login required</p>
               )}
-              <p className='text-xs text-gray-500 mt-2'>Sets host_approved=true so you can access /HostDashboard</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className='text-lg'>Admin Access</CardTitle>
+              <CardDescription>Become an admin to access admin portal</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={handleMakeMeAdmin} disabled={loading || !user} className='w-full'>
+                Make Me Admin
+              </Button>
+              {!user && (
+                <p className='text-xs text-orange-600 mt-2'>Login required</p>
+              )}
             </CardContent>
           </Card>
         </div>
-
-        {/* Firestore Rules Setup */}
-        <Card className='mt-6 border-2 border-yellow-300'>
-          <CardHeader>
-            <CardTitle className='flex items-center gap-2'>
-              ⚠️ Setup Required: Firestore Security Rules
-            </CardTitle>
-          </CardHeader>
-          <CardContent className='space-y-4'>
-            <div>
-              <h3 className='font-semibold mb-2'>Step 1: Copy These Development Rules</h3>
-              <pre className='bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-xs'>
-                {`rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // TEMPORARY: Allow all for development
-    // ⚠️ Change this before production!
-    match /{document=**} {
-      allow read, write: if true;
-    }
-  }
-}`}
-              </pre>
-            </div>
-            <div>
-              <h3 className='font-semibold mb-2'>Step 2: Update Rules in Firebase</h3>
-              <ol className='text-sm text-gray-600 space-y-2 list-decimal list-inside'>
-                <li>
-                  Go to{' '}
-                  <a
-                    href='https://console.firebase.google.com/project/sawa-explorer/firestore/rules'
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='text-blue-600 hover:underline font-semibold'
-                  >
-                    Firebase Console → Firestore Rules
-                  </a>
-                </li>
-                <li>
-                  Select the <strong>"test"</strong> database (top-right dropdown)
-                </li>
-                <li>Paste the rules above</li>
-                <li>
-                  Click <strong>Publish</strong>
-                </li>
-              </ol>
-            </div>
-            <div className='bg-blue-50 p-3 rounded-lg'>
-              <p className='text-sm text-blue-800'>
-                💡 <strong>Tip:</strong> These rules allow all access for testing. Before deploying
-                to production, use the secure rules from{' '}
-                <code className='bg-blue-100 px-2 py-1 rounded'>firestore.rules</code> file.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Instructions */}
-        <Card className='mt-6'>
-          <CardHeader>
-            <CardTitle>📖 How to Use</CardTitle>
-          </CardHeader>
-          <CardContent className='space-y-4'>
-            <div>
-              <h3 className='font-semibold mb-2'>1. Seed the Database</h3>
-              <p className='text-sm text-gray-600'>
-                Click "Seed All Data" to populate your Firestore database with sample cities,
-                adventures, and services.
-              </p>
-            </div>
-            <div>
-              <h3 className='font-semibold mb-2'>2. View in Firebase Console</h3>
-              <p className='text-sm text-gray-600'>
-                Go to{' '}
-                <a
-                  href='https://console.firebase.google.com/project/sawa-explorer/firestore/data'
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='text-blue-600 hover:underline'
-                >
-                  Firebase Console
-                </a>{' '}
-                to see your data. Make sure to select the <strong>"test"</strong> database.
-              </p>
-            </div>
-            <div>
-              <h3 className='font-semibold mb-2'>3. Use in Your App</h3>
-              <p className='text-sm text-gray-600'>
-                Import the helper functions from{' '}
-                <code className='bg-gray-100 px-2 py-1 rounded'>src/utils/firestore.js</code> to
-                read/write data in your components.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Code Examples */}
-        <Card className='mt-6'>
-          <CardHeader>
-            <CardTitle>💻 Code Examples</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='space-y-4'>
-              <div>
-                <h4 className='font-semibold mb-2'>Get all cities:</h4>
-                <pre className='bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm'>
-                  {`import { getAllDocuments } from '@/utils/firestore';
-
-const cities = await getAllDocuments('cities');
-console.log(cities);`}
-                </pre>
-              </div>
-
-              <div>
-                <h4 className='font-semibold mb-2'>Add a new city:</h4>
-                <pre className='bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm'>
-                  {`import { addDocument } from '@/utils/firestore';
-
-const cityId = await addDocument('cities', {
-  name: 'Paris',
-  country: 'France',
-  description: 'City of lights',
-  is_active: true
-});`}
-                </pre>
-              </div>
-
-              <div>
-                <h4 className='font-semibold mb-2'>Query with filters:</h4>
-                <pre className='bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm'>
-                  {`import { queryDocuments } from '@/utils/firestore';
-
-const activeCities = await queryDocuments(
-  'cities',
-  [['is_active', '==', true]],
-  { orderBy: { field: 'name', direction: 'asc' } }
-);`}
-                </pre>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

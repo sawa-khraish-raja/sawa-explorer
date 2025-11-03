@@ -168,7 +168,6 @@ export const updateDocument = async (collectionName, docId, data) => {
       ...data,
       updated_at: serverTimestamp(),
     });
-    console.log(` Document updated: ${collectionName}/${docId}`);
   } catch (error) {
     console.error(` Error updating document ${collectionName}/${docId}:`, error);
     throw error;
@@ -400,8 +399,6 @@ export const sendMessage = async (chatId, messageData) => {
  * Get user notifications
  */
 export const getUserNotifications = async (userId, unreadOnly = false, userEmail = null) => {
-  console.log('🔔 getUserNotifications called with:', { userId, unreadOnly, userEmail });
-
   const criteria = {};
   if (userId) {
     criteria.user_id = userId;
@@ -413,13 +410,10 @@ export const getUserNotifications = async (userId, unreadOnly = false, userEmail
   let results = [];
 
   if (criteria.user_id) {
-    console.log('🔔 Filtering by user_id:', criteria);
     results = await notificationEntity.filter(criteria);
-    console.log('🔔 Found by user_id:', results.length);
   }
 
   if ((!results.length || !criteria.user_id) && userEmail) {
-    console.log('🔔 Filtering by email:', userEmail);
     const emailCriteria = { recipient_email: userEmail };
     if (unreadOnly) {
       emailCriteria.read = false;
@@ -435,14 +429,9 @@ export const getUserNotifications = async (userId, unreadOnly = false, userEmail
     });
   }
 
-  console.log('🔔 Total notifications before sort:', results.length);
   return results.sort((a, b) => {
     const getTime = (entry) => {
-      const timestamps = [
-        entry.created_date,
-        entry.created_at,
-        entry.updated_at,
-      ].filter(Boolean);
+      const timestamps = [entry.created_date, entry.created_at, entry.updated_at].filter(Boolean);
       if (timestamps.length === 0) {
         return 0;
       }
@@ -621,13 +610,21 @@ export const getOrCreateConversation = async (bookingData) => {
     console.log('💬 getOrCreateConversation:', bookingData);
 
     // Try to find existing conversation for this booking
-    const existing = await queryDocuments('conversations', [
-      ['booking_id', '==', bookingData.id],
-    ]);
+    try {
+      const existing = await queryDocuments('conversations', [
+        ['booking_id', '==', bookingData.id],
+      ]);
 
-    if (existing.length > 0) {
-      console.log('💬 Found existing conversation:', existing[0].id);
-      return existing[0];
+      if (existing.length > 0) {
+        console.log('💬 Found existing conversation:', existing[0].id);
+        return existing[0];
+      }
+    } catch (queryError) {
+      console.warn(
+        '⚠️ Could not query existing conversations (will create new):',
+        queryError.message
+      );
+      // If query fails due to permissions, proceed to create new conversation
     }
 
     // Create new conversation
@@ -659,7 +656,10 @@ export const getOrCreateConversation = async (bookingData) => {
       console.log('✅ Verified conversation is readable:', verifyDoc.id);
       return verifyDoc;
     } catch (verifyError) {
-      console.warn('⚠️ Could not verify conversation read, returning created data:', verifyError.message);
+      console.warn(
+        '⚠️ Could not verify conversation read, returning created data:',
+        verifyError.message
+      );
       return { id: conversationId, ...conversationData };
     }
   } catch (error) {
@@ -677,8 +677,6 @@ export const getOrCreateConversation = async (bookingData) => {
  */
 export const subscribeToConversations = (userEmail, isHost, callback) => {
   try {
-    console.log('📡 Subscribing to conversations for:', userEmail, 'isHost:', isHost);
-
     const conversationsRef = collection(db, 'conversations');
     let q;
 
@@ -705,7 +703,6 @@ export const subscribeToConversations = (userEmail, isHost, callback) => {
         snapshot.forEach((doc) => {
           conversations.push({ id: doc.id, ...doc.data() });
         });
-        console.log('📡 Conversations updated:', conversations.length);
         callback(conversations);
       },
       (error) => {
@@ -729,8 +726,6 @@ export const subscribeToConversations = (userEmail, isHost, callback) => {
  */
 export const subscribeToMessages = (conversationId, callback) => {
   try {
-    console.log('📡 Subscribing to messages for conversation:', conversationId);
-
     const messagesRef = collection(db, 'messages');
     const q = query(
       messagesRef,
@@ -745,7 +740,6 @@ export const subscribeToMessages = (conversationId, callback) => {
         snapshot.forEach((doc) => {
           messages.push({ id: doc.id, ...doc.data() });
         });
-        console.log('📡 Messages updated:', messages.length);
         callback(messages);
       },
       (error) => {

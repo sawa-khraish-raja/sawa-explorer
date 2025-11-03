@@ -1,0 +1,127 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "offers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "booking_id",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "traveler_email",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "created_date",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "offers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "booking_id",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "host_email",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "created_date",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "messages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "conversation_id",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "created_date",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "hero_slides",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "page_type",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "order",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "hero_slides",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "page_type",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "city_name",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "order",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "hero_slides",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "page_type",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "is_active",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "order",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "hero_slides",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "page_type",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "city_name",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "is_active",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "order",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, addDocument, updateDocument, deleteDocument, queryDocuments } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import AdminLayout from '../components/admin/AdminLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -53,13 +54,17 @@ export default function AdminHeroSlides() {
       let allSlides;
 
       if (selectedPage === 'city') {
-        allSlides = await base44.entities.HeroSlide.filter({
-          page_type: 'city',
-          city_name: selectedCity,
+        allSlides = await queryDocuments('hero_slides', [
+          ['page_type', '==', 'city'],
+          ['city_name', '==', selectedCity],
+        ], {
+          orderBy: { field: 'order', direction: 'asc' }
         });
       } else {
-        allSlides = await base44.entities.HeroSlide.filter({
-          page_type: selectedPage,
+        allSlides = await queryDocuments('hero_slides', [
+          ['page_type', '==', selectedPage],
+        ], {
+          orderBy: { field: 'order', direction: 'asc' }
         });
       }
 
@@ -68,7 +73,13 @@ export default function AdminHeroSlides() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (slideData) => base44.entities.HeroSlide.create(slideData),
+    mutationFn: async (slideData) => {
+      await addDocument('hero_slides', {
+        ...slideData,
+        created_date: new Date().toISOString(),
+        updated_date: new Date().toISOString(),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminHeroSlides']);
       showSuccess('Hero slide created successfully!');
@@ -80,7 +91,12 @@ export default function AdminHeroSlides() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.HeroSlide.update(id, data),
+    mutationFn: async ({ id, data }) => {
+      await updateDocument('hero_slides', id, {
+        ...data,
+        updated_date: new Date().toISOString(),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminHeroSlides']);
       showSuccess('Hero slide updated successfully!');
@@ -92,7 +108,9 @@ export default function AdminHeroSlides() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.HeroSlide.delete(id),
+    mutationFn: async (id) => {
+      await deleteDocument('hero_slides', id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminHeroSlides']);
       showSuccess('Hero slide deleted successfully!');
@@ -135,8 +153,21 @@ export default function AdminHeroSlides() {
 
     try {
       setUploading(true);
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setEditingSlide((prev) => ({ ...prev, [field]: file_url }));
+
+      // Determine upload path and function based on field
+      let fileUrl;
+      if (field === 'video_url') {
+        // Upload video to hero-slides/videos
+        fileUrl = await uploadVideo(file, 'hero-slides/videos');
+      } else if (field === 'poster_image') {
+        // Upload image to hero-slides/images
+        fileUrl = await uploadImage(file, 'hero-slides/images');
+      } else {
+        // Fallback for other file types
+        fileUrl = await uploadImage(file, 'hero-slides/images');
+      }
+
+      setEditingSlide((prev) => ({ ...prev, [field]: fileUrl }));
       showSuccess('File uploaded successfully!');
     } catch (error) {
       showError('Failed to upload file: ' + error.message);

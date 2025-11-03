@@ -13,7 +13,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Upload, X, DollarSign, Info } from 'lucide-react';
 import { calculateAdventureCommissions } from './commissionCalculator';
-import { base44 } from '@/api/base44Client'; // ⚠️ TODO: Migrate image upload to Firebase Storage
+import { uploadImage } from '@/utils/storage';
 import { toast } from 'sonner';
 
 export default function AdventureForm({ adventure, hostType, onSubmit, onCancel, isSubmitting }) {
@@ -90,28 +90,24 @@ export default function AdventureForm({ adventure, hostType, onSubmit, onCancel,
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be less than 5MB');
-      return;
-    }
-
     setUploadingImage(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      // Upload to Firebase Storage
+      const downloadURL = await uploadImage(file, 'adventures/images');
 
       if (isGallery) {
         setFormData((prev) => ({
           ...prev,
-          gallery_images: [...prev.gallery_images, file_url].slice(0, 5),
+          gallery_images: [...prev.gallery_images, downloadURL].slice(0, 5),
         }));
       } else {
-        setFormData((prev) => ({ ...prev, image_url: file_url }));
+        setFormData((prev) => ({ ...prev, image_url: downloadURL }));
       }
 
       toast.success('Image uploaded!');
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error('Failed to upload image');
+      toast.error(error.message || 'Failed to upload image');
     } finally {
       setUploadingImage(false);
     }
@@ -194,6 +190,7 @@ export default function AdventureForm({ adventure, hostType, onSubmit, onCancel,
 
       // Images
       images: [formData.image_url, ...formData.gallery_images].filter(Boolean), //  Combine into single images array
+      image_url: formData.image_url, // Keep for backwards compatibility
 
       // Commission Data
       sawa_commission_amount: commissionBreakdown.sawaAmount,
@@ -208,7 +205,12 @@ export default function AdventureForm({ adventure, hostType, onSubmit, onCancel,
       },
     };
 
-    console.log(' Submitting adventure data:', submissionData);
+    console.log('📝 Submitting adventure data:', submissionData);
+    console.log('🖼️ Images being saved:', {
+      images: submissionData.images,
+      image_url: submissionData.image_url,
+      image_count: submissionData.images.length
+    });
     onSubmit(submissionData);
   };
 

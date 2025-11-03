@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { queryDocuments } from '@/utils/firestore';
 
 const variants = {
   enter: {
@@ -38,22 +38,26 @@ export default function PageHeroVideo({ pageType = 'home', cityName = null }) {
       let allSlides;
 
       if (pageType === 'city' && cityName) {
-        allSlides = await base44.entities.HeroSlide.filter({
-          page_type: 'city',
-          city_name: cityName,
-          is_active: true,
+        allSlides = await queryDocuments('hero_slides', [
+          ['page_type', '==', 'city'],
+          ['city_name', '==', cityName],
+          ['is_active', '==', true],
+        ], {
+          orderBy: { field: 'order', direction: 'asc' }
         });
       } else {
-        allSlides = await base44.entities.HeroSlide.filter({
-          page_type: pageType,
-          is_active: true,
+        allSlides = await queryDocuments('hero_slides', [
+          ['page_type', '==', pageType],
+          ['is_active', '==', true],
+        ], {
+          orderBy: { field: 'order', direction: 'asc' }
         });
       }
 
       const validSlides = allSlides.filter((s) => s.video_url);
       const sortedSlides = validSlides.sort((a, b) => (a.order || 0) - (b.order || 0));
       console.log(
-        ` Loaded ${pageType}${cityName ? ` (${cityName})` : ''} hero slides:`,
+        `🎬 Loaded ${pageType}${cityName ? ` (${cityName})` : ''} hero slides:`,
         sortedSlides.length
       );
       return sortedSlides;

@@ -106,33 +106,38 @@ export default function MyOffers() {
   const { user, userLoading: isLoadingUser } = useAppContext();
 
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
-    queryKey: ['travelerBookings', user?.email],
+    queryKey: ['travelerBookings', user?.id],
     queryFn: async () => {
-      if (!user?.email) return [];
-      console.log('🔍 Fetching bookings for:', user.email);
-      const allBookings = await queryDocuments('bookings', [
-        ['traveler_email', '==', user.email],
-      ]);
-      console.log('📦 Found bookings:', allBookings.length, allBookings);
-      return allBookings.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+      if (!user?.id) return [];
+      console.log('🔍 Fetching bookings for user:', { id: user.id, email: user.email });
+      try {
+        const allBookings = await queryDocuments('bookings', [
+          ['user_id', '==', user.id],
+        ]);
+        console.log('📦 Found bookings:', allBookings.length, allBookings);
+        return allBookings.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+      } catch (error) {
+        console.error('❌ Error fetching bookings:', error);
+        return [];
+      }
     },
-    enabled: !!user?.email,
+    enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,
     cacheTime: 15 * 60 * 1000,
   });
 
   const { data: adventureBookings = [] } = useQuery({
-    queryKey: ['travelerAdventureBookings', user?.email],
+    queryKey: ['travelerAdventureBookings', user?.id],
     queryFn: async () => {
-      if (!user?.email) return [];
+      if (!user?.id) return [];
       const allBookings = await queryDocuments('bookings', [
-        ['traveler_email', '==', user.email],
+        ['user_id', '==', user.id],
       ]);
       // Filter for adventure bookings (has adventure_id)
       const allAdventures = allBookings.filter(b => b.adventure_id);
       return allAdventures.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
-    enabled: !!user?.email,
+    enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,
     cacheTime: 15 * 60 * 1000,
   });
@@ -143,21 +148,18 @@ export default function MyOffers() {
     queryKey: ['myOffers', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
-      const serviceBookingIds = serviceBookings.map((b) => b.id);
-      console.log('🔍 Service booking IDs:', serviceBookingIds);
-      if (serviceBookingIds.length === 0) {
-        console.log('⚠️ No service bookings found - cannot fetch offers');
-        return [];
-      }
 
-      console.log('🔍 Fetching all offers...');
-      const offers = await getAllDocuments('offers');
-      console.log('📋 All offers:', offers.length, offers);
-      const filteredOffers = offers.filter((o) => serviceBookingIds.includes(o.booking_id));
-      console.log('✅ Filtered offers for my bookings:', filteredOffers.length, filteredOffers);
-      return filteredOffers.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+      console.log('🔍 Fetching offers for traveler:', user.email);
+
+      // Query offers where user is the traveler
+      const offers = await queryDocuments('offers', [
+        ['traveler_email', '==', user.email],
+      ]);
+
+      console.log('📋 Found offers for my bookings:', offers.length, offers);
+      return offers.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
-    enabled: !!user?.email && serviceBookings.length > 0,
+    enabled: !!user?.email,
     staleTime: 3 * 60 * 1000,
     cacheTime: 10 * 60 * 1000,
   });
@@ -176,11 +178,16 @@ export default function MyOffers() {
     queryKey: ['myAdventureConversations', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
-      const allConvos = await queryDocuments('chats', [
-        ['traveler_email', '==', user.email],
-        ['conversation_type', '==', 'adventure'],
-      ]);
-      return allConvos;
+      try {
+        // Query conversations collection (not chats) for adventure conversations
+        const allConvos = await queryDocuments('conversations', [
+          ['traveler_email', '==', user.email],
+        ]);
+        return allConvos;
+      } catch (error) {
+        console.warn('⚠️ Could not fetch adventure conversations:', error.message);
+        return [];
+      }
     },
     enabled: !!user?.email,
     staleTime: 5 * 60 * 1000,
@@ -281,19 +288,35 @@ export default function MyOffers() {
 
       console.log('📦 Found offer:', offer);
 
-      // Update booking to confirmed status
-      await updateDocument('bookings', offer.booking_id, {
-        status: 'confirmed',
-        confirmed_at: new Date().toISOString(),
-        updated_date: new Date().toISOString(),
-      });
+      // Update booking to confirmed status and set host_id
+      console.log('📝 Updating booking:', offer.booking_id);
+      try {
+        await updateDocument('bookings', offer.booking_id, {
+          status: 'confirmed',
+          host_id: offer.host_id, // Set the host_id so host can read the booking
+          host_email: offer.host_email,
+          confirmed_at: new Date().toISOString(),
+          updated_date: new Date().toISOString(),
+        });
+        console.log('✅ Booking updated successfully');
+      } catch (error) {
+        console.error('❌ Failed to update booking:', error);
+        throw new Error(`Failed to update booking: ${error.message}`);
+      }
 
       // Update offer to accepted status
-      await updateDocument('offers', offerId, {
-        status: 'accepted',
-        accepted_at: new Date().toISOString(),
-        updated_date: new Date().toISOString(),
-      });
+      console.log('📝 Updating offer:', offerId);
+      try {
+        await updateDocument('offers', offerId, {
+          status: 'accepted',
+          accepted_at: new Date().toISOString(),
+          updated_date: new Date().toISOString(),
+        });
+        console.log('✅ Offer updated successfully');
+      } catch (error) {
+        console.error('❌ Failed to update offer:', error);
+        throw new Error(`Failed to update offer: ${error.message}`);
+      }
 
       console.log('✅ Booking and offer confirmed successfully');
 

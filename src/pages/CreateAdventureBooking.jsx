@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getDocument, addDocument, updateDocument } from '@/utils/firestore';
+import { useAppContext } from '../components/context/AppContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,21 +39,12 @@ export default function CreateAdventureBooking() {
   const [numberOfGuests, setNumberOfGuests] = useState(initialGuests);
   const [notes, setNotes] = useState('');
 
-  const { data: user, isLoading: userLoading } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: async () => {
-      try {
-        const currentUser = await base44.auth.me();
-        return currentUser;
-      } catch (e) {
-        return null;
-      }
-    },
-  });
+  // Use AppContext for user
+  const { user, userLoading } = useAppContext();
 
   const { data: adventure, isLoading: adventureLoading } = useQuery({
     queryKey: ['adventure', adventureId],
-    queryFn: () => base44.entities.Adventure.get(adventureId),
+    queryFn: () => getDocument('adventures', adventureId),
     enabled: !!adventureId,
   });
 
@@ -62,9 +54,10 @@ export default function CreateAdventureBooking() {
         throw new Error('Please login to book this adventure');
       }
 
-      // Create booking
-      const booking = await base44.entities.Booking.create({
+      // Create booking in Firestore
+      const bookingId = await addDocument('bookings', {
         ...bookingData,
+        user_id: user.id,
         traveler_email: user.email,
         adventure_id: adventureId,
         start_date: adventure.date,
@@ -74,36 +67,41 @@ export default function CreateAdventureBooking() {
         city: adventure.city,
         status: 'confirmed',
         state: 'confirmed',
+        host_id: adventure.host_id,
         host_email: adventure.host_email,
         total_price: totalPrice,
         notes: notes,
+        created_at: new Date().toISOString(),
       });
 
       // Update adventure participants count
-      await base44.entities.Adventure.update(adventureId, {
+      await updateDocument('adventures', adventureId, {
         current_participants: (adventure.current_participants || 0) + numberOfGuests,
       });
 
       // Send notification to host
-      await base44.entities.Notification.create({
+      await addDocument('notifications', {
+        user_id: adventure.host_id,
         recipient_email: adventure.host_email,
         recipient_type: 'host',
         type: 'booking_request',
         title: 'New Adventure Booking!',
         message: `${user.full_name || user.email} booked your adventure: ${adventure.title}`,
         link: `/HostAdventures?tab=bookings`,
-        related_booking_id: booking.id,
+        related_booking_id: bookingId,
+        is_read: false,
+        created_at: new Date().toISOString(),
       });
 
-      return booking;
+      return { id: bookingId };
     },
-    onSuccess: (booking) => {
-      queryClient.invalidateQueries({ queryKey: ['myBookings'] });
-      queryClient.invalidateQueries({ queryKey: ['adventure', adventureId] });
-      queryClient.invalidateQueries({ queryKey: ['adventures'] });
-      queryClient.invalidateQueries({ queryKey: ['homeAdventures'] });
+    onSuccess: async (booking) => {
+      await queryClient.refetchQueries({ queryKey: ['myBookings'] });
+      await queryClient.refetchQueries({ queryKey: ['adventure', adventureId] });
+      await queryClient.refetchQueries({ queryKey: ['adventures'] });
+      await queryClient.refetchQueries({ queryKey: ['allAdventures'] });
 
-      toast.success('🎉 Adventure booked successfully!');
+      toast.success('Adventure booked successfully!');
       navigate(createPageUrl('MyOffers'));
     },
     onError: (error) => {
@@ -116,7 +114,8 @@ export default function CreateAdventureBooking() {
     e.preventDefault();
 
     if (!user) {
-      base44.auth.redirectToLogin(window.location.href);
+      toast.info('Please sign in to book this adventure');
+      navigate(createPageUrl('Home'));
       return;
     }
 

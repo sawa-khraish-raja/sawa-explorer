@@ -67,6 +67,8 @@ export default function SimpleBookingForm({ city, onSuccess }) {
       const formattedEndDate = formatDate(endDate);
 
       console.log('📝 Booking data:', {
+        user_id: user.id, // ← Added for Firestore rules
+        user_email: user.email,
         traveler_email: user.email,
         traveler_id: user.id,
         city_name: city.name,
@@ -80,6 +82,8 @@ export default function SimpleBookingForm({ city, onSuccess }) {
 
       //  Create booking in Firestore
       const bookingId = await addDocument('bookings', {
+        user_id: user.id,
+        user_email: user.email,
         traveler_email: user.email,
         traveler_id: user.id,
         city_name: city.name,
@@ -97,26 +101,31 @@ export default function SimpleBookingForm({ city, onSuccess }) {
       console.log('✅ Booking created with ID:', bookingId);
 
       // Send notifications to hosts in this city
-      for (const host of cityHosts) {
-        const notificationData = {
-          recipient_email: host.email,
-          type: 'booking_request',
-          title: 'New Booking Request',
-          message: `New booking request for ${city.name} from ${formattedStartDate} to ${formattedEndDate}`,
-          booking_id: bookingId,
-          read: false,
-          created_date: new Date().toISOString(),
-        };
+      // Wrapped in try-catch because notification creation requires admin permissions
+      try {
+        for (const host of cityHosts) {
+          const notificationData = {
+            recipient_email: host.email,
+            type: 'booking_request',
+            title: 'New Booking Request',
+            message: `New booking request for ${city.name} from ${formattedStartDate} to ${formattedEndDate}`,
+            booking_id: bookingId,
+            read: false,
+            created_date: new Date().toISOString(),
+          };
 
-        // Only add user_id if it exists
-        if (host.id) {
-          notificationData.user_id = host.id;
+          // Only add user_id if it exists
+          if (host.id) {
+            notificationData.user_id = host.id;
+          }
+
+          await addDocument('notifications', notificationData);
         }
-
-        await addDocument('notifications', notificationData);
+        console.log(`✅ Sent notifications to ${cityHosts.length} host(s)`);
+      } catch (error) {
+        console.warn('⚠️ Could not send notifications (requires admin permissions):', error.message);
+        // Don't throw - booking was already created successfully
       }
-
-      console.log(`✅ Sent notifications to ${cityHosts.length} host(s)`);
 
       return { id: bookingId };
     },
@@ -194,8 +203,8 @@ export default function SimpleBookingForm({ city, onSuccess }) {
               <div className='text-sm text-orange-800'>
                 <p className='font-semibold mb-1'>No Hosts Available Yet</p>
                 <p>
-                  We're working on adding new hosts in {city.name} soon. You can still submit
-                  your request, and we'll notify you when hosts become available.
+                  We're working on adding new hosts in {city.name} soon. You can still submit your
+                  request, and we'll notify you when hosts become available.
                 </p>
               </div>
             </div>

@@ -37,24 +37,17 @@ export default function Messages() {
       return;
     }
 
-    console.log('📡 Setting up conversation subscription for:', user.email);
     setConversationsLoading(true);
 
     const isHost = user?.host_approved;
 
     // Subscribe to conversations
-    const unsubscribe = subscribeToConversations(
-      user.email,
-      isHost,
-      (conversations) => {
-        console.log('📡 Received conversations update:', conversations.length);
-        setRawConversations(conversations);
-        setConversationsLoading(false);
-      }
-    );
+    const unsubscribe = subscribeToConversations(user.email, isHost, (conversations) => {
+      setRawConversations(conversations);
+      setConversationsLoading(false);
+    });
 
     return () => {
-      console.log('📡 Cleaning up conversation subscription');
       unsubscribe();
     };
   }, [user?.email, user?.host_approved]);
@@ -178,7 +171,6 @@ export default function Messages() {
     const convoId = params.get('conversation_id');
 
     if (convoId) {
-      console.log('🔗 [Messages] Opening conversation from URL:', convoId);
       setActiveConversationId(convoId);
     } else {
       setActiveConversationId(null);

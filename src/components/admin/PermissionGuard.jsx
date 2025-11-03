@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { useAppContext } from '../context/AppContext';
 import { createPageUrl } from '@/utils';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -40,24 +39,13 @@ export const ADMIN_PAGES = {
 };
 
 export function useAdminPermissions() {
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: async () => {
-      try {
-        return await base44.auth.me();
-      } catch (error) {
-        return null;
-      }
-    },
-    staleTime: 0,
-    refetchInterval: 3000,
-  });
+  const { user, userLoading, isAdmin } = useAppContext();
 
   const hasFullAccess =
     user?.role_type === 'admin' && (!user?.admin_access_type || user?.admin_access_type === 'full');
 
   const hasPageAccess = (pageId) => {
-    if (!user || user.role_type !== 'admin') return false;
+    if (!user || !isAdmin) return false;
     if (hasFullAccess) return true;
     if (user.admin_access_type === 'limited' && user.admin_allowed_pages) {
       return user.admin_allowed_pages.includes(pageId);
@@ -69,31 +57,42 @@ export function useAdminPermissions() {
     user,
     hasFullAccess,
     hasPageAccess,
-    isLoading: !user,
+    isLoading: userLoading,
+    isAdmin,
   };
 }
 
 export default function PermissionGuard({ pageId, children }) {
   const navigate = useNavigate();
-  const { user, hasFullAccess, hasPageAccess, isLoading } = useAdminPermissions();
+  const { user, hasFullAccess, hasPageAccess, isLoading, isAdmin } = useAdminPermissions();
 
   useEffect(() => {
-    if (!isLoading && user) {
-      //  Check if user lost admin role
-      if (user.role_type !== 'admin') {
-        console.log('🚫 Not an admin, redirecting to Home...');
-        toast.success('🏠 Redirecting to Home page...', { duration: 2000 });
+    // Only check permissions after loading is complete AND we have a definitive answer
+    if (!isLoading) {
+      // If loading is done and user is null, they're not logged in
+      if (user === null) {
+        console.log('🚫 Not logged in, redirecting to Home...');
+        toast.info('Please sign in as an admin to access this page.', { duration: 2000 });
         navigate(createPageUrl('Home'), { replace: true });
         return;
       }
 
-      //  Check page access
-      if (!hasPageAccess(pageId)) {
+      // If we have a user but they're not an admin
+      if (user && !isAdmin) {
+        console.log('🚫 Not an admin, redirecting to Home...');
+        toast.info('Please sign in as an admin to access this page.', { duration: 2000 });
+        navigate(createPageUrl('Home'), { replace: true });
+        return;
+      }
+
+      //  Check page access for limited admins
+      if (user && isAdmin && !hasPageAccess(pageId)) {
         console.log('🚫 No access to this page, redirecting to Dashboard...');
+        toast.warning('You do not have access to this page.', { duration: 2000 });
         navigate(createPageUrl('AdminDashboard'), { replace: true });
       }
     }
-  }, [user, isLoading, pageId, hasPageAccess, navigate, hasFullAccess]);
+  }, [user, isLoading, pageId, hasPageAccess, navigate, isAdmin]);
 
   if (isLoading) {
     return (
@@ -103,7 +102,7 @@ export default function PermissionGuard({ pageId, children }) {
     );
   }
 
-  if (!user || user.role_type !== 'admin' || !hasPageAccess(pageId)) {
+  if (!user || !isAdmin || !hasPageAccess(pageId)) {
     return null;
   }
 

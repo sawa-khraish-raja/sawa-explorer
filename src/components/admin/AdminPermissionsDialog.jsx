@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { updateDocument } from '@/utils/firestore';
+import { useAppContext } from '../context/AppContext';
 import {
   Dialog,
   DialogContent,
@@ -21,18 +22,13 @@ const ALL_PAGES = Object.values(ADMIN_PAGES);
 
 export default function AdminPermissionsDialog({ isOpen, onClose, user }) {
   const queryClient = useQueryClient();
-  const [currentPermissions, setCurrentPermissions] = useState([]); // Renamed from selectedPages
+  const { user: currentUser } = useAppContext();
+  const [currentPermissions, setCurrentPermissions] = useState([]);
   const [accessType, setAccessType] = useState('full');
-
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
 
   useEffect(() => {
     if (user) {
       setAccessType(user.admin_access_type || 'full');
-      // Ensure admin_allowed_pages is an array, default to empty array if not
       setCurrentPermissions(
         Array.isArray(user.admin_allowed_pages) ? user.admin_allowed_pages : []
       );
@@ -40,25 +36,22 @@ export default function AdminPermissionsDialog({ isOpen, onClose, user }) {
   }, [user]);
 
   const updateUserMutation = useMutation({
-    // Renamed from updatePermissionsMutation
     mutationFn: async (updateData) => {
       if (!user) return;
-      await base44.entities.User.update(user.id, updateData);
+      await updateDocument('users', user.id, {
+        ...updateData,
+        updated_date: new Date().toISOString(),
+      });
       return updateData;
     },
-    onSuccess: (updateData) => {
-      // Original logAuditAction removed as per outline's implicit change
-      queryClient.invalidateQueries({ queryKey: ['adminUsers'] }); // Changed query key
-      // Original invalidateQueries for ['currentUser'] removed as per outline's implicit change
-
-      toast.success('Permissions updated successfully!'); // Simplified toast message
-
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allAdminUsers'] });
+      toast.success('Permissions updated successfully!');
       onClose();
     },
     onError: (error) => {
-      console.error('Failed to update permissions:', error); // Simplified error message
-      toast.error('Failed to update permissions.'); // Simplified toast message
-      // Original logError call removed as per outline's implicit change
+      console.error('Failed to update permissions:', error);
+      toast.error('Failed to update permissions.');
     },
   });
 
