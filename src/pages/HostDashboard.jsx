@@ -539,14 +539,28 @@ export default function HostDashboard() {
                         )}
 
                         <Button
-                          onClick={() => {
-                            setSelectedBooking(booking);
-                            setShowOfferDialog(true);
+                          onClick={async () => {
+                            try {
+                              // Get or create conversation
+                              const conversation = await getOrCreateConversation({
+                                id: booking.id,
+                                traveler_email: booking.traveler_email,
+                                host_email: user.email,
+                                city_name: booking.city_name || booking.city,
+                              });
+                              console.log('💬 Opening chat for booking:', booking.id);
+
+                              // Navigate to Messages page with conversation ID
+                              navigate(createPageUrl(`Messages?conversation_id=${conversation.id}`));
+                            } catch (error) {
+                              console.error('❌ Error opening chat:', error);
+                              toast.error('Failed to open chat. Please try again.');
+                            }
                           }}
                           className='w-full bg-gradient-to-r from-[#330066] to-[#9933CC] hover:from-[#47008F] hover:to-[#AD5CD6]'
                         >
-                          <Send className='w-4 h-4 mr-2' />
-                          Send Offer
+                          <MessageSquare className='w-4 h-4 mr-2' />
+                          Accept Request
                         </Button>
                       </CardContent>
                     </Card>

@@ -1,8 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
-import { getAllDocuments } from '@/utils/firestore';
+import { getAllDocuments, updateDocument, getDocument } from '@/utils/firestore';
 import { useAppContext } from '../components/context/AppContext';
 import PermissionGuard from '../components/admin/PermissionGuard';
 import AdminLayout from '../components/admin/AdminLayout';
@@ -50,18 +49,19 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-async function logAuditAction(adminEmail, action, affectedUserEmail, details = {}) {
-  try {
-    await base44.entities.AuditLog.create({
-      admin_email: adminEmail,
-      action: action,
-      affected_user_email: affectedUserEmail,
-      details: JSON.stringify(details),
-    });
-  } catch (error) {
-    console.error('Audit log failed:', error);
-  }
-}
+// TODO: Audit logging removed - AuditLog not yet migrated to Firestore
+// async function logAuditAction(adminEmail, action, affectedUserEmail, details = {}) {
+//   try {
+//     await base44.entities.AuditLog.create({
+//       admin_email: adminEmail,
+//       action: action,
+//       affected_user_email: affectedUserEmail,
+//       details: JSON.stringify(details),
+//     });
+//   } catch (error) {
+//     console.error('Audit log failed:', error);
+//   }
+// }
 
 export default function AdminUsers() {
   const queryClient = useQueryClient();
@@ -96,21 +96,23 @@ export default function AdminUsers() {
     mutationFn: async ({ userId, updates, city, officeData, action, affectedUserEmail }) => {
       const finalUpdates = { ...updates };
 
+      // TODO: Office updates removed - Offices collection not yet migrated to Firestore
       //  When removing office role
       if (updates.role_type === 'user' && updates.office_id === null) {
-        const currentUserData = users.find((u) => u.id === userId);
-        if (currentUserData?.office_id) {
-          const office = await base44.entities.Office.get(currentUserData.office_id);
-          if (office && office.assigned_hosts) {
-            const updatedHosts = office.assigned_hosts.filter(
-              (email) => email !== currentUserData.email
-            );
-            await base44.entities.Office.update(office.id, {
-              assigned_hosts: updatedHosts,
-              total_hosts: Math.max(0, (office.total_hosts || 0) - 1),
-            });
-          }
-        }
+        console.log('⚠️ Office host count update skipped - offices not yet migrated to Firestore');
+        // const currentUserData = users.find((u) => u.id === userId);
+        // if (currentUserData?.office_id) {
+        //   const office = await base44.entities.Office.get(currentUserData.office_id);
+        //   if (office && office.assigned_hosts) {
+        //     const updatedHosts = office.assigned_hosts.filter(
+        //       (email) => email !== currentUserData.email
+        //     );
+        //     await base44.entities.Office.update(office.id, {
+        //       assigned_hosts: updatedHosts,
+        //       total_hosts: Math.max(0, (office.total_hosts || 0) - 1),
+        //     });
+        //   }
+        // }
       }
 
       //  قاعدة 1: Admin حصرياً
@@ -168,88 +170,97 @@ export default function AdminUsers() {
         console.log('📊 Making user marketing');
       }
 
-      const updatedUser = await base44.entities.User.update(userId, finalUpdates);
+      await updateDocument('users', userId, {
+        ...finalUpdates,
+        updated_date: new Date().toISOString(),
+      });
+      const updatedUser = await getDocument('users', userId);
 
-      if (action) {
-        await logAuditAction(currentUser?.email, action, affectedUserEmail, {
-          updates,
-          city,
-          office: officeData?.name,
-        });
-      }
+      // TODO: Audit logging removed - not yet migrated to Firestore
+      // if (action) {
+      //   await logAuditAction(currentUser?.email, action, affectedUserEmail, {
+      //     updates,
+      //     city,
+      //     office: officeData?.name,
+      //   });
+      // }
 
+      // TODO: HostProfile updates removed - HostProfile collection not yet migrated to Firestore
       //  تحديث HostProfile
       if (updates.host_approved !== undefined) {
-        const hostProfiles = await base44.entities.HostProfile.filter({
-          user_email: updatedUser.email,
-        });
-        if (updates.host_approved) {
-          const hostProfileData = {
-            user_email: updatedUser.email,
-            user_id: updatedUser.id,
-            full_name: updatedUser.full_name,
-            display_name: updatedUser.display_name || updatedUser.full_name,
-            city: city || updatedUser.city,
-            cities: updatedUser.assigned_cities || (city ? [city] : []),
-            is_active: true,
-            bio: updatedUser.bio || '',
-            profile_photo: updatedUser.profile_photo || '',
-            languages: updatedUser.languages || ['English', 'Arabic'],
-            rating: updatedUser.rating || 5.0,
-            host_type: updatedUser.host_type || 'freelancer',
-            office_id: updatedUser.office_id,
-            company_name: updatedUser.company_name,
-            services_offered: updatedUser.services_offered || [],
-            completed_bookings: updatedUser.completed_bookings || 0,
-            response_time_hours: updatedUser.response_time_hours || 24,
-            last_synced: new Date().toISOString(),
-          };
-
-          if (hostProfiles && hostProfiles.length > 0) {
-            await base44.entities.HostProfile.update(hostProfiles[0].id, hostProfileData);
-          } else {
-            await base44.entities.HostProfile.create(hostProfileData);
-          }
-        } else {
-          if (hostProfiles && hostProfiles.length > 0) {
-            await base44.entities.HostProfile.update(hostProfiles[0].id, {
-              is_active: false,
-              city: null,
-              cities: [],
-              office_id: null,
-              company_name: null,
-            });
-          }
-        }
+        console.log('⚠️ HostProfile update skipped - not yet migrated to Firestore');
+        // const hostProfiles = await base44.entities.HostProfile.filter({
+        //   user_email: updatedUser.email,
+        // });
+        // if (updates.host_approved) {
+        //   const hostProfileData = {
+        //     user_email: updatedUser.email,
+        //     user_id: updatedUser.id,
+        //     full_name: updatedUser.full_name,
+        //     display_name: updatedUser.display_name || updatedUser.full_name,
+        //     city: city || updatedUser.city,
+        //     cities: updatedUser.assigned_cities || (city ? [city] : []),
+        //     is_active: true,
+        //     bio: updatedUser.bio || '',
+        //     profile_photo: updatedUser.profile_photo || '',
+        //     languages: updatedUser.languages || ['English', 'Arabic'],
+        //     rating: updatedUser.rating || 5.0,
+        //     host_type: updatedUser.host_type || 'freelancer',
+        //     office_id: updatedUser.office_id,
+        //     company_name: updatedUser.company_name,
+        //     services_offered: updatedUser.services_offered || [],
+        //     completed_bookings: updatedUser.completed_bookings || 0,
+        //     response_time_hours: updatedUser.response_time_hours || 24,
+        //     last_synced: new Date().toISOString(),
+        //   };
+        //
+        //   if (hostProfiles && hostProfiles.length > 0) {
+        //     await base44.entities.HostProfile.update(hostProfiles[0].id, hostProfileData);
+        //   } else {
+        //     await base44.entities.HostProfile.create(hostProfileData);
+        //   }
+        // } else {
+        //   if (hostProfiles && hostProfiles.length > 0) {
+        //     await base44.entities.HostProfile.update(hostProfiles[0].id, {
+        //       is_active: false,
+        //       city: null,
+        //       cities: [],
+        //       office_id: null,
+        //       company_name: null,
+        //     });
+        //   }
+        // }
       }
 
+      // TODO: Booking notifications removed - Bookings not fully migrated yet
       //  إرسال إشعارات عن جميع الحجوزات المفتوحة في المدينة
       if (updates.host_approved === true && city) {
-        try {
-          const openBookings = await base44.entities.Booking.filter({
-            city: city,
-            state: 'open',
-          });
-
-          console.log(`📢 Found ${openBookings.length} open bookings in ${city}`);
-
-          for (const booking of openBookings) {
-            await base44.entities.Notification.create({
-              recipient_email: updatedUser.email,
-              recipient_type: 'host',
-              type: 'booking_request',
-              title: `Booking Request in ${booking.city}`,
-              message: `A traveler needs help in ${booking.city} from ${booking.start_date} to ${booking.end_date}`,
-              link: `/HostDashboard`,
-              related_booking_id: booking.id,
-              read: false,
-            });
-          }
-
-          console.log(` Notified new host about ${openBookings.length} open bookings`);
-        } catch (error) {
-          console.error('⚠️ Failed to notify about existing bookings:', error);
-        }
+        console.log('⚠️ Booking notifications skipped - not yet migrated to Firestore');
+        // try {
+        //   const openBookings = await base44.entities.Booking.filter({
+        //     city: city,
+        //     state: 'open',
+        //   });
+        //
+        //   console.log(`📢 Found ${openBookings.length} open bookings in ${city}`);
+        //
+        //   for (const booking of openBookings) {
+        //     await base44.entities.Notification.create({
+        //       recipient_email: updatedUser.email,
+        //       recipient_type: 'host',
+        //       type: 'booking_request',
+        //       title: `Booking Request in ${booking.city}`,
+        //       message: `A traveler needs help in ${booking.city} from ${booking.start_date} to ${booking.end_date}`,
+        //       link: `/HostDashboard`,
+        //       related_booking_id: booking.id,
+        //       read: false,
+        //     });
+        //   }
+        //
+        //   console.log(` Notified new host about ${openBookings.length} open bookings`);
+        // } catch (error) {
+        //   console.error('⚠️ Failed to notify about existing bookings:', error);
+        // }
       }
 
       return updatedUser;

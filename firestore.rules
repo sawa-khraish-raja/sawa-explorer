@@ -48,6 +48,16 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ========== OFFICES COLLECTION ==========
+
+    match /offices/{officeId} {
+      // Anyone authenticated can read offices (needed for host assignment)
+      allow read: if isAuthenticated();
+
+      // Only admins can create/update/delete offices
+      allow write: if isAdmin();
+    }
+
     // ========== ADVENTURES COLLECTION ==========
 
     match /adventures/{adventureId} {
@@ -315,6 +325,16 @@ service cloud.firestore {
                       (resource.data.user_id == request.auth.uid ||
                        resource.data.user_email == request.auth.token.email ||
                        isAdmin());
+    }
+
+    // ========== HERO SLIDES COLLECTION ==========
+
+    match /hero_slides/{slideId} {
+      // Anyone can read hero slides (public)
+      allow read: if true;
+
+      // Only admins can create/update/delete hero slides
+      allow write: if isAdmin();
     }
   }
 }

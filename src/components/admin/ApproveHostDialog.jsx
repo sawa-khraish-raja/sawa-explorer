@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, updateDocument } from '@/utils/firestore';
 import {
   Dialog,
   DialogContent,
@@ -41,12 +41,13 @@ export default function ApproveHostDialog({ isOpen, onClose, user, onSuccess }) 
 
   const { data: cities = [] } = useQuery({
     queryKey: ['cities'],
-    queryFn: () => base44.entities.City.list(),
+    queryFn: () => getAllDocuments('cities'),
   });
 
+  // Note: Offices collection not yet migrated to Firestore
   const { data: offices = [] } = useQuery({
     queryKey: ['offices'],
-    queryFn: () => base44.entities.Office.list(),
+    queryFn: () => getAllDocuments('offices'),
     enabled: hostType === 'office',
   });
 
@@ -55,96 +56,29 @@ export default function ApproveHostDialog({ isOpen, onClose, user, onSuccess }) 
       if (!city) throw new Error('Please select a city');
       if (hostType === 'office' && !officeId) throw new Error('Please select an office');
 
-      console.log(' Approving host:', {
+      console.log('✅ Approving host:', {
+        userId: user.id,
         email: user.email,
         hostType,
         city,
         officeId,
       });
 
-      //  1. Update User
+      // Update user document with host approval
       const userData = {
         host_approved: true,
         host_type: hostType,
         city: city,
-        assigned_cities: [city],
         visible_in_city: visible,
-        role_type: 'user',
-        role: 'user',
+        role_type: 'host',
         office_id: hostType === 'office' ? officeId : null,
         company_name: hostType === 'office' ? offices.find((o) => o.id === officeId)?.name : null,
+        updated_date: new Date().toISOString(),
       };
 
-      await base44.entities.User.update(user.id, userData);
+      await updateDocument('users', user.id, userData);
 
-      //  2. Create/Update HostProfile
-      const profiles = await base44.entities.HostProfile.filter({
-        user_email: user.email,
-      });
-
-      const profileData = {
-        user_email: user.email,
-        user_id: user.id,
-        full_name: user.full_name,
-        display_name: user.display_name || user.full_name,
-        city: city,
-        cities: [city],
-        bio: user.bio || '',
-        profile_photo: user.profile_photo || '',
-        languages: user.languages || ['English', 'Arabic'],
-        rating: 5.0,
-        host_type: hostType,
-        office_id: hostType === 'office' ? officeId : null,
-        is_active: true,
-      };
-
-      if (profiles?.length > 0) {
-        await base44.entities.HostProfile.update(profiles[0].id, profileData);
-      } else {
-        await base44.entities.HostProfile.create(profileData);
-      }
-
-      //  3. Update Office
-      if (hostType === 'office' && officeId) {
-        const office = offices.find((o) => o.id === officeId);
-        if (office) {
-          const assignedHosts = office.assigned_hosts || [];
-          if (!assignedHosts.includes(user.email)) {
-            await base44.entities.Office.update(officeId, {
-              assigned_hosts: [...assignedHosts, user.email],
-              total_hosts: (office.total_hosts || 0) + 1,
-            });
-          }
-        }
-      }
-
-      //  إرسال إشعارات عن جميع الحجوزات المفتوحة في المدينة
-      try {
-        const openBookings = await base44.entities.Booking.filter({
-          city: city,
-          state: 'open',
-        });
-
-        console.log(`📢 Found ${openBookings.length} open bookings in ${city}`);
-
-        for (const booking of openBookings) {
-          await base44.entities.Notification.create({
-            recipient_email: user.email,
-            recipient_type: 'host',
-            type: 'booking_request',
-            title: `Booking Request in ${booking.city}`,
-            message: `A traveler needs help in ${booking.city} from ${booking.start_date} to ${booking.end_date}`,
-            link: `/HostDashboard`,
-            related_booking_id: booking.id,
-            read: false,
-          });
-        }
-
-        console.log(` Notified new host about ${openBookings.length} open bookings`);
-      } catch (error) {
-        console.error('⚠️ Failed to notify about existing bookings:', error);
-      }
-
+      console.log('✅ User approved as host successfully');
       return true;
     },
     onSuccess: () => {

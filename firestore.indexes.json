@@ -49,6 +49,78 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "hero_slides",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "page_type",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "order",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "hero_slides",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "page_type",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "city_name",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "order",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "hero_slides",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "page_type",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "is_active",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "order",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "hero_slides",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "page_type",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "city_name",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "is_active",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "order",
+          "order": "ASCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

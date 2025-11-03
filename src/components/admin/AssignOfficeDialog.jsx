@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, updateDocument } from '@/utils/firestore';
 import {
   Dialog,
   DialogContent,
@@ -27,7 +27,7 @@ export default function AssignOfficeDialog({ user, isOpen, onClose, onConfirm })
 
   const { data: offices = [], isLoading } = useQuery({
     queryKey: ['allOfficesForSelect'],
-    queryFn: () => base44.entities.Office.list(),
+    queryFn: () => getAllDocuments('offices'),
   });
 
   useEffect(() => {
@@ -36,33 +36,25 @@ export default function AssignOfficeDialog({ user, isOpen, onClose, onConfirm })
     }
   }, [isOpen]);
 
-  //  Mutation to assign office
   const assignOfficeMutation = useMutation({
     mutationFn: async (officeData) => {
       // Update user with office info
-      await base44.entities.User.update(user.id, {
-        role_type: 'office',
+      await updateDocument('users', user.id, {
         office_id: officeData.id,
         company_name: officeData.name,
-        role: 'user',
+        updated_date: new Date().toISOString(),
       });
 
-      // Update office to include this host
-      const currentAssignedHosts = officeData.assigned_hosts || [];
-      if (!currentAssignedHosts.includes(user.email)) {
-        await base44.entities.Office.update(officeData.id, {
-          assigned_hosts: [...currentAssignedHosts, user.email],
-          total_hosts: (officeData.total_hosts || 0) + 1,
-        });
-      }
+      // TODO: Update office document when offices collection is migrated
+      console.log('Office update skipped - offices not yet migrated to Firestore');
 
       return officeData;
     },
     onSuccess: (officeData) => {
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['allAdminUsers'] });
       queryClient.invalidateQueries({ queryKey: ['allOffices'] });
-      queryClient.invalidateQueries({ queryKey: ['officeCurrentHosts'] });
-      toast.success(` ${user.full_name || user.email} assigned to ${officeData.name}`);
+      toast.success(`✅ ${user?.full_name || user?.email} assigned to ${officeData?.name}`);
       onClose();
     },
     onError: (error) => {
