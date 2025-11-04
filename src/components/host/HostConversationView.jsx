@@ -399,15 +399,20 @@ export default function HostConversationView({
     };
 
     // Subscribe to real-time updates for messages in this conversation
-    const unsubscribe = // TODO: Firebase real-time listeners
-    // base44.subscribeToEntityUpdates(
-      'Message',
-      conversation.id,
-      handleNewMessage
-    );
+    // TODO: Firebase real-time listeners
+    const unsubscribe = null;
+    // const unsubscribe = base44.subscribeToEntityUpdates(
+    //   'Message',
+    //   conversation.id,
+    //   handleNewMessage
+    // );
 
     // Return cleanup function to unsubscribe when component unmounts or deps change
-    return () => unsubscribe();
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [conversation?.id, currentUser?.email, queryClient]);
 
   const handleImageSelect = (e) => {

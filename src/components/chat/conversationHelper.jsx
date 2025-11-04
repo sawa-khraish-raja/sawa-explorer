@@ -35,12 +35,13 @@ export async function createOrGetConversation({ travelerEmail, hostEmail, bookin
 
     // 2) Create a new conversation
     console.log('[conversationHelper] Creating new conversation');
-    const newConversation = await addDocument('conversations', { ...{
+    const newConversation = await addDocument('conversations', {
       booking_id: bookingId,
       traveler_email: travelerEmail,
       host_emails: [hostEmail],
       last_message_preview: 'Offer accepted - Chat opened',
-      last_message_timestamp: new Date(, created_date: new Date().toISOString() }).toISOString(),
+      last_message_timestamp: new Date().toISOString(),
+      created_date: new Date().toISOString(),
       unread_by_traveler: false,
       unread_by_hosts: [],
     });

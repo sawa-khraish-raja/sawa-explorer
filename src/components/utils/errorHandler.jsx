@@ -13,11 +13,12 @@ export const handleError = async (error, context = {}) => {
   };
 
   try {
-    await addDocument('errorlogs', { ...{
+    await addDocument('errorlogs', {
       section: context.section || 'Unknown',
       message: errorData.message,
       user_email: context.userEmail || 'anonymous',
-      details: JSON.stringify(errorData, created_date: new Date().toISOString() }),
+      details: JSON.stringify(errorData),
+      created_date: new Date().toISOString()
     });
   } catch (logError) {
     // Silent fail for error logging

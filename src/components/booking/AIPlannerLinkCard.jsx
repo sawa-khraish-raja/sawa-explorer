@@ -1,19 +1,15 @@
-import { useQuery } from '@tanstack/react-query';
 import { Sparkles, Bot } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-
+import { useAppContext } from '@/components/context/AppContext';
 
 import AITripPlannerModal from './AITripPlannerModal';
 
 export default function AIPlannerLinkCard({ city }) {
   const { user } = useAppContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-    retry: false,
-  });
 
   if (!user) {
     return null; // Don't show the card if the user is not logged in

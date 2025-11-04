@@ -49,11 +49,12 @@ const INTERESTS = ['culture', 'food', 'nature', 'nightlife', 'shopping', 'histor
 
 const logError = async (message, details) => {
   try {
-    await addDocument('ailogs', { ...{
+    await addDocument('ailogs', {
       scope: 'planner',
       level: 'error',
       message: message,
-      meta_json: JSON.stringify(details, created_date: new Date().toISOString() }),
+      meta_json: JSON.stringify(details),
+      created_date: new Date().toISOString()
     });
   } catch (e) {
     console.error('Failed to log error:', e);

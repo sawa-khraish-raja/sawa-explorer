@@ -38,11 +38,8 @@ export default function HostReelsManager({ user }) {
     queryKey: ['hostReels', user?.email],
     queryFn: async () => {
       const allReels = await queryDocuments('host_reels', [
-        {
-          host_email: user.email,
-        },
-        '-created_date'
-      );
+        ['host_email', '==', user.email]
+      ]);
       return allReels;
     },
     enabled: !!user,
