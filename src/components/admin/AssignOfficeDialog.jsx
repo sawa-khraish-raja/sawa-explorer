@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, updateDocument } from '@/utils/firestore';
+import { Building2, Loader2, UserCheck, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,6 +12,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -16,10 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Building2, Loader2, UserCheck, AlertCircle } from 'lucide-react';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
+import { getAllDocuments, updateDocument } from '@/utils/firestore';
 
 export default function AssignOfficeDialog({ user, isOpen, onClose, onConfirm }) {
   const queryClient = useQueryClient();
@@ -54,7 +55,7 @@ export default function AssignOfficeDialog({ user, isOpen, onClose, onConfirm })
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
       queryClient.invalidateQueries({ queryKey: ['allAdminUsers'] });
       queryClient.invalidateQueries({ queryKey: ['allOffices'] });
-      toast.success(`✅ ${user?.full_name || user?.email} assigned to ${officeData?.name}`);
+      toast.success(` ${user?.full_name || user?.email} assigned to ${officeData?.name}`);
       onClose();
     },
     onError: (error) => {

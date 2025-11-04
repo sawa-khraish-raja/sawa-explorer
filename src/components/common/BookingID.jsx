@@ -1,6 +1,8 @@
-import React from 'react';
 import { Copy, Check } from 'lucide-react';
+import React from 'react';
+
 import { Button } from '@/components/ui/button';
+
 import { showNotification } from '../notifications/NotificationManager';
 
 export function BookingID({ booking, size = 'default', showCopy = true }) {

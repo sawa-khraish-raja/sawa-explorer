@@ -1,7 +1,9 @@
-import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { SAWA_SERVICES, getServiceById } from '../config/sawaServices';
 import { Plane, Users, Calendar, Map, Package, Home, ShieldAlert } from 'lucide-react';
+
+import { Badge } from '@/components/ui/badge';
+
+import { getServiceById } from '../config/sawaServices';
+
 
 const iconMap = {
   Plane,

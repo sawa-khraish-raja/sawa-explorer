@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { useAppContext } from '../context/AppContext';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { DollarSign, Loader2, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,22 +11,18 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { DollarSign, Loader2, AlertCircle } from 'lucide-react';
+import { addDocument, updateDocument } from '@/utils/firestore';
+
 import { showNotification } from '../notifications/NotificationManager';
 
 export default function HostCommissionDialog({ host, isOpen, onClose }) {
+  const { user } = useAppContext();
   const queryClient = useQueryClient();
   const [sawaPercent, setSawaPercent] = useState(host?.commission_overrides?.sawa || '');
   const [officePercent, setOfficePercent] = useState(host?.commission_overrides?.office || '');
 
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => useAppContext().user,
-  });
 
   const updateCommissionMutation = useMutation({
     mutationFn: async () => {

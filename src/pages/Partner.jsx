@@ -1,8 +1,5 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { useMutation } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   TrendingUp,
   Landmark,
@@ -18,11 +15,15 @@ import {
   Send,
   Handshake,
 } from 'lucide-react';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import { useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { addDocument } from '@/utils/firestore';
+
 import PageHero from '../components/common/PageHero';
 
 const whyPartnerFeatures = [
@@ -121,7 +122,10 @@ export default function Partner() {
   const submitPartnerRequestMutation = useMutation({
     mutationFn: async (data) => {
       // 1. Save to database
-      const partnerRequest = await addDocument('partnerrequests', { ...data, created_date: new Date().toISOString() });
+      const partnerRequest = await addDocument('partnerrequests', {
+        ...data,
+        created_date: new Date().toISOString(),
+      });
 
       // 2. Send email to SAWA team
       await invokeFunction('sendEmail', {
@@ -138,13 +142,13 @@ export default function Partner() {
               <h2 style="color: #330066; border-bottom: 2px solid #CCCCFF; padding-bottom: 10px; margin-top: 0;">Contact Information</h2>
               
               <div style="margin: 20px 0;">
-                <p style="margin: 10px 0;"><strong style="color: #330066;">👤 Name:</strong> ${data.first_name}</p>
+                <p style="margin: 10px 0;"><strong style="color: #330066;">Name:</strong> ${data.first_name}</p>
                 <p style="margin: 10px 0;"><strong style="color: #330066;">📧 Email:</strong> <a href="mailto:${data.email}" style="color: #9933CC;">${data.email}</a></p>
                 <p style="margin: 10px 0;"><strong style="color: #330066;">📞 Phone:</strong> <a href="tel:${data.phone}" style="color: #9933CC;">${data.phone}</a></p>
                 <p style="margin: 10px 0;"><strong style="color: #330066;">🏢 Organization:</strong> ${data.organization_name}</p>
               </div>
               
-              <h3 style="color: #330066; border-bottom: 2px solid #CCCCFF; padding-bottom: 10px; margin-top: 25px;">💬 Message</h3>
+              <h3 style="color: #330066; border-bottom: 2px solid #CCCCFF; padding-bottom: 10px; margin-top: 25px;">Message</h3>
               <div style="background: #f8f7fa; padding: 15px; border-radius: 8px; border-left: 4px solid #9933CC; margin-top: 15px;">
                 <p style="margin: 0; line-height: 1.6; color: #333;">${data.message}</p>
               </div>
@@ -181,7 +185,7 @@ export default function Partner() {
               <p style="color: #333; line-height: 1.8;">Our team will review your request and get back to you within <strong>2-3 business days</strong>.</p>
               
               <div style="background: #f8f7fa; padding: 20px; border-radius: 8px; border-left: 4px solid #9933CC; margin: 25px 0;">
-                <h3 style="color: #330066; margin-top: 0;">📋 Your Request Summary</h3>
+                <h3 style="color: #330066; margin-top: 0;">Your Request Summary</h3>
                 <p style="margin: 5px 0; color: #666;"><strong>Organization:</strong> ${data.organization_name}</p>
                 <p style="margin: 5px 0; color: #666;"><strong>Email:</strong> ${data.email}</p>
                 <p style="margin: 5px 0; color: #666;"><strong>Phone:</strong> ${data.phone}</p>
@@ -343,7 +347,7 @@ export default function Partner() {
             Together, we bring destinations to life, one authentic experience at a time.
           </p>
           <div className='relative'>
-            <div className='absolute top-1/2 left-0 w-full h-0.5 bg-gray-200 -translate-y-1/2 hidden sm:block'></div>
+            <div className='absolute top-1/2 left-0 w-full h-0.5 bg-gray-200 -translate-y-1/2 hidden sm:block' />
             <div className='relative grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8'>
               {howItWorksSteps.map((step, index) => (
                 <div key={step.title} className='text-center bg-white sm:bg-transparent p-4 sm:p-0'>

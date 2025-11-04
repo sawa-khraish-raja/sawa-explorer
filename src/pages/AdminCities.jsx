@@ -1,17 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import AdminLayout from '../components/admin/AdminLayout';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   MapPin,
   Plus,
@@ -23,14 +10,26 @@ import {
   Loader2,
   Eye,
   Star,
-  Globe,
-  Calendar,
-  Thermometer,
-  Users,
   CheckCircle,
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { uploadImage } from '@/utils/storage';
+
+import AdminLayout from '../components/admin/AdminLayout';
+
+
+
 
 const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityMutation }) => {
   const queryClient = useQueryClient();
@@ -502,7 +501,7 @@ export default function AdminCities() {
     queryKey: ['cities'],
     queryFn: async () => {
       const { queryDocuments } = await import('@/utils/firestore');
-      return await queryDocuments('cities', [], {
+      return queryDocuments('cities', [], {
         orderBy: { field: 'name', direction: 'asc' },
       });
     },
@@ -511,7 +510,7 @@ export default function AdminCities() {
   const createCityMutation = useMutation({
     mutationFn: async (data) => {
       const { addDocument } = await import('@/utils/firestore');
-      return await addDocument('cities', data);
+      return addDocument('cities', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cities'] });
@@ -528,7 +527,7 @@ export default function AdminCities() {
   const updateCityMutation = useMutation({
     mutationFn: async ({ id, data }) => {
       const { updateDocument } = await import('@/utils/firestore');
-      return await updateDocument('cities', id, data);
+      return updateDocument('cities', id, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cities'] });
@@ -545,7 +544,7 @@ export default function AdminCities() {
   const deleteCityMutation = useMutation({
     mutationFn: async (id) => {
       const { deleteDocument } = await import('@/utils/firestore');
-      return await deleteDocument('cities', id);
+      return deleteDocument('cities', id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cities'] });

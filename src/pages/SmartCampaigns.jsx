@@ -1,31 +1,25 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Sparkles,
   Globe,
   Zap,
   Loader2,
   TrendingUp,
-  Target,
   DollarSign,
   Users,
-  Calendar,
   Eye,
-  BarChart3,
   MapPin,
   Languages,
-  RefreshCw,
-  Plus,
-  CheckCircle2,
 } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+
 import MarketingLayout from '@/components/marketing/MarketingLayout';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { getAllDocuments } from '@/utils/firestore';
 
 const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -59,7 +53,7 @@ export default function SmartCampaigns() {
   const handleGenerateCityCampaigns = async () => {
     setGenerating(true);
     try {
-      toast.info('🏙️ Generating city campaigns...');
+      toast.info('Generating city campaigns...');
 
       const response = await invokeFunction('AI_City_Campaign_Generator', {
         cities: ['Damascus', 'Cairo'],

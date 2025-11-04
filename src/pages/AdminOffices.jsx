@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import AdminLayout from '../components/admin/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Building2, Plus, Search, Users, Calendar, DollarSign, Eye } from 'lucide-react'; // Added Eye
-import { toast } from 'sonner';
-import CreateOfficeDialog from '../components/admin/CreateOfficeDialog';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Added useNavigate
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils'; // Added createPageUrl
+import { getAllDocuments } from '@/utils/firestore';
+
+import AdminLayout from '../components/admin/AdminLayout';
+import CreateOfficeDialog from '../components/admin/CreateOfficeDialog';
+
+
 
 export default function AdminOffices() {
   const queryClient = useQueryClient();

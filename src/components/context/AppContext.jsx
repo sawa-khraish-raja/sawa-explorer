@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useMemo, useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db, auth } from '@/config/firebase';
 import { signOut, updateProfile } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { createContext, useContext, useMemo, useEffect, useState } from 'react';
+
+import { db, auth } from '@/config/firebase';
+import { useAuth } from '@/contexts/AuthContext';
 import { updateDocument } from '@/utils/firestore';
 
 const AppContext = createContext(null);
@@ -16,7 +17,6 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!firebaseUser) {
-        console.log('🔴 No Firebase user found');
         setUser(null);
         setUserLoading(false);
         return;
@@ -40,7 +40,7 @@ export const AppProvider = ({ children }) => {
 
           setUser(userData);
         } else {
-          console.log('⚠️ No Firestore document found - using basic data');
+          console.log(' No Firestore document found - using basic data');
           // Set basic user data if no Firestore doc exists
           const basicUserData = {
             id: firebaseUser.uid,
@@ -53,7 +53,7 @@ export const AppProvider = ({ children }) => {
           setUser(basicUserData);
         }
       } catch (error) {
-        console.error('❌ Failed to fetch user profile:', error);
+        console.error('Failed to fetch user profile:', error);
         // Set basic user data on error
         const basicUserData = {
           id: firebaseUser.uid,

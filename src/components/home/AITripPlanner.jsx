@@ -1,16 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useAppContext } from '../context/AppContext';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { useQuery } from '@tanstack/react-query';
 import { format, addDays } from 'date-fns';
 import {
   Sparkles,
@@ -30,12 +18,25 @@ import {
   MapPin,
   Clock,
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { isAIFeatureEnabled } from '../config/aiFlags';
-import SimpleDatePicker from '../booking/SimpleDatePicker';
-import { useQuery } from '@tanstack/react-query';
-import { useTranslation } from '../i18n/LanguageContext';
+import { queryDocuments } from '@/utils/firestore';
 import { invokeLLM } from '@/utils/llm';
+
+import SimpleDatePicker from '../booking/SimpleDatePicker';
+import { isAIFeatureEnabled } from '../config/aiFlags';
+import { useAppContext } from '../context/AppContext';
+import { useTranslation } from '../i18n/LanguageContext';
 import {
   showWarning,
   showError,
@@ -68,7 +69,7 @@ function safeParseJSON(jsonStr) {
       return parsed;
     }
   } catch (e) {
-    console.warn('⚠️ safeParseJSON: Strategy 1 (direct parse) failed:', e.message);
+    console.warn(' safeParseJSON: Strategy 1 (direct parse) failed:', e.message);
   }
 
   // Strategy 2: Extract JSON from markdown code blocks
@@ -90,29 +91,25 @@ function safeParseJSON(jsonStr) {
       const parsed = JSON.parse(extracted);
       console.log(' safeParseJSON: Strategy 2 (markdown extraction) succeeded.');
       return parsed;
-    } else {
-      // If no markdown block, try to find a standalone JSON object
-      const standaloneJsonMatch = jsonStr.match(/\{[\s\S]*\}/);
-      if (standaloneJsonMatch && standaloneJsonMatch[0]) {
-        let extracted = standaloneJsonMatch[0];
-        extracted = extracted
-          .trim()
-          .replace(/,(\s*[}\]])/g, '$1')
-          .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*?)(\s*:)/g, '$1"$2"$3')
-          .replace(/:\s*'([^']*)'/g, ':"$1"')
-          .replace(/\\"/g, '"')
-          .replace(/\/\/.*$/gm, '')
-          .replace(/\/\*[\s\S]*?\*\//g, '');
-        const parsed = JSON.parse(extracted);
-        console.log(' safeParseJSON: Strategy 2.1 (standalone JSON extraction) succeeded.');
-        return parsed;
-      }
+    }
+    // If no markdown block, try to find a standalone JSON object
+    const standaloneJsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+    if (standaloneJsonMatch && standaloneJsonMatch[0]) {
+      let extracted = standaloneJsonMatch[0];
+      extracted = extracted
+        .trim()
+        .replace(/,(\s*[}\]])/g, '$1')
+        .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*?)(\s*:)/g, '$1"$2"$3')
+        .replace(/:\s*'([^']*)'/g, ':"$1"')
+        .replace(/\\"/g, '"')
+        .replace(/\/\/.*$/gm, '')
+        .replace(/\/\*[\s\S]*?\*\//g, '');
+      const parsed = JSON.parse(extracted);
+      console.log(' safeParseJSON: Strategy 2.1 (standalone JSON extraction) succeeded.');
+      return parsed;
     }
   } catch (e) {
-    console.warn(
-      '⚠️ safeParseJSON: Strategy 2 (markdown/standalone extraction) failed:',
-      e.message
-    );
+    console.warn(' safeParseJSON: Strategy 2 (markdown/standalone extraction) failed:', e.message);
   }
 
   // Strategy 3: Aggressive cleanup and extraction for common JSON errors
@@ -140,7 +137,7 @@ function safeParseJSON(jsonStr) {
       return parsed;
     }
   } catch (e) {
-    console.warn('⚠️ safeParseJSON: Strategy 3 (aggressive cleanup) failed:', e.message);
+    console.warn(' safeParseJSON: Strategy 3 (aggressive cleanup) failed:', e.message);
   }
 
   throw new Error('All JSON parsing strategies failed to yield a valid JSON object.');
@@ -148,7 +145,7 @@ function safeParseJSON(jsonStr) {
 
 //  ENHANCED: Generate Fallback Plan
 function generateFallbackPlan(destination, days, totalBudget, currency, allDates, dailyBreakdown) {
-  console.log('⚠️ Generating fallback plan due to AI response issues.');
+  console.log(' Generating fallback plan due to AI response issues.');
 
   const budgetBreakdown = {
     accommodation: Math.round(totalBudget * 0.4),
@@ -370,7 +367,7 @@ export default function AITripPlanner() {
     queryKey: ['cityEventsForPlanner', destination],
     queryFn: async () => {
       if (!destination) return [];
-      const events = await queryDocuments('events', [['city', '==', destination ]]);
+      const events = await queryDocuments('events', [['city', '==', destination]]);
       return events.filter((e) => new Date(e.start_datetime) >= new Date());
     },
     enabled: !!destination,
@@ -444,14 +441,41 @@ export default function AITripPlanner() {
         };
       });
 
-      //  SIMPLIFIED PROMPT - More reliable JSON output
+      //  DETAILED PROMPT - Comprehensive trip planning
       const response = await invokeLLM({
-        prompt: `Create a detailed ${days}-day trip plan for ${destination}.
-Budget: ${budget} ${currency}. ${interestsPrompt}.
+        prompt: `You are an expert travel planner with deep knowledge of ${destination}. Create a comprehensive ${days}-day trip itinerary that feels authentic, practical, and exciting.
 
-CRITICAL: Return ONLY valid, properly formatted JSON. No markdown fences (like \`\`\`json), no code blocks, no comments, no extra text. Ensure all string values are enclosed in double quotes.
+TRAVELER PROFILE:
+- Destination: ${destination}
+- Duration: ${days} days (${startDate} to ${endDate})
+- Total Budget: ${budget} ${currency}
+- Interests: ${interestsPrompt}
+- Travel Style: Mix of popular attractions and hidden gems
 
-Structure:
+INSTRUCTIONS:
+1. Research ${destination}'s current attractions, popular neighborhoods, local cuisine, and cultural experiences
+2. Create a day-by-day plan that flows naturally (consider travel time between locations)
+3. Balance famous landmarks with authentic local experiences
+4. Recommend specific restaurants, cafes, and food experiences - use real names of well-known establishments OR describe the type/area (e.g., "popular seafood restaurants in the Old Port area")
+5. For accommodations: recommend NEIGHBORHOODS and hotel types, not specific hotel names (you don't have real-time hotel data)
+6. Include practical details: opening hours, average costs, booking tips
+7. Consider realistic travel times and energy levels throughout each day
+8. Suggest activities that match the traveler's interests: ${interestsPrompt}
+9. Include local insider tips and cultural etiquette
+10. Provide safety advice specific to ${destination}
+11. Budget should be realistic for ${destination}'s current cost of living
+12. Be honest about what you know vs don't know - provide general guidance when specific current information isn't available
+
+BUDGET ALLOCATION (Total: ${totalBudget} ${currency}):
+- Accommodation: ${budgetBreakdown.accommodation} ${currency}
+- Activities & Attractions: ${budgetBreakdown.activities} ${currency}
+- Transportation: ${budgetBreakdown.transport} ${currency}
+- Meals & Dining: ${budgetBreakdown.meals} ${currency}
+- Emergency Fund: ${budgetBreakdown.emergency} ${currency}
+
+CRITICAL: Return ONLY valid JSON. No markdown, no code blocks, no explanations. Just pure JSON starting with { and ending with }.
+
+JSON Structure:
 {
   "destination": "${destination}",
   "days": ${days},
@@ -468,102 +492,271 @@ Structure:
     {
       "day": 1,
       "date": "${allDates[0]?.date || 'YYYY-MM-DD'}",
-      "theme": "Day 1 in ${destination}",
-      "weather": {"temp": "25°C", "condition": "Sunny"},
+      "theme": "Arrival & City Orientation - First Impressions of ${destination}",
+      "weather": {"temp": "25°C", "condition": "Sunny", "humidity": "60%", "best_time_outdoors": "Morning and late afternoon"},
       "activities": [
         {
           "time": "09:00",
-          "name": "Morning Activity Example",
-          "description": "Explore a cultural landmark.",
-          "cost": ${Math.round(dailyBreakdown.activities * 0.4)},
-          "duration": "3h",
+          "name": "Visit the Main Square & Historic District",
+          "description": "Start your journey at the heart of ${destination}. Explore the historic architecture, watch local life unfold, and visit nearby monuments. Perfect for orientation and photos. Bring water and wear comfortable shoes.",
+          "cost": ${Math.round(dailyBreakdown.activities * 0.3)},
+          "duration": "2.5h",
           "category": "Cultural",
-          "location": "City Landmark",
-          "gps": "33.5138,36.2765"
+          "location": "Old Town Historic Quarter",
+          "gps": "33.5138,36.2765",
+          "booking_required": false,
+          "insider_tip": "Visit early morning to avoid crowds and catch the best light for photos.",
+          "nearby_attractions": ["Local Market", "Artisan Quarter"],
+          "accessibility": "Wheelchair accessible"
+        },
+        {
+          "time": "14:00",
+          "name": "Afternoon Museum or Gallery Visit",
+          "description": "Dive into ${destination}'s rich history and culture. Recommended: National Museum or Contemporary Art Gallery. Usually includes guided tours in multiple languages.",
+          "cost": ${Math.round(dailyBreakdown.activities * 0.25)},
+          "duration": "2h",
+          "category": "Cultural",
+          "location": "Museum District",
+          "gps": "33.5140,36.2770",
+          "booking_required": true,
+          "booking_tip": "Book online to skip queues. Student discounts available.",
+          "insider_tip": "Free entry on first Sunday of each month"
         }
       ],
       "meals": [
-        {"type": "Breakfast", "suggestion": "Local Cafe", "cost": ${Math.round(
-          dailyBreakdown.meals * 0.25
-        )}, "time": "07:30", "location": "Hotel Area"}
+        {
+          "type": "Breakfast",
+          "suggestion": "Recommend type of place and area (e.g., 'Traditional cafes in the Old Town serve excellent breakfast') OR specific well-known establishment if you're confident",
+          "dishes": ["List 3-4 typical breakfast dishes in ${destination}"],
+          "cost": ${Math.round(dailyBreakdown.meals * 0.2)},
+          "time": "07:30",
+          "location": "Specific neighborhood or street",
+          "insider_tip": "Local breakfast custom or money-saving tip",
+          "restaurant_types": "Describe where locals eat breakfast"
+        },
+        {
+          "type": "Lunch",
+          "suggestion": "Street food area, market, or restaurant type/neighborhood - be specific about location but general about establishments unless very famous",
+          "dishes": ["List 3-4 popular lunch options in ${destination}"],
+          "cost": ${Math.round(dailyBreakdown.meals * 0.25)},
+          "time": "12:30",
+          "location": "Specific area or market name",
+          "vegetarian_options": true,
+          "popular_spots": "Mention famous food streets or markets"
+        },
+        {
+          "type": "Dinner",
+          "suggestion": "Recommend dining area/neighborhood and restaurant type. Mention specific famous restaurants ONLY if you're certain they're well-established",
+          "dishes": ["List 3-4 must-try dinner dishes in ${destination}"],
+          "cost": ${Math.round(dailyBreakdown.meals * 0.35)},
+          "time": "19:30",
+          "location": "Specific dining district or waterfront area",
+          "reservation_recommended": true,
+          "insider_tip": "Local dining customs, best times to eat, how to get authentic experience",
+          "price_ranges": "Describe low/mid/high-end options in this area"
+        }
       ],
       "transport": {
-        "type": "Metro",
-        "cost": ${dailyBreakdown.transport},
-        "details": "Day pass",
-        "how_to_get_around": "Use the metro system."
+        "type": "Mix: Metro + Walking",
+        "cost": ${Math.round(dailyBreakdown.transport / days)},
+        "details": "Day pass for metro/bus + short taxi if needed",
+        "how_to_get_around": "Get a rechargeable transport card at any metro station. Most attractions in Old Town are walkable. Use rideshare apps for late evening.",
+        "estimated_walking": "5-7 km",
+        "app_recommendations": ["Uber", "Careem", "Local Metro App"]
       },
       "accommodation": {
-        "type": "Hotel",
-        "name": "Example Hotel",
-        "cost_per_night": ${dailyBreakdown.accommodation},
-        "location": "City Center",
-        "rating": "4-star"
+        "type": "Mid-range Hotel or Boutique Guesthouse",
+        "recommended_areas": ["List 2-3 best neighborhoods to stay in ${destination}", "Consider proximity to attractions and safety"],
+        "cost_per_night": ${Math.round(dailyBreakdown.accommodation / days)},
+        "what_to_look_for": "Hotels with breakfast included, central location, good reviews, AC, WiFi. Mention specific neighborhoods or streets known for good hotels.",
+        "booking_platforms": ["Booking.com", "Airbnb", "Local hotel booking sites for ${destination}"],
+        "booking_tips": ["Book 2-3 months in advance for best prices", "Look for free cancellation options", "Check if breakfast is included", "Read recent reviews"],
+        "budget_options": "For budget travelers: hostels in [specific areas], guesthouses, budget hotel chains available in ${destination}",
+        "mid_range_options": "For mid-range: boutique hotels in [specific areas], 3-4 star hotels, well-reviewed guesthouses",
+        "luxury_options": "For luxury: 5-star hotels in [specific areas], resort options if applicable"
       },
-      "daily_total": 0
+      "daily_total": ${Math.round(dailyBreakdown.accommodation / days + dailyBreakdown.meals * 0.8 + dailyBreakdown.activities * 0.55 + dailyBreakdown.transport / days)},
+      "insider_tips": [
+        "Keep small bills (5-10 ${currency}) for tips and street vendors",
+        "Download offline maps before arriving",
+        "Learn basic greetings in local language - locals appreciate it"
+      ]
     }
   ],
   "travel_essentials": {
-    "weather_overview": "Expect sunny days with average temperatures around 25°C. Pack light clothes.",
-    "best_time_to_visit": "Spring (April-May) and Autumn (Sept-Oct) offer pleasant weather.",
-    "visa_info": "Most common nationalities need a visa. Check your embassy.",
-    "currency_tips": "Local currency is ${currency}. Exchange at official banks or ATMs. Avoid street exchanges.",
+    "weather_overview": "Provide detailed weather forecast for ${destination} during ${startDate} to ${endDate}. Include temperature ranges, rainfall probability, humidity levels, and what clothes to pack. Mention if any weather extremes are expected.",
+    "best_time_to_visit": "Explain the best months to visit ${destination} and why. Include peak/off-peak seasons, major festivals, and how timing affects prices and crowds.",
+    "visa_info": "Detail visa requirements for common nationalities visiting ${destination}. Include: visa-on-arrival options, e-visa availability, required documents, processing time, and costs. Mention if visa-free entry exists.",
+    "currency_tips": "Currency: ${currency}. Provide: current exchange rate estimates, best places to exchange money, ATM availability and fees, credit card acceptance, tipping customs, and typical daily spending.",
     "emergency_contacts": {
-      "police": "112",
-      "hospital": "115",
-      "embassy": "Check your country's embassy website"
-    }
+      "police": "Provide local emergency number",
+      "ambulance": "Provide local ambulance number",
+      "fire": "Provide fire department number",
+      "tourist_police": "If available in ${destination}",
+      "embassy": "Major embassy contacts for common nationalities",
+      "hospital_recommendations": "List 2-3 reputable hospitals/clinics"
+    },
+    "connectivity": "SIM card options at airport and city, costs, data packages, WiFi availability in ${destination}",
+    "power_adapters": "Specify plug types used in ${destination} and voltage",
+    "language": "Main language(s) spoken, English proficiency level in tourist areas",
+    "time_zone": "Time zone and any daylight saving considerations"
   },
   "local_guide": {
     "customs": [
-      "Always greet with a 'Salam Alaikum'.",
-      "Dress modestly, especially when visiting religious sites.",
-      "Remove shoes before entering homes or mosques.",
-      "Always use your right hand when shaking hands or eating.",
-      "Bargaining is common in markets."
+      "List 5-7 specific cultural customs unique to ${destination}",
+      "Include greeting etiquette, dining customs, and social norms",
+      "Mention religious or cultural sensitivities",
+      "Explain tipping culture and expected amounts",
+      "Shopping and bargaining practices",
+      "Photography restrictions (if any)"
     ],
     "phrases": [
-      {"english": "Hello", "local": "Marhaba", "pronunciation": "mahr-hah-bah"},
-      {"english": "Thank you", "local": "Shukran", "pronunciation": "shook-ran"},
-      {"english": "Please", "local": "Min fadlak", "pronunciation": "min fad-lak"},
-      {"english": "Yes", "local": "Na'am", "pronunciation": "nah-ahm"},
-      {"english": "No", "local": "Laa", "pronunciation": "lah"}
+      {"english": "Hello", "local": "Provide local greeting", "pronunciation": "phonetic spelling"},
+      {"english": "Thank you", "local": "Local phrase", "pronunciation": "phonetic"},
+      {"english": "Please", "local": "Local phrase", "pronunciation": "phonetic"},
+      {"english": "Yes/No", "local": "Local phrases", "pronunciation": "phonetic"},
+      {"english": "How much?", "local": "Essential for shopping", "pronunciation": "phonetic"},
+      {"english": "Where is...?", "local": "For directions", "pronunciation": "phonetic"},
+      {"english": "Excuse me", "local": "Polite phrase", "pronunciation": "phonetic"},
+      {"english": "Help!", "local": "Emergency phrase", "pronunciation": "phonetic"}
     ],
     "dos_and_donts": {
       "dos": [
-        "Be respectful of local traditions and religion.",
-        "Try local cuisine."
+        "List 6-8 specific things travelers SHOULD do in ${destination}",
+        "Include cultural respect practices",
+        "Recommended behaviors and interactions",
+        "Best practices for photos, dining, shopping",
+        "How to show respect and appreciation"
       ],
       "donts": [
-        "Avoid public displays of affection.",
-        "Don't interrupt prayers."
+        "List 6-8 specific things to AVOID in ${destination}",
+        "Cultural taboos and sensitive topics",
+        "Behaviors that might offend locals",
+        "Common tourist mistakes to avoid",
+        "Safety-related don'ts"
       ]
     },
-    "sim_wifi_info": "Local SIM cards are available at the airport or telecom stores. Wi-Fi is widely available in hotels and cafes."
+    "food_culture": "Describe ${destination}'s food culture: meal times, must-try dishes, dietary considerations, street food safety, restaurant etiquette",
+    "social_norms": "Explain social interactions, personal space, conversation topics to avoid, gender-specific considerations if relevant",
+    "religious_considerations": "If applicable to ${destination}, explain prayer times, religious holidays, dress codes, alcohol availability"
   },
   "safety": {
+    "overall_safety_rating": "Rate ${destination} safety level (Very Safe / Safe / Moderately Safe / Exercise Caution) with brief explanation",
     "warnings": [
-      "Be aware of your surroundings, especially in crowded areas.",
-      "Avoid walking alone late at night in unfamiliar neighborhoods."
+      "List 4-6 specific safety warnings for ${destination}",
+      "Include area-specific concerns (neighborhoods to avoid)",
+      "Time-specific warnings (night safety, rush hours)",
+      "Seasonal concerns if applicable",
+      "Transportation safety tips"
     ],
-    "scams": [
-      "Beware of unsolicited 'guides' near tourist attractions.",
-      "Always agree on taxi fares before starting the journey."
+    "common_scams": [
+      "Describe 5-7 common tourist scams in ${destination}",
+      "How to recognize them",
+      "How to avoid them",
+      "What to do if targeted"
     ],
     "safe_areas": [
-      "City Center",
-      "Old Town (during the day)"
+      "List 5-8 safest neighborhoods/areas in ${destination}",
+      "Best areas for tourists to stay",
+      "Safe areas for evening walks",
+      "Family-friendly zones"
     ],
-    "healthcare_info": "Pharmacies are common. For serious issues, public and private hospitals are available."
+    "areas_to_avoid": [
+      "List specific areas/neighborhoods to avoid in ${destination}",
+      "Explain why (crime, unrest, etc.)",
+      "Alternative safe areas nearby"
+    ],
+    "healthcare_info": {
+      "quality": "Healthcare quality level in ${destination}",
+      "insurance": "Travel insurance recommendations and local insurance acceptance",
+      "pharmacies": "Availability, common medications, prescription requirements",
+      "hospitals": "List 2-3 best hospitals for tourists with addresses",
+      "common_health_risks": "List health risks specific to ${destination} (food/water safety, altitude, diseases)",
+      "vaccinations": "Recommended vaccinations for ${destination}"
+    },
+    "emergency_procedures": "What to do in case of: theft, lost passport, medical emergency, natural disaster (if applicable to ${destination})",
+    "women_travelers": "Specific safety advice for solo women travelers in ${destination}",
+    "lgbtq_travelers": "LGBTQ+ safety considerations and legal status in ${destination}"
   },
-  "packing_list": [
-    "Lightweight clothing", "Comfortable walking shoes", "Sunscreen", "Hat", "Adapter",
-    "Basic first aid kit", "Reusable water bottle", "Small backpack", "Scarf (for women, visiting religious sites)", "Power bank"
+  "packing_list": {
+    "essentials": [
+      "Passport & visa documents",
+      "Travel insurance documents",
+      "Credit cards & cash (${currency})",
+      "Phone & charger",
+      "Power adapter (specify type for ${destination})",
+      "Copies of important documents (digital & physical)"
+    ],
+    "clothing": [
+      "Weather-appropriate clothing for ${destination} in ${startDate} season",
+      "Comfortable walking shoes (expect 5-10km daily)",
+      "Dress code-appropriate attire (for religious sites if applicable)",
+      "Light jacket or sweater (for AC/evenings)",
+      "Swimwear (if relevant to ${destination})",
+      "Specific items based on planned activities"
+    ],
+    "toiletries": [
+      "Sunscreen (SPF 30+)",
+      "Insect repellent (if needed in ${destination})",
+      "Personal medications + prescription copies",
+      "Basic first aid (bandaids, pain relievers, stomach meds)",
+      "Hand sanitizer & wet wipes",
+      "Toiletries (some hotels may not provide)"
+    ],
+    "tech": [
+      "Power bank for phones",
+      "Camera + memory cards",
+      "Universal travel adapter",
+      "Headphones",
+      "Offline maps downloaded"
+    ],
+    "convenience": [
+      "Reusable water bottle",
+      "Small daypack/backpack",
+      "Travel pillow for flights",
+      "Earplugs & sleep mask",
+      "Snacks for travel days",
+      "Plastic bags for dirty clothes"
+    ],
+    "location_specific": [
+      "Add 3-5 items specific to ${destination} and planned activities",
+      "Based on weather, culture, and selected interests: ${interestsPrompt}"
+    ]
+  },
+  "sawa_benefits": "SAWA connects you with authentic local experiences in ${destination}. Our platform features verified local hosts offering personalized tours, unique adventures, and insider access to hidden gems. Book activities through SAWA to support local communities and create unforgettable memories. Available experiences: cultural tours, food experiences, adventure activities, and customized itineraries matching your interests: ${interestsPrompt}.",
+  "money_saving_tips": [
+    "Provide 8-10 specific money-saving tips for ${destination}",
+    "Free attractions and activities",
+    "Best value restaurants and street food",
+    "Transportation hacks",
+    "When to visit for best prices",
+    "Where locals shop vs tourist traps",
+    "Apps and discount cards available in ${destination}"
   ],
-  "sawa_benefits": "SAWA offers unique local experiences and adventures in ${destination}. Connect with local hosts for authentic insights and personalized tours. Book your activities through SAWA for a memorable trip!",
-  "total_estimate":${totalBudget},
-  "tips":["Book accommodation in advance","Try local street food","Use public transport"]
-}`,
+  "pro_tips": [
+    "Provide 10-12 insider tips that only locals would know about ${destination}",
+    "Best times to visit popular attractions (avoid crowds)",
+    "Hidden viewpoints and photo spots",
+    "Local habits and rhythms (siesta times, rush hours, etc.)",
+    "Neighborhood secrets",
+    "Where locals actually eat/shop/hang out",
+    "Seasonal events or weekly markets",
+    "Day trip options from ${destination}",
+    "Unique experiences not in guidebooks"
+  ],
+  "total_estimate": ${totalBudget},
+  "budget_notes": "This is an estimated budget for ${days} days in ${destination}. Actual costs may vary based on personal spending habits, season, and accommodation choices. Always budget 10-15% extra for unexpected expenses."
+}
+
+IMPORTANT FINAL REMINDERS:
+- Make this plan feel personal and practical, not generic
+- Use specific names of places, restaurants, and attractions when possible
+- All costs should be realistic for ${destination}'s current prices
+- Daily plans should flow logically (consider geography and timing)
+- Balance tourist attractions with authentic local experiences
+- Consider the traveler's interests: ${interestsPrompt}
+- All GPS coordinates should be accurate for ${destination}
+- Return ONLY the JSON object, no other text or formatting`,
         response_json_schema: {
           type: 'object',
           properties: {
@@ -639,7 +832,7 @@ Structure:
       //  Fill missing days if needed
       if (parsedPlan.daily_plan.length < days) {
         console.warn(
-          `⚠️ Only ${parsedPlan.daily_plan.length} of ${days} days generated. Attempting to fill missing days...`
+          ` Only ${parsedPlan.daily_plan.length} of ${days} days generated. Attempting to fill missing days...`
         );
 
         while (parsedPlan.daily_plan.length < days) {
@@ -670,25 +863,22 @@ Structure:
           showInfo(
             language === 'ar'
               ? `تم ملء الأيام المفقودة حتى ${parsedPlan.daily_plan.length} يومًا.`
-              : `Filled to ${parsedPlan.daily_plan.length} days.`,
-            { id: 'plan_fill_success', duration: 3000 }
+              : `Filled to ${parsedPlan.daily_plan.length} days.`
           );
         } else {
           showWarning(
             language === 'ar'
               ? `تم إنشاء ${parsedPlan.daily_plan.length} أيام من أصل ${days} أيام.`
-              : `Generated ${parsedPlan.daily_plan.length} days out of ${days}.`,
-            { id: 'plan_fill_partial', duration: 4000 }
+              : `Generated ${parsedPlan.daily_plan.length} days out of ${days}.`
           );
         }
       } else if (parsedPlan.daily_plan.length > days) {
         parsedPlan.daily_plan = parsedPlan.daily_plan.slice(0, days);
-        console.warn(`⚠️ AI generated too many days. Trimmed to ${days}.`);
+        console.warn(` AI generated too many days. Trimmed to ${days}.`);
         showInfo(
           language === 'ar'
             ? `تم تقليم الأيام الزائدة إلى ${days} يومًا.`
-            : `Trimmed extra days to ${days}.`,
-          { id: 'plan_trim_extra', duration: 3000 }
+            : `Trimmed extra days to ${days}.`
         );
       }
 
@@ -714,15 +904,11 @@ Structure:
       const actualTotal = parsedPlan.daily_plan.reduce((sum, day) => sum + day.daily_total, 0);
       parsedPlan.total_estimate = actualTotal;
 
-      console.log(` Generated ${parsedPlan.daily_plan.length}-day plan successfully`);
-      console.log(`💰 Total: ${currency} ${actualTotal} (Target: ${currency} ${totalBudget})`);
-
       setTripPlan(parsedPlan);
       showSuccess(
         language === 'ar'
           ? `🎉 خطة رحلتك لـ ${parsedPlan.daily_plan.length} أيام جاهزة!`
-          : `🎉 Your ${parsedPlan.daily_plan.length}-day trip plan is ready!`,
-        { id: 'plan_success', duration: 4000 }
+          : `🎉 Your ${parsedPlan.daily_plan.length}-day trip plan is ready!`
       );
     } catch (error) {
       console.error(' AI Planning Error:', error);
@@ -741,7 +927,7 @@ Structure:
             : 'Network error. Check your connection.';
       }
 
-      showError(errorMessage, { id: 'plan_error' });
+      showError(errorMessage);
     }
     setLoading(false);
   };
@@ -895,31 +1081,31 @@ function TripPlanDisplay({ plan, language }) {
         <div className='grid grid-cols-2 md:grid-cols-5 gap-4'>
           <BudgetItem
             icon={<Hotel />}
-            label={'Accommodation'}
+            label='Accommodation'
             amount={plan.budget_breakdown.accommodation}
             currency={plan.currency}
           />
           <BudgetItem
             icon={<MapPin />}
-            label={'Activities'}
+            label='Activities'
             amount={plan.budget_breakdown.activities}
             currency={plan.currency}
           />
           <BudgetItem
             icon={<Plane />}
-            label={'Transport'}
+            label='Transport'
             amount={plan.budget_breakdown.transport}
             currency={plan.currency}
           />
           <BudgetItem
             icon={<Utensils />}
-            label={'Meals'}
+            label='Meals'
             amount={plan.budget_breakdown.meals}
             currency={plan.currency}
           />
           <BudgetItem
             icon={<Sparkles />}
-            label={'Emergency'}
+            label='Emergency'
             amount={plan.budget_breakdown.emergency}
             currency={plan.currency}
           />

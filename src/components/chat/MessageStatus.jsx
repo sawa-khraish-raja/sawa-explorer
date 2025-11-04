@@ -1,6 +1,5 @@
-import React from 'react';
 import { Check, CheckCheck, Clock } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
 
 export default function MessageStatus({ message, currentUserEmail }) {
   // Only show status for messages sent by current user

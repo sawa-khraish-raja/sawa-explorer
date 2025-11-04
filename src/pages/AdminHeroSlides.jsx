@@ -1,34 +1,18 @@
-import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, addDocument, updateDocument, deleteDocument, queryDocuments } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import AdminLayout from '../components/admin/AdminLayout';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Plus, Trash2, Save, Upload, Eye, EyeOff, Film, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Plus,
-  Trash2,
-  Save,
-  Upload,
-  Eye,
-  EyeOff,
-  Film,
-  Loader2,
-  CheckCircle2,
-  X,
-} from 'lucide-react';
+import { addDocument, updateDocument, deleteDocument, queryDocuments } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
+
+import AdminLayout from '../components/admin/AdminLayout';
 import { showSuccess, showError } from '../components/utils/notifications';
-import { Badge } from '@/components/ui/badge';
 
 const PAGE_TYPES = [
   { value: 'home', label: 'Home Page', icon: '🏠' },
@@ -54,17 +38,19 @@ export default function AdminHeroSlides() {
       let allSlides;
 
       if (selectedPage === 'city') {
-        allSlides = await queryDocuments('hero_slides', [
-          ['page_type', '==', 'city'],
-          ['city_name', '==', selectedCity],
-        ], {
-          orderBy: { field: 'order', direction: 'asc' }
-        });
+        allSlides = await queryDocuments(
+          'hero_slides',
+          [
+            ['page_type', '==', 'city'],
+            ['city_name', '==', selectedCity],
+          ],
+          {
+            orderBy: { field: 'order', direction: 'asc' },
+          }
+        );
       } else {
-        allSlides = await queryDocuments('hero_slides', [
-          ['page_type', '==', selectedPage],
-        ], {
-          orderBy: { field: 'order', direction: 'asc' }
+        allSlides = await queryDocuments('hero_slides', [['page_type', '==', selectedPage]], {
+          orderBy: { field: 'order', direction: 'asc' },
         });
       }
 
@@ -86,7 +72,7 @@ export default function AdminHeroSlides() {
       setEditingSlide(null);
     },
     onError: (error) => {
-      showError('Failed to create slide: ' + error.message);
+      showError(`Failed to create slide: ${error.message}`);
     },
   });
 
@@ -103,7 +89,7 @@ export default function AdminHeroSlides() {
       setEditingSlide(null);
     },
     onError: (error) => {
-      showError('Failed to update slide: ' + error.message);
+      showError(`Failed to update slide: ${error.message}`);
     },
   });
 
@@ -116,7 +102,7 @@ export default function AdminHeroSlides() {
       showSuccess('Hero slide deleted successfully!');
     },
     onError: (error) => {
-      showError('Failed to delete slide: ' + error.message);
+      showError(`Failed to delete slide: ${error.message}`);
     },
   });
 
@@ -138,7 +124,7 @@ export default function AdminHeroSlides() {
       is_active: editingSlide.is_active !== undefined ? editingSlide.is_active : true,
     };
 
-    console.log('💾 Saving slide:', slideData);
+    console.log('Saving slide:', slideData);
 
     if (editingSlide.id) {
       updateMutation.mutate({ id: editingSlide.id, data: slideData });
@@ -170,7 +156,7 @@ export default function AdminHeroSlides() {
       setEditingSlide((prev) => ({ ...prev, [field]: fileUrl }));
       showSuccess('File uploaded successfully!');
     } catch (error) {
-      showError('Failed to upload file: ' + error.message);
+      showError(`Failed to upload file: ${error.message}`);
     } finally {
       setUploading(false);
       e.target.value = null; // Clear the input so same file can be selected again

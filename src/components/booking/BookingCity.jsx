@@ -1,34 +1,33 @@
-import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { queryDocuments, getAllDocuments, addDocument } from '@/utils/firestore';
-import { useAppContext } from '../context/AppContext';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { motion } from 'framer-motion';
 import {
   Loader2,
   MapPin,
   Star,
-  Building2,
   Calendar,
   Users,
   Image as ImageIcon,
-  Info,
   CheckCircle,
   Search,
   Sparkles,
   AlertCircle,
 } from 'lucide-react';
-import CityGallery from './CityGallery';
-import EventList from './EventList';
-import BookingForm from './BookingForm';
-import { motion } from 'framer-motion';
-import { format } from 'date-fns';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { createPageUrl } from '@/utils';
+import { queryDocuments, getAllDocuments, addDocument } from '@/utils/firestore';
+
+import PageHeroVideo from '../common/PageHeroVideo';
+import { useAppContext } from '../context/AppContext';
 import { useTranslation } from '../i18n/LanguageContext';
 import { showSuccess, showError } from '../utils/notifications';
-import PageHeroVideo from '../common/PageHeroVideo';
+
+import BookingForm from './BookingForm';
+import CityGallery from './CityGallery';
+import EventList from './EventList';
 
 const HostCard = ({ host, navigate, createPageUrl }) => {
   const getFirstName = (fullName) => {
@@ -38,8 +37,8 @@ const HostCard = ({ host, navigate, createPageUrl }) => {
 
   const handleClick = () => {
     //  FIXED: Pass email as query parameter
-    const targetUrl = createPageUrl('HostProfile') + `?email=${encodeURIComponent(host.email)}`;
-    console.log('🔗 Navigating to:', targetUrl, 'Host:', host);
+    const targetUrl = `${createPageUrl('HostProfile')}?email=${encodeURIComponent(host.email)}`;
+    console.log('Navigating to:', targetUrl, 'Host:', host);
     navigate(targetUrl);
   };
 
@@ -183,10 +182,7 @@ export default function BookingCity({ cityName }) {
         // Get all users who are approved hosts and visible in this city
         const allUsers = await getAllDocuments('users');
         const cityHosts = allUsers.filter(
-          (u) =>
-            u.host_approved === true &&
-            u.visible_in_city === true &&
-            u.city === cityName
+          (u) => u.host_approved === true && u.visible_in_city === true && u.city === cityName
         );
 
         return cityHosts;

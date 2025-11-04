@@ -1,7 +1,8 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Utensils, Palette, Music, Briefcase, Users, Star, DollarSign } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Utensils, Palette, Music, Briefcase, Users, Star, DollarSign } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+
 
 const CATEGORIES = [
   { name: 'All', icon: Star, color: 'from-purple-500 to-purple-600' },

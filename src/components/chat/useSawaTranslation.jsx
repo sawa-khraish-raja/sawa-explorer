@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { batchTranslateMessages } from './translationHelper';
+import { useState, useEffect, useCallback } from 'react';
+
 import { normLang } from '@/components/i18n/i18nVoice';
+
+import { batchTranslateMessages } from './translationHelper';
 
 /**
  * Unified translation hook for all SAWA chat types
@@ -78,7 +80,6 @@ export function useSawaTranslation(messages, displayLanguage, bookingId = null, 
   const loadMore = useCallback(() => {
     if (visibleCount < messages.length) {
       setVisibleCount((prev) => Math.min(prev + 20, messages.length));
-      console.log(`📥 [useSawaTranslation] Loading 20 more messages...`);
     }
   }, [visibleCount, messages.length]);
 

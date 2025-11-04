@@ -1,9 +1,11 @@
+import { Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppContext } from '../context/AppContext';
-import { createPageUrl } from '@/utils';
-import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+
+import { createPageUrl } from '@/utils';
+
+import { useAppContext } from '../context/AppContext';
 
 //  All available admin pages
 export const ADMIN_PAGES = {
@@ -71,7 +73,7 @@ export default function PermissionGuard({ pageId, children }) {
     if (!isLoading) {
       // If loading is done and user is null, they're not logged in
       if (user === null) {
-        console.log('🚫 Not logged in, redirecting to Home...');
+        console.log(' Not logged in, redirecting to Home...');
         toast.info('Please sign in as an admin to access this page.', { duration: 2000 });
         navigate(createPageUrl('Home'), { replace: true });
         return;
@@ -79,7 +81,7 @@ export default function PermissionGuard({ pageId, children }) {
 
       // If we have a user but they're not an admin
       if (user && !isAdmin) {
-        console.log('🚫 Not an admin, redirecting to Home...');
+        console.log(' Not an admin, redirecting to Home...');
         toast.info('Please sign in as an admin to access this page.', { duration: 2000 });
         navigate(createPageUrl('Home'), { replace: true });
         return;
@@ -87,7 +89,7 @@ export default function PermissionGuard({ pageId, children }) {
 
       //  Check page access for limited admins
       if (user && isAdmin && !hasPageAccess(pageId)) {
-        console.log('🚫 No access to this page, redirecting to Dashboard...');
+        console.log(' No access to this page, redirecting to Dashboard...');
         toast.warning('You do not have access to this page.', { duration: 2000 });
         navigate(createPageUrl('AdminDashboard'), { replace: true });
       }

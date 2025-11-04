@@ -1,9 +1,5 @@
-import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getDocument, updateDocument, queryDocuments, addDocument } from '@/utils/firestore';
-import { useAppContext } from '../components/context/AppContext';
-import { useNavigate, Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { format } from 'date-fns';
 import {
   Heart,
   MessageCircle,
@@ -17,14 +13,23 @@ import {
   Clock,
   Tag,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
-import { getUserDisplayName } from '@/components/utils/userHelpers';
-import { format } from 'date-fns';
+import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { useNavigate, Link } from 'react-router-dom';
+import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { getUserDisplayName } from '@/components/utils/userHelpers';
+import { createPageUrl } from '@/utils';
+import { getDocument, updateDocument, queryDocuments, addDocument } from '@/utils/firestore';
+
+import { useAppContext } from '../components/context/AppContext';
+
+
+
 
 export default function ForumPostDetail() {
   const navigate = useNavigate();

@@ -1,13 +1,5 @@
-import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import AdminLayout from '../components/admin/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 import {
   Briefcase,
   Search,
@@ -21,8 +13,6 @@ import {
   Clock,
   MessageSquare,
   User,
-  ArrowRight,
-  TrendingUp,
   Users,
   FileText,
   AlertCircle,
@@ -30,8 +20,12 @@ import {
   Edit,
   Loader2,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { useState } from 'react';
 import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -39,6 +33,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -46,7 +41,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { getAllDocuments, updateDocument } from '@/utils/firestore';
+
+import AdminLayout from '../components/admin/AdminLayout';
 
 export default function AdminPartnerRequests() {
   const queryClient = useQueryClient();
@@ -70,7 +69,7 @@ export default function AdminPartnerRequests() {
   // Update request status mutation
   const updateStatusMutation = useMutation({
     mutationFn: async ({ requestId, status, notes }) => {
-      return await updateDocument('partnerrequests', requestId, { ...{
+      return updateDocument('partnerrequests', requestId, { ...{
         status,
         admin_notes: notes,
       }, updated_date: new Date().toISOString() });

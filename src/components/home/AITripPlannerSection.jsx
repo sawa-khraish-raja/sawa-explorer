@@ -1,7 +1,9 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Sparkles, Zap, ArrowRight, Globe, Heart } from 'lucide-react';
+
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Zap, ArrowRight, Clock, Globe, Heart, CheckCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+
 import { useTranslation } from '../i18n/LanguageContext';
 
 /**

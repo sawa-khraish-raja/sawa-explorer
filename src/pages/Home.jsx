@@ -1,10 +1,13 @@
-import React, { lazy, Suspense, useEffect } from 'react';
-import SearchBar from '../components/home/SearchBar';
+import { Loader2 } from 'lucide-react';
+import { lazy, Suspense, useEffect } from 'react';
+
+import { Button } from '@/components/ui/button';
+
 import PageHeroVideo from '../components/common/PageHeroVideo';
+import SearchBar from '../components/home/SearchBar';
 import { useTranslation } from '../components/i18n/LanguageContext';
 import { normalizeText } from '../components/utils/textHelpers';
-import { Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+
 
 const DestinationIcons = lazy(() => import('../components/home/DestinationIcons'));
 const AITripPlanner = lazy(() => import('../components/home/AITripPlanner'));

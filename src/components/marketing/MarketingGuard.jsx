@@ -1,24 +1,14 @@
+import { Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import { createPageUrl } from '@/utils';
-import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { createPageUrl } from '@/utils';
+
+import { useAppContext } from '../context/AppContext';
+
 export function useMarketingAuth() {
-  const { data: user, isLoading } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: async () => {
-      try {
-        return await useAppContext().user;
-      } catch (error) {
-        return null;
-      }
-    },
-    staleTime: 5 * 60 * 1000,
-  });
+  const { user, isLoading } = useAppContext();
 
   const hasAccess = user?.role_type === 'marketing' || user?.role_type === 'admin';
 
@@ -37,7 +27,7 @@ export default function MarketingGuard({ children }) {
 
   useEffect(() => {
     if (!isLoading && !hasAccess) {
-      console.log('🚫 Unauthorized access to Marketing Dashboard');
+      console.log(' Unauthorized access to Marketing Dashboard');
       toast.error('Access Denied', {
         description: 'You need Marketing or Admin role to access this area.',
       });

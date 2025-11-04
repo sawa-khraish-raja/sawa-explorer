@@ -1,13 +1,13 @@
 // @ts-check
 
-import js from '@eslint/js'
-import eslintConfigPrettier from 'eslint-config-prettier'
-import importPlugin from 'eslint-plugin-import-x'
-import react from 'eslint-plugin-react'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import unusedImports from 'eslint-plugin-unused-imports'
-import globals from 'globals'
+import js from '@eslint/js';
+import eslintConfigPrettier from 'eslint-config-prettier';
+import importPlugin from 'eslint-plugin-import-x';
+import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
+import unusedImports from 'eslint-plugin-unused-imports';
+import globals from 'globals';
 
 export default [
   {
@@ -152,14 +152,14 @@ export default [
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
 
       // ===== General JavaScript Rules =====
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-console': 'off',
       'no-debugger': 'warn',
       'no-alert': 'warn',
       'no-var': 'error',
       'prefer-const': 'error',
       'prefer-arrow-callback': 'warn',
       'no-duplicate-imports': 'error',
-      'eqeqeq': ['error', 'always', { null: 'ignore' }],
+      eqeqeq: ['error', 'always', { null: 'ignore' }],
       'no-eval': 'error',
       'no-implied-eval': 'error',
       'no-new-func': 'error',
@@ -176,7 +176,7 @@ export default [
       'no-nested-ternary': 'warn',
       'no-unneeded-ternary': 'warn',
       'no-else-return': 'warn',
-      'curly': ['warn', 'all'],
+      curly: ['warn', 'all'],
       'no-constant-condition': ['error', { checkLoops: false }],
     },
   },
@@ -200,4 +200,4 @@ export default [
 
   // Prettier config (must be last to override other formatting rules)
   eslintConfigPrettier,
-]
+];

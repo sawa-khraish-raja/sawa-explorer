@@ -1,26 +1,28 @@
-import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Bell, Loader2, Check, Settings } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
+import { createPageUrl } from '@/utils';
 import {
   getUserNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
   deleteDocument,
 } from '@/utils/firestore';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Bell, Loader2, Check, Trash2, Settings } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { motion, AnimatePresence } from 'framer-motion';
-import NotificationItem from './NotificationItem';
+
 import { useAppContext } from '../context/AppContext';
+
+import NotificationItem from './NotificationItem';
+
 
 export default function NotificationBell({ className }) {
   const navigate = useNavigate();
@@ -167,7 +169,7 @@ export default function NotificationBell({ className }) {
                 size='icon'
                 className='w-8 h-8'
                 onClick={() => {
-                  navigate(createPageUrl('UserProfile') + '?tab=notifications');
+                  navigate(`${createPageUrl('UserProfile')  }?tab=notifications`);
                   setIsOpen(false);
                 }}
               >
@@ -217,7 +219,7 @@ export default function NotificationBell({ className }) {
               variant='ghost'
               className='w-full text-sm text-purple-600 hover:bg-purple-50'
               onClick={() => {
-                navigate(createPageUrl('UserProfile') + '?tab=notifications');
+                navigate(`${createPageUrl('UserProfile')  }?tab=notifications`);
                 setIsOpen(false);
               }}
             >

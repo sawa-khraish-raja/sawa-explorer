@@ -1,8 +1,4 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { queryDocuments, getAllDocuments } from '@/utils/firestore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   MapPin,
   Users,
@@ -15,13 +11,19 @@ import {
   Star,
   Loader2,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { createPageUrl } from '@/utils';
+import { queryDocuments, getAllDocuments } from '@/utils/firestore';
+
 import PageHeroVideo from '../common/PageHeroVideo';
-import SimpleBookingForm from './SimpleBookingForm';
-import EventCard from './EventCard';
 import { normalizeText } from '../utils/textHelpers';
 import { getUserDisplayName } from '../utils/userHelpers';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+
+import EventCard from './EventCard';
+import SimpleBookingForm from './SimpleBookingForm';
 
 export default function BookingPageTemplate({ city }) {
   const navigate = useNavigate();
@@ -40,16 +42,13 @@ export default function BookingPageTemplate({ city }) {
   const { data: hosts = [], isLoading: isLoadingHosts } = useQuery({
     queryKey: ['cityHosts', city.name],
     queryFn: async () => {
-      console.log('🔍 [BookingPageTemplate] Fetching hosts for:', city.name);
+      console.log(' [BookingPageTemplate] Fetching hosts for:', city.name);
 
       try {
         // Get all users who are approved hosts and visible in this city
         const allUsers = await getAllDocuments('users');
         const cityHosts = allUsers.filter(
-          (u) =>
-            u.host_approved === true &&
-            u.visible_in_city === true &&
-            u.city === city.name
+          (u) => u.host_approved === true && u.visible_in_city === true && u.city === city.name
         );
 
         console.log(' [BookingPageTemplate] Found hosts:', cityHosts.length);
@@ -73,7 +72,7 @@ export default function BookingPageTemplate({ city }) {
     enabled: !!city.name,
   });
 
-  console.log('📊 [BookingPageTemplate] Rendering with:', {
+  console.log('[BookingPageTemplate] Rendering with:', {
     city: city.name,
     hostsCount: hosts.length,
     isLoadingHosts,
@@ -138,7 +137,7 @@ export default function BookingPageTemplate({ city }) {
                 <div
                   key={host.id}
                   onClick={() => {
-                    console.log('🔗 [BookingPageTemplate] Navigating to host:', host.email);
+                    console.log('[BookingPageTemplate] Navigating to host:', host.email);
                     navigate(createPageUrl(`HostProfile?email=${encodeURIComponent(host.email)}`));
                   }}
                   className='flex flex-col items-center gap-3 p-4 bg-white rounded-xl hover:bg-purple-50 transition-all cursor-pointer group border border-purple-100 hover:border-purple-300 hover:shadow-lg'

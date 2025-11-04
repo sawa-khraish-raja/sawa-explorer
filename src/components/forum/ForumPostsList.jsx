@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { queryDocuments } from '@/utils/firestore';
+import { motion } from 'framer-motion';
 import { Loader2, Search } from 'lucide-react';
+import { useState } from 'react';
+
+
+
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -10,7 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { motion } from 'framer-motion';
+import { queryDocuments } from '@/utils/firestore';
+
+
 import PostCard from './PostCard';
 
 export default function ForumPostsList() {

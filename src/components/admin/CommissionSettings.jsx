@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import { Save, AlertCircle, DollarSign } from 'lucide-react';
+import { useState } from 'react';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Save, AlertCircle, DollarSign } from 'lucide-react';
-import { COMMISSION_RATES } from '../pricing/commissionEngine';
+
 import { showNotification } from '../notifications/NotificationManager';
+import { COMMISSION_RATES } from '../pricing/commissionEngine';
 
 export default function CommissionSettings() {
   const [freelancerSawa, setFreelancerSawa] = useState(COMMISSION_RATES.FREELANCER.SAWA_PERCENT);
@@ -16,7 +18,7 @@ export default function CommissionSettings() {
   const handleSave = () => {
     // In a real implementation, this would save to database/config
     showNotification({
-      title: '⚠️ Notice',
+      title: ' Notice',
       message:
         'Commission rates are currently hard-coded. This will be configurable in a future update.',
       type: 'info',
@@ -30,12 +32,11 @@ export default function CommissionSettings() {
       const sawa = ((basePrice * freelancerSawa) / 100).toFixed(2);
       const total = (basePrice + parseFloat(sawa)).toFixed(2);
       return { base: basePrice, sawa, total };
-    } else {
-      const sawa = ((basePrice * officeSawa) / 100).toFixed(2);
-      const office = ((basePrice * officePercent) / 100).toFixed(2);
-      const total = (basePrice + parseFloat(sawa) + parseFloat(office)).toFixed(2);
-      return { base: basePrice, sawa, office, total };
     }
+    const sawa = ((basePrice * officeSawa) / 100).toFixed(2);
+    const office = ((basePrice * officePercent) / 100).toFixed(2);
+    const total = (basePrice + parseFloat(sawa) + parseFloat(office)).toFixed(2);
+    return { base: basePrice, sawa, office, total };
   };
 
   const freelancerExample = calculateExample('freelancer');

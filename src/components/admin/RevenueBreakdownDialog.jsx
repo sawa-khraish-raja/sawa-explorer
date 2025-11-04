@@ -1,7 +1,3 @@
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   Sparkles,
   DollarSign,
@@ -12,6 +8,11 @@ import {
   Activity,
   MapPin,
 } from 'lucide-react';
+import React from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function RevenueBreakdownDialog({ open, onOpenChange, revenueData, totalRevenue }) {
   return (
@@ -240,7 +241,7 @@ export default function RevenueBreakdownDialog({ open, onOpenChange, revenueData
           <Card className='bg-white border-2 border-[#CCCCFF]'>
             <CardHeader className='bg-gradient-to-r from-[#E6E6FF] to-white border-b'>
               <CardTitle className='text-base sm:text-lg text-[#330066]'>
-                📊 Booking-by-Booking Breakdown
+                Booking-by-Booking Breakdown
               </CardTitle>
             </CardHeader>
             <CardContent className='p-0'>

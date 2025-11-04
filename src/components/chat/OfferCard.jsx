@@ -1,8 +1,5 @@
-import React, { useState } from 'react';
-import { useAppContext } from '../context/AppContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { format } from 'date-fns';
 import {
   Check,
   X,
@@ -13,10 +10,14 @@ import {
   Loader2,
   CheckCircle2,
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { updateDocument } from '@/utils/firestore';
+
+import { useAppContext } from '../context/AppContext';
 import { showSuccess, showError } from '../utils/notifications';
 
 export default function OfferCard({
@@ -26,26 +27,13 @@ export default function OfferCard({
   onDecline,
   viewerType = 'traveler',
 }) {
+  const { user } = useAppContext();
   const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
-
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: async () => {
-      try {
-        return await useAppContext().user;
-      } catch {
-        return null;
-      }
-    },
-    staleTime: 30 * 60 * 1000,
-  });
 
   //  FIXED: Accept offer mutation - use offer.booking_id if booking prop is undefined
   const acceptMutation = useMutation({
     mutationFn: async (offerId) => {
-      console.log('🚀 [OfferCard] Starting accept for offer:', offerId);
-
       if (!offerId || typeof offerId !== 'string') {
         throw new Error('Invalid offer ID');
       }
@@ -57,7 +45,7 @@ export default function OfferCard({
       setIsProcessing(true);
 
       //  Use offer.booking_id directly
-      const response = await confirmBooking( {
+      const response = await confirmBooking({
         booking_id: offer.booking_id,
         offer_id: offerId,
       });
@@ -104,17 +92,18 @@ export default function OfferCard({
   //  FIXED: Decline offer mutation
   const declineMutation = useMutation({
     mutationFn: async (offerId) => {
-      console.log('🚀 [OfferCard] Declining offer:', offerId);
-
       if (!offerId || typeof offerId !== 'string') {
         throw new Error('Invalid offer ID');
       }
 
       setIsProcessing(true);
 
-      await updateDocument('offers', offerId, { ...{
-        status: 'declined',
-      }, updated_date: new Date().toISOString() });
+      await updateDocument('offers', offerId, {
+        ...{
+          status: 'declined',
+        },
+        updated_date: new Date().toISOString(),
+      });
 
       return { success: true };
     },
@@ -146,7 +135,7 @@ export default function OfferCard({
   const handleAccept = () => {
     if (isProcessing) return;
 
-    console.log('🔵 [OfferCard] Accept button clicked for offer:', offer.id);
+    console.log('[OfferCard] Accept button clicked for offer:', offer.id);
     acceptMutation.mutate(offer.id);
   };
 
@@ -154,7 +143,7 @@ export default function OfferCard({
   const handleDecline = () => {
     if (isProcessing) return;
 
-    console.log('🔵 [OfferCard] Decline button clicked for offer:', offer.id);
+    console.log('[OfferCard] Decline button clicked for offer:', offer.id);
     declineMutation.mutate(offer.id);
   };
 

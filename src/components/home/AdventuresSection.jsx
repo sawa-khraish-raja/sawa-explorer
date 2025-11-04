@@ -1,12 +1,14 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getAllDocuments } from '@/utils/firestore';
-import { useNavigate } from 'react-router-dom';
-import { Calendar, Users, DollarSign, MapPin, Loader2 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { Calendar, Users, DollarSign, MapPin, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { getAllDocuments } from '@/utils/firestore';
+
+
 
 export default function AdventuresSection() {
   const navigate = useNavigate();

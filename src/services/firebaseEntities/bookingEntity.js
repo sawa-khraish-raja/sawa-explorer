@@ -11,6 +11,7 @@ import {
   limit as limitDocuments,
   serverTimestamp,
 } from 'firebase/firestore';
+
 import { db } from '@/config/firebase';
 
 const COLLECTION = 'bookings';

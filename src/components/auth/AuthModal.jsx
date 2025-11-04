@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { firebaseAuthAdapter } from '@/services/firebaseAuthAdapter';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,11 +11,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { firebaseAuthAdapter } from '@/services/firebaseAuthAdapter';
 
 export function AuthModal({ isOpen, onClose, defaultTab = 'login' }) {
   const [tab, setTab] = useState(defaultTab);
@@ -78,28 +79,28 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'login' }) {
       return;
     }
 
-    console.log('🟡 Modal: Starting signup process...');
+    console.log('Modal: Starting signup process...');
     setLoading(true);
     try {
-      console.log('🟡 Modal: Calling signup function...');
+      console.log('Modal: Calling signup function...');
       await signup(email, password, fullName);
-      console.log('🟡 Modal: Signup function returned');
+      console.log('Modal: Signup function returned');
       setLoading(false); // Stop loading immediately
-      console.log('🟡 Modal: Loading stopped');
+      console.log('Modal: Loading stopped');
       setSuccess('Account created successfully!');
       const returnUrl = firebaseAuthAdapter.getReturnUrl();
       if (returnUrl) {
         firebaseAuthAdapter.clearReturnUrl();
         navigate(returnUrl, { replace: true });
       }
-      console.log('🟡 Modal: Success message set');
+      console.log('Modal: Success message set');
       setTimeout(() => {
-        console.log('🟡 Modal: Closing modal...');
+        console.log('Modal: Closing modal...');
         onClose();
         resetForm();
       }, 500);
     } catch (err) {
-      console.error('🟡 Modal: Signup error:', err);
+      console.error('Modal: Signup error:', err);
       setLoading(false); // Stop loading on error
       setError(err.message || 'Failed to create account');
     }

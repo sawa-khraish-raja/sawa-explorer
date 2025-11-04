@@ -1,17 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { updateDocument, getDocument, queryDocuments, getAllDocuments } from '@/utils/firestore';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { format } from 'date-fns';
+import { motion } from 'framer-motion';
 import {
   Loader2,
   Check,
@@ -36,23 +25,36 @@ import {
   AlertTriangle,
   Compass,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { BookingID } from '../components/common/BookingID';
-import { normalizeText } from '../components/utils/textHelpers';
-import BookingServicesDisplay from '../components/booking/BookingServicesDisplay';
-import { useTranslation } from '../components/i18n/LanguageContext';
-import { getUserDisplayName } from '../components/utils/userHelpers';
-import { motion } from 'framer-motion';
-import { showSuccess, showError, showInfo } from '../components/utils/notifications';
-import CancelBookingDialog from '../components/booking/CancelBookingDialog';
-import BookingDetailsModal from '../components/booking/BookingDetailsModal';
-import { useAppContext } from '../components/context/AppContext';
-import PageHeroVideo from '../components/common/PageHeroVideo';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { createPageUrl } from '@/utils';
+import { updateDocument, getDocument, queryDocuments, getAllDocuments } from '@/utils/firestore';
+
+import BookingDetailsModal from '../components/booking/BookingDetailsModal';
 import BookingFilters from '../components/booking/BookingFilters';
+import BookingServicesDisplay from '../components/booking/BookingServicesDisplay';
 import BookingStats from '../components/booking/BookingStats';
+import CancelBookingDialog from '../components/booking/CancelBookingDialog';
+import { BookingID } from '../components/common/BookingID';
+import PageHeroVideo from '../components/common/PageHeroVideo';
+import { useAppContext } from '../components/context/AppContext';
+import { useTranslation } from '../components/i18n/LanguageContext';
+import { showSuccess, showError, showInfo } from '../components/utils/notifications';
+import { normalizeText } from '../components/utils/textHelpers';
+import { getUserDisplayName } from '../components/utils/userHelpers';
 
 // Map icon names to LucideReact components
 const iconMap = {
@@ -109,15 +111,13 @@ export default function MyOffers() {
     queryKey: ['travelerBookings', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      console.log('🔍 Fetching bookings for user:', { id: user.id, email: user.email });
+
       try {
-        const allBookings = await queryDocuments('bookings', [
-          ['user_id', '==', user.id],
-        ]);
-        console.log('📦 Found bookings:', allBookings.length, allBookings);
+        const allBookings = await queryDocuments('bookings', [['user_id', '==', user.id]]);
+
         return allBookings.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
       } catch (error) {
-        console.error('❌ Error fetching bookings:', error);
+        console.error('Error fetching bookings:', error);
         return [];
       }
     },
@@ -130,11 +130,9 @@ export default function MyOffers() {
     queryKey: ['travelerAdventureBookings', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      const allBookings = await queryDocuments('bookings', [
-        ['user_id', '==', user.id],
-      ]);
+      const allBookings = await queryDocuments('bookings', [['user_id', '==', user.id]]);
       // Filter for adventure bookings (has adventure_id)
-      const allAdventures = allBookings.filter(b => b.adventure_id);
+      const allAdventures = allBookings.filter((b) => b.adventure_id);
       return allAdventures.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
     enabled: !!user?.id,
@@ -149,14 +147,9 @@ export default function MyOffers() {
     queryFn: async () => {
       if (!user?.email) return [];
 
-      console.log('🔍 Fetching offers for traveler:', user.email);
-
       // Query offers where user is the traveler
-      const offers = await queryDocuments('offers', [
-        ['traveler_email', '==', user.email],
-      ]);
+      const offers = await queryDocuments('offers', [['traveler_email', '==', user.email]]);
 
-      console.log('📋 Found offers for my bookings:', offers.length, offers);
       return offers.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
     enabled: !!user?.email,
@@ -185,7 +178,7 @@ export default function MyOffers() {
         ]);
         return allConvos;
       } catch (error) {
-        console.warn('⚠️ Could not fetch adventure conversations:', error.message);
+        console.warn(' Could not fetch adventure conversations:', error.message);
         return [];
       }
     },
@@ -279,17 +272,13 @@ export default function MyOffers() {
   // Simplified accept offer flow (using Firestore)
   const acceptOfferMutation = useMutation({
     mutationFn: async (offerId) => {
-      console.log('🚀 Starting accept offer for:', offerId);
-
       const offer = allOffers.find((o) => o.id === offerId);
       if (!offer) {
         throw new Error('Offer not found');
       }
 
-      console.log('📦 Found offer:', offer);
-
       // Update booking to confirmed status and set host_id
-      console.log('📝 Updating booking:', offer.booking_id);
+
       try {
         await updateDocument('bookings', offer.booking_id, {
           status: 'confirmed',
@@ -298,27 +287,26 @@ export default function MyOffers() {
           confirmed_at: new Date().toISOString(),
           updated_date: new Date().toISOString(),
         });
-        console.log('✅ Booking updated successfully');
       } catch (error) {
-        console.error('❌ Failed to update booking:', error);
+        console.error('Failed to update booking:', error);
         throw new Error(`Failed to update booking: ${error.message}`);
       }
 
       // Update offer to accepted status
-      console.log('📝 Updating offer:', offerId);
+      console.log('Updating offer:', offerId);
       try {
         await updateDocument('offers', offerId, {
           status: 'accepted',
           accepted_at: new Date().toISOString(),
           updated_date: new Date().toISOString(),
         });
-        console.log('✅ Offer updated successfully');
+        console.log(' Offer updated successfully');
       } catch (error) {
-        console.error('❌ Failed to update offer:', error);
+        console.error('Failed to update offer:', error);
         throw new Error(`Failed to update offer: ${error.message}`);
       }
 
-      console.log('✅ Booking and offer confirmed successfully');
+      console.log(' Booking and offer confirmed successfully');
 
       return {
         ok: true,
@@ -353,7 +341,7 @@ export default function MyOffers() {
   // Simplified decline offer flow (using Firestore)
   const declineOfferMutation = useMutation({
     mutationFn: async (offerId) => {
-      console.log('🚫 Declining offer:', offerId);
+      console.log(' Declining offer:', offerId);
 
       await updateDocument('offers', offerId, {
         status: 'declined',
@@ -462,7 +450,6 @@ export default function MyOffers() {
 
   // Separate pending offers for services
   const pendingOffers = allOffers.filter((o) => o.status === 'pending');
-  console.log('🔔 Pending offers:', pendingOffers.length, pendingOffers);
 
   const getHost = (hostEmail) => {
     const host = allHosts.find((h) => h.email === hostEmail);
@@ -1101,7 +1088,7 @@ export default function MyOffers() {
                                 size='sm'
                                 onClick={(e) => {
                                   e.stopPropagation(); // Prevent opening booking details
-                                  navigate(createPageUrl('Messages') + `?bookingId=${booking.id}`);
+                                  navigate(`${createPageUrl('Messages')}?bookingId=${booking.id}`);
                                 }}
                                 className='w-full border-blue-200 text-blue-600 hover:bg-blue-50 h-8 text-xs'
                               >
@@ -1188,7 +1175,7 @@ export default function MyOffers() {
             <Button
               onClick={() => {
                 if (selectedOffer) {
-                  console.log('🎯 User clicked confirm for offer:', selectedOffer.id);
+                  console.log('User clicked confirm for offer:', selectedOffer.id);
                   acceptOfferMutation.mutate(selectedOffer.id);
                 }
               }}

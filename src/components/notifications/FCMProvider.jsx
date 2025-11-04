@@ -1,8 +1,10 @@
-import React, { useEffect, useRef } from 'react';
 import { getToken, onMessage } from 'firebase/messaging';
-import { messaging } from '@/config/firebase';
+import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
+
+import { messaging } from '@/config/firebase';
 import { saveDeviceToken } from '@/utils/firestore';
+
 import { useAppContext } from '../context/AppContext';
 
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;

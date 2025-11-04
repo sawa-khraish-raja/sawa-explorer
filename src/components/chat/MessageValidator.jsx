@@ -73,8 +73,8 @@ export class MessageValidator {
     const messages = violations.map((v) => (language === 'ar' ? v.messageAr : v.message));
 
     if (language === 'ar') {
-      return `⚠️ تحذير: ${messages.join(' ')} للسلامة، يرجى إبقاء جميع الاتصالات داخل المنصة.`;
+      return ` تحذير: ${messages.join(' ')} للسلامة، يرجى إبقاء جميع الاتصالات داخل المنصة.`;
     }
-    return `⚠️ Warning: ${messages.join(' ')} For your safety, please keep all communication on the platform.`;
+    return ` Warning: ${messages.join(' ')} For your safety, please keep all communication on the platform.`;
   }
 }

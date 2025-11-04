@@ -1,13 +1,5 @@
-import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { queryDocuments, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { useAppContext } from '../components/context/AppContext';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { format } from 'date-fns';
 import {
   Loader2,
   Plus,
@@ -23,16 +15,10 @@ import {
   XCircle,
   AlertCircle,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import AdventureForm from '../components/adventures/AdventureForm';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,7 +29,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { createPageUrl } from '@/utils';
+import { queryDocuments, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+
+import AdventureForm from '../components/adventures/AdventureForm';
 import { calculateAdventureCommissions } from '../components/adventures/commissionCalculator';
+import { useAppContext } from '../components/context/AppContext';
 
 export default function HostAdventures() {
   const navigate = useNavigate();
@@ -121,13 +123,13 @@ export default function HostAdventures() {
           updated_at: new Date().toISOString(),
         });
         return editingAdventure.id;
-      } else {
-        return await addDocument('adventures', {
+      } 
+        return addDocument('adventures', {
           ...dataToSave,
           created_at: new Date().toISOString(),
           current_participants: 0,
         });
-      }
+      
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({ queryKey: ['hostAdventures'] });
@@ -148,7 +150,7 @@ export default function HostAdventures() {
   // Delete mutation
   const deleteAdventureMutation = useMutation({
     mutationFn: async (id) => {
-      return await deleteDocument('adventures', id);
+      return deleteDocument('adventures', id);
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({ queryKey: ['hostAdventures'] });

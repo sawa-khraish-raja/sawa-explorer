@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
+import { Loader2, CheckCircle2, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+import CountrySelector from '@/components/common/CountrySelector';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import CountrySelector from '@/components/common/CountrySelector';
-import { Loader2, CheckCircle2, Sparkles } from 'lucide-react';
-import { toast } from 'sonner';
+import { Textarea } from '@/components/ui/textarea';
+
 
 const translations = {
   en: {

@@ -1,4 +1,6 @@
-import React from 'react';
+import { Wand2, CircleUser, Bot, FileText, CheckCircle } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -7,8 +9,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Wand2, CircleUser, Bot, FileText, CheckCircle } from 'lucide-react';
+
 
 const steps = [
   {

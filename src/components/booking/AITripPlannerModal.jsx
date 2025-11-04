@@ -42,7 +42,6 @@ import {
 import { toast } from 'sonner';
 import { AnimatePresence, motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
-import { useAppContext } from '../context/AppContext';
 import { useTranslation } from '../i18n/LanguageContext';
 import { invokeLLM } from '@/utils/llm';
 
@@ -304,16 +303,13 @@ const PlanResult = ({ plan, onBack, hosts }) => {
 };
 
 export default function AITripPlannerModal({ isOpen, onClose, city }) {
+  const { user } = useAppContext();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
   const [request, setRequest] = useState({ city });
   const [plan, setPlan] = useState(null);
   const [regenerationCount, setRegenerationCount] = useState(0);
 
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => useAppContext().user,
-    staleTime: Infinity,
   });
 
   const cacheKey = useMemo(() => {

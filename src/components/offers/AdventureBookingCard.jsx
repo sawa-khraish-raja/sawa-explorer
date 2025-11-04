@@ -1,26 +1,23 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { format } from 'date-fns';
 import {
   Calendar,
   Users,
   MapPin,
   MessageSquare,
-  Loader2,
   ChevronRight,
-  Info,
   CheckCircle,
   XCircle,
   Clock,
   Sparkles,
 } from 'lucide-react';
-import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { createPageUrl } from '@/utils';
+import { queryDocuments, getDocument } from '@/utils/firestore';
 
 export default function AdventureBookingCard({ booking }) {
   const navigate = useNavigate();
@@ -55,7 +52,7 @@ export default function AdventureBookingCard({ booking }) {
     return (
       <Card className='animate-pulse bg-gradient-to-br from-purple-50 to-pink-50'>
         <CardContent className='p-6'>
-          <div className='h-24 bg-purple-200 rounded'></div>
+          <div className='h-24 bg-purple-200 rounded' />
         </CardContent>
       </Card>
     );

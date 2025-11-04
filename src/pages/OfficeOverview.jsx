@@ -1,16 +1,15 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Users, DollarSign, Star, TrendingUp, Loader2 } from 'lucide-react';
+
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { queryDocuments } from '@/utils/firestore';
 
 export default function OfficeOverview({ office }) {
   const { data: officeHosts = [], isLoading: hostsLoading } = useQuery({
     queryKey: ['officeHosts', office.id],
     queryFn: async () => {
       if (!office.id) return [];
-      return await queryDocuments('users', ['office_id', '==', office.id],
+      return queryDocuments('users', ['office_id', '==', office.id],
             ['host_approved', '==', true ]);
     },
     enabled: !!office?.id,

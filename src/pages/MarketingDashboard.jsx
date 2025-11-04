@@ -1,40 +1,23 @@
-import React, { useMemo, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { invokeFunction } from '@/utils/functions';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  TrendingUp,
   Users,
   DollarSign,
   Target,
   Activity,
-  Globe,
-  BarChart3,
   Zap,
   RefreshCw,
-  Eye,
   Clock,
   ArrowUpRight,
   ArrowDownRight,
   Loader2,
-  CheckCircle2,
-  AlertCircle,
   MapPin,
   Smartphone,
   Monitor,
   Tablet,
-  Calendar,
   TrendingDown,
 } from 'lucide-react';
-import { toast } from 'sonner';
-import MarketingLayout from '@/components/marketing/MarketingLayout';
+import { useMemo, useState } from 'react';
 import {
-  LineChart,
-  Line,
   BarChart,
   Bar,
   PieChart,
@@ -44,9 +27,16 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { toast } from 'sonner';
+
+import MarketingLayout from '@/components/marketing/MarketingLayout';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { getAllDocuments, queryDocuments } from '@/utils/firestore';
+import { invokeFunction } from '@/utils/functions';
 
 const COLORS = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ef4444'];
 
@@ -103,7 +93,7 @@ export default function MarketingDashboard() {
   const handleSyncGA4 = async () => {
     setSyncing(true);
     try {
-      toast.info('📊 Syncing with Google Analytics...');
+      toast.info('Syncing with Google Analytics...');
       const response = await invokeFunction('GA4_Real_Sync', {});
 
       if (response.data?.ok) {

@@ -1,14 +1,5 @@
-import React, { useState } from 'react';
-import { useAppContext } from '../components/context/AppContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { format } from 'date-fns';
 import {
   Loader2,
   Plus,
@@ -25,16 +16,10 @@ import {
   AlertCircle,
   Building2,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import AdventureForm from '../components/adventures/AdventureForm';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,7 +30,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { createPageUrl } from '@/utils';
+import { getAllDocuments, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+
+import AdventureForm from '../components/adventures/AdventureForm';
 import { calculateAdventureCommissions } from '../components/adventures/commissionCalculator';
+import { useAppContext } from '../components/context/AppContext';
 
 export default function OfficeAdventures() {
   const navigate = useNavigate();
@@ -123,10 +124,10 @@ export default function OfficeAdventures() {
       };
 
       if (editingAdventure) {
-        return await updateDocument('adventures', editingAdventure.id, { ...dataToSave, updated_date: new Date().toISOString() });
-      } else {
-        return await addDocument('adventures', { ...dataToSave, created_date: new Date().toISOString() });
-      }
+        return updateDocument('adventures', editingAdventure.id, { ...dataToSave, updated_date: new Date().toISOString() });
+      } 
+        return addDocument('adventures', { ...dataToSave, created_date: new Date().toISOString() });
+      
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['officeAdventures'] });
@@ -145,7 +146,7 @@ export default function OfficeAdventures() {
   // Delete mutation
   const deleteAdventureMutation = useMutation({
     mutationFn: async (id) => {
-      return await deleteDocument('adventures', id);
+      return deleteDocument('adventures', id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['officeAdventures'] });

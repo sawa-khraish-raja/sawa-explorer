@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Bell, Volume2, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -6,9 +10,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Bell, Volume2, X } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 export default function NotificationWelcomePrompt() {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,8 +29,6 @@ export default function NotificationWelcomePrompt() {
   }, []);
 
   const handleActivate = async () => {
-    console.log('🔔 [Welcome] User activated sound notifications');
-
     try {
       //  Create and play a test sound to unlock audio
       const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -75,7 +74,7 @@ export default function NotificationWelcomePrompt() {
   };
 
   const handleSkip = () => {
-    console.log('⏭️ [Welcome] User skipped sound activation');
+    console.log('[Welcome] User skipped sound activation');
     localStorage.setItem('notification_sound_activated', 'skipped');
     setIsOpen(false);
   };

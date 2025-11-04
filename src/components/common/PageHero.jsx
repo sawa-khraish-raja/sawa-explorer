@@ -1,5 +1,5 @@
-import React from 'react';
 import { cn } from '@/lib/utils';
+
 import PageHeroVideo from './PageHeroVideo';
 
 export default function PageHero({

@@ -1,11 +1,25 @@
-import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { format } from 'date-fns';
+import { motion } from 'framer-motion';
+import {
+  Loader2,
+  Calendar,
+  MessageSquare,
+  DollarSign,
+  CheckCircle,
+  User,
+  Clock,
+  Users,
+  Building2,
+  Send,
+} from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -15,37 +29,22 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
+import { createPageUrl } from '@/utils';
 import {
-  Loader2,
-  Calendar,
-  MessageSquare,
-  DollarSign,
-  CheckCircle,
-  User,
-  Clock,
-  Check,
-  Users,
-  Building2,
-  Send,
-} from 'lucide-react';
-import {
-  getAllDocuments,
   queryDocuments,
   addDocument,
-  updateDocument,
   getDocument,
   getOrCreateConversation,
 } from '@/utils/firestore';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { toast } from 'sonner';
-import HostProfileSettings from '../components/host/HostProfileSettings';
-import { getUserDisplayName } from '../components/utils/userHelpers';
-import { useTranslation } from '../components/i18n/LanguageContext';
-import { motion } from 'framer-motion';
+
 import { useAppContext } from '../components/context/AppContext'; // Updated import path
+import HostProfileSettings from '../components/host/HostProfileSettings';
+import { useTranslation } from '../components/i18n/LanguageContext';
+import { getUserDisplayName } from '../components/utils/userHelpers';
 
 export default function HostDashboard() {
   const navigate = useNavigate();
@@ -82,13 +81,10 @@ export default function HostDashboard() {
 
   const sendOfferMutation = useMutation({
     mutationFn: async ({ booking, offerData }) => {
-      console.log('📤 Sending offer for booking:', booking.id);
-      console.log('📤 Offer data:', offerData);
-
       // Calculate fees (15% SAWA fee + 10% office fee = 25% total)
       const basePrice = parseFloat(offerData.price);
       const sawaFee = basePrice * 0.15;
-      const officeFee = basePrice * 0.10;
+      const officeFee = basePrice * 0.1;
       const totalPrice = basePrice + sawaFee + officeFee;
 
       const offer = {
@@ -116,7 +112,7 @@ export default function HostDashboard() {
       };
 
       const offerId = await addDocument('offers', offer);
-      console.log('✅ Offer created with ID:', offerId);
+      console.log(' Offer created with ID:', offerId);
 
       // Create notification for traveler
       const notificationData = {
@@ -156,17 +152,17 @@ export default function HostDashboard() {
           city_name: data.booking.city_name || data.booking.city,
         });
 
-        console.log('💬 Conversation created/found:', conversation.id);
+        console.log('Conversation created/found:', conversation.id);
 
         // Navigate to Messages page with conversation ID
         navigate(createPageUrl(`Messages?conversation_id=${conversation.id}`));
       } catch (error) {
-        console.error('❌ Error opening chat:', error);
+        console.error('Error opening chat:', error);
         toast.error('Offer sent, but failed to open chat. Please check Messages page.');
       }
     },
     onError: (error) => {
-      console.error('❌ Error sending offer:', error);
+      console.error('Error sending offer:', error);
       toast.error(error.message || 'Failed to send offer');
     },
   });
@@ -175,26 +171,16 @@ export default function HostDashboard() {
     queryKey: ['availableBookings', user?.email, hostCities],
     queryFn: async () => {
       if (!user?.email || !hostCities || hostCities.length === 0) {
-        console.log('⚠️ No user or host cities');
         return [];
       }
 
       try {
-        console.log('🔍 Fetching available bookings for host:', user.email);
-        console.log('🔍 Host cities:', hostCities);
-
         // Get only pending bookings (hosts can only read pending bookings per Firestore rules)
-        const allBookings = await queryDocuments('bookings', [
-          ['status', '==', 'pending'],
-        ]);
-        console.log('📦 Total pending bookings in database:', allBookings.length);
+        const allBookings = await queryDocuments('bookings', [['status', '==', 'pending']]);
 
         // Get all offers made by this host
-        const myOffers = await queryDocuments('offers', [
-          ['host_email', '==', user.email],
-        ]);
+        const myOffers = await queryDocuments('offers', [['host_email', '==', user.email]]);
         const myOfferedBookingIds = new Set(myOffers.map((o) => o.booking_id));
-        console.log('📋 My existing offers:', myOffers.length);
 
         // Filter for available bookings
         const available = allBookings.filter((booking) => {
@@ -219,10 +205,10 @@ export default function HostDashboard() {
           return true;
         });
 
-        console.log('✅ Available bookings:', available.length);
+        console.log(' Available bookings:', available.length);
         return available.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
       } catch (error) {
-        console.error('❌ Error fetching available bookings:', error);
+        console.error('Error fetching available bookings:', error);
         return [];
       }
     },
@@ -240,13 +226,11 @@ export default function HostDashboard() {
       if (!user?.email) return [];
 
       try {
-        console.log('🔍 Fetching my bookings (where I sent offers)');
+        console.log(' Fetching my bookings (where I sent offers)');
 
         // Get all offers made by this host
-        const myOffers = await queryDocuments('offers', [
-          ['host_email', '==', user.email],
-        ]);
-        console.log('📋 My offers:', myOffers.length);
+        const myOffers = await queryDocuments('offers', [['host_email', '==', user.email]]);
+        console.log('My offers:', myOffers.length);
 
         if (myOffers.length === 0) {
           return [];
@@ -269,22 +253,23 @@ export default function HostDashboard() {
         }
 
         // Add offer details to bookings
-        const bookingsWithOffers = myBookings
-          .map((booking) => {
-            // Find the offer for this booking
-            const offer = myOffers.find((o) => o.booking_id === booking.id);
-            return {
-              ...booking,
-              offer_id: offer?.id,
-              offer_status: offer?.status,
-              offer_price: offer?.price_total,
-            };
-          });
+        const bookingsWithOffers = myBookings.map((booking) => {
+          // Find the offer for this booking
+          const offer = myOffers.find((o) => o.booking_id === booking.id);
+          return {
+            ...booking,
+            offer_id: offer?.id,
+            offer_status: offer?.status,
+            offer_price: offer?.price_total,
+          };
+        });
 
-        console.log('✅ My bookings:', bookingsWithOffers.length);
-        return bookingsWithOffers.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+        console.log(' My bookings:', bookingsWithOffers.length);
+        return bookingsWithOffers.sort(
+          (a, b) => new Date(b.created_date) - new Date(a.created_date)
+        );
       } catch (error) {
-        console.error('❌ Error fetching my bookings:', error);
+        console.error('Error fetching my bookings:', error);
         return [];
       }
     },
@@ -548,12 +533,14 @@ export default function HostDashboard() {
                                 host_email: user.email,
                                 city_name: booking.city_name || booking.city,
                               });
-                              console.log('💬 Opening chat for booking:', booking.id);
+                              console.log('Opening chat for booking:', booking.id);
 
                               // Navigate to Messages page with conversation ID
-                              navigate(createPageUrl(`Messages?conversation_id=${conversation.id}`));
+                              navigate(
+                                createPageUrl(`Messages?conversation_id=${conversation.id}`)
+                              );
                             } catch (error) {
-                              console.error('❌ Error opening chat:', error);
+                              console.error('Error opening chat:', error);
                               toast.error('Failed to open chat. Please try again.');
                             }
                           }}
@@ -688,9 +675,7 @@ export default function HostDashboard() {
                 <p className='text-xs text-gray-500'>
                   Total with fees (25%): ${(parseFloat(offerForm.price) * 1.25).toFixed(2)}
                   <br />
-                  <span className='text-xs text-gray-400'>
-                    (SAWA 15% + Office 10%)
-                  </span>
+                  <span className='text-xs text-gray-400'>(SAWA 15% + Office 10%)</span>
                 </p>
               )}
             </div>

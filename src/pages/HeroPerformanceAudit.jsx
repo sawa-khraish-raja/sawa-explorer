@@ -1,10 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
 import {
   AlertTriangle,
   CheckCircle,
@@ -14,11 +8,16 @@ import {
   Clock,
   Database,
   Zap,
-  Download,
   RefreshCw,
   Smartphone,
   Monitor,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { queryDocuments } from '@/utils/firestore';
 
 export default function HeroPerformanceAudit() {
   const [memoryInfo, setMemoryInfo] = useState(null);
@@ -28,8 +27,11 @@ export default function HeroPerformanceAudit() {
   const { data: slides = [], isLoading } = useQuery({
     queryKey: ['heroSlides', 'home'],
     queryFn: async () => {
-      const allSlides = await queryDocuments('heroslides', ['page_type', '==', 'home'],
-            ['is_active', '==', true]);
+      const allSlides = await queryDocuments(
+        'heroslides',
+        ['page_type', '==', 'home'],
+        ['is_active', '==', true]
+      );
       return allSlides.filter((s) => s.video_url).sort((a, b) => (a.order || 0) - (b.order || 0));
     },
   });
@@ -139,7 +141,7 @@ export default function HeroPerformanceAudit() {
           status: slides.every((s) => s.poster_image) ? 'pass' : 'warning',
           message: slides.every((s) => s.poster_image)
             ? ' All videos have poster images'
-            : `⚠️ ${slides.filter((s) => !s.poster_image).length} videos missing posters`,
+            : ` ${slides.filter((s) => !s.poster_image).length} videos missing posters`,
           severity: slides.every((s) => s.poster_image) ? 'success' : 'warning',
           recommendation: !slides.every((s) => s.poster_image)
             ? 'Add poster_image for instant visual display while video loads.'
@@ -234,7 +236,7 @@ export default function HeroPerformanceAudit() {
         {
           name: 'Video Codec',
           status: 'info',
-          message: '⚠️ Check: Must use H.264 for mobile compatibility',
+          message: ' Check: Must use H.264 for mobile compatibility',
           severity: 'info',
           recommendation: 'Ensure all videos use H.264 codec, not H.265/VP9.',
         },
@@ -253,7 +255,7 @@ export default function HeroPerformanceAudit() {
         {
           name: 'Background Tab Behavior',
           status: 'warning',
-          message: '⚠️ Videos continue playing in background tabs',
+          message: ' Videos continue playing in background tabs',
           severity: 'warning',
           recommendation: 'Add Page Visibility API to pause videos when tab is hidden.',
         },
@@ -302,7 +304,7 @@ export default function HeroPerformanceAudit() {
                   {criticalIssues > 0 && '🚨 Critical issues detected - immediate action required'}
                   {criticalIssues === 0 &&
                     warnings > 2 &&
-                    '⚠️ Multiple warnings - optimization needed'}
+                    ' Multiple warnings - optimization needed'}
                   {criticalIssues === 0 && warnings <= 2 && ' System is well optimized'}
                 </p>
               </div>
@@ -455,12 +457,10 @@ export default function HeroPerformanceAudit() {
             <CardContent>
               <ol className='list-decimal list-inside space-y-3 text-gray-900'>
                 {criticalIssues > 0 && (
-                  <>
-                    <li className='font-bold text-red-600'>
-                      🚨 CRITICAL:{' '}
-                      {allChecks.filter((c) => c.severity === 'critical')[0]?.recommendation}
-                    </li>
-                  </>
+                  <li className='font-bold text-red-600'>
+                    🚨 CRITICAL:{' '}
+                    {allChecks.filter((c) => c.severity === 'critical')[0]?.recommendation}
+                  </li>
                 )}
                 {allChecks
                   .filter((c) => c.recommendation && c.severity !== 'critical')

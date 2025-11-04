@@ -1,12 +1,13 @@
-import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { queryDocuments, updateDocument, deleteDocument, getAllDocuments } from '@/utils/firestore';
-import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2, Clock, User, MessageCircle, Star } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { createPageUrl } from '@/utils';
+import { queryDocuments, updateDocument, deleteDocument } from '@/utils/firestore';
+
 import { NotificationHelpers } from '../notifications/notificationHelpers';
 
 function AcceptedHostItem({ hostEmail, booking }) {
@@ -57,7 +58,12 @@ function AcceptedHostItem({ hostEmail, booking }) {
         total_price: offer.price,
         updated_date: new Date().toISOString(),
       });
-      const updatedBooking = { ...booking, status: 'confirmed', host_email: offer.host_email, total_price: offer.price };
+      const updatedBooking = {
+        ...booking,
+        status: 'confirmed',
+        host_email: offer.host_email,
+        total_price: offer.price,
+      };
 
       // 3. Send notifications
       await NotificationHelpers.onOfferAccepted(updatedOffer, updatedBooking);
@@ -86,16 +92,13 @@ function AcceptedHostItem({ hostEmail, booking }) {
 
       // --- NEW: CLEANUP LOGIC FOR OTHER HOSTS ---
       try {
-        console.log('🚀 Starting cleanup for other hosts...');
         const winningHostEmail = acceptedOffer.host_email;
         const bookingId = updatedBooking.id;
 
         const allConversations = await queryDocuments('conversations', [
           ['booking_id', '==', bookingId],
         ]);
-        const allOffers = await queryDocuments('offers', [
-          ['booking_id', '==', bookingId],
-        ]);
+        const allOffers = await queryDocuments('offers', [['booking_id', '==', bookingId]]);
 
         const conversationsToDelete = allConversations.filter(
           (c) => c.host_emails && !c.host_emails.includes(winningHostEmail)
@@ -175,10 +178,10 @@ function AcceptedHostItem({ hostEmail, booking }) {
     return (
       <div className='bg-white rounded-2xl p-4 shadow-sm border-2 border-gray-100 animate-pulse'>
         <div className='flex items-center gap-4'>
-          <div className='w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded-full flex-shrink-0'></div>
+          <div className='w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded-full flex-shrink-0' />
           <div className='flex-1 space-y-3'>
-            <div className='h-5 w-32 bg-gray-200 rounded'></div>
-            <div className='h-4 w-24 bg-gray-200 rounded'></div>
+            <div className='h-5 w-32 bg-gray-200 rounded' />
+            <div className='h-4 w-24 bg-gray-200 rounded' />
           </div>
         </div>
       </div>
@@ -269,7 +272,7 @@ export default function BookingOffersView({ booking, onBack }) {
   const { data: conversations, isLoading: isLoadingConversations } = useQuery({
     queryKey: ['bookingConversations', booking.id],
     queryFn: async () => {
-      return await queryDocuments('conversations', [['booking_id', '==', booking.id]]);
+      return queryDocuments('conversations', [['booking_id', '==', booking.id]]);
     },
     enabled: !!booking.id,
     refetchInterval: 5000,

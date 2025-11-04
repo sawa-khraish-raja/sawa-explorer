@@ -1,20 +1,17 @@
-import React, { useState } from 'react';
-import { useAppContext } from '../context/AppContext';
+import { useQuery } from '@tanstack/react-query';
+import { Sparkles, Bot } from 'lucide-react';
+import { useState } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Sparkles, Bot } from 'lucide-react';
+
+
 import AITripPlannerModal from './AITripPlannerModal';
-import { useQuery } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
 
 export default function AIPlannerLinkCard({ city }) {
+  const { user } = useAppContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => useAppContext().user,
-    staleTime: Infinity,
     retry: false,
   });
 

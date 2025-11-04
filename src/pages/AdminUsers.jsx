@@ -1,14 +1,5 @@
-import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { getAllDocuments, updateDocument, getDocument } from '@/utils/firestore';
-import { useAppContext } from '../components/context/AppContext';
-import PermissionGuard from '../components/admin/PermissionGuard';
-import AdminLayout from '../components/admin/AdminLayout';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { motion } from 'framer-motion';
 import {
   Loader2,
   Users,
@@ -25,19 +16,10 @@ import {
   Eye,
   BarChart3,
 } from 'lucide-react'; // BarChart3 added
+import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
-import AdminPermissionsDialog from '../components/admin/AdminPermissionsDialog';
-import { motion } from 'framer-motion';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import ApproveHostDialog from '../components/admin/ApproveHostDialog';
-import AssignOfficeDialog from '../components/admin/AssignOfficeDialog';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,6 +30,26 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { cn } from '@/lib/utils';
+import { getAllDocuments, updateDocument, getDocument } from '@/utils/firestore';
+
+import AdminLayout from '../components/admin/AdminLayout';
+import AdminPermissionsDialog from '../components/admin/AdminPermissionsDialog';
+import ApproveHostDialog from '../components/admin/ApproveHostDialog';
+import AssignOfficeDialog from '../components/admin/AssignOfficeDialog';
+import PermissionGuard from '../components/admin/PermissionGuard';
+import { useAppContext } from '../components/context/AppContext';
 
 // TODO: Audit logging removed - AuditLog not yet migrated to Firestore
 // async function logAuditAction(adminEmail, action, affectedUserEmail, details = {}) {
@@ -99,7 +101,7 @@ export default function AdminUsers() {
       // TODO: Office updates removed - Offices collection not yet migrated to Firestore
       //  When removing office role
       if (updates.role_type === 'user' && updates.office_id === null) {
-        console.log('⚠️ Office host count update skipped - offices not yet migrated to Firestore');
+        console.log(' Office host count update skipped - offices not yet migrated to Firestore');
         // const currentUserData = users.find((u) => u.id === userId);
         // if (currentUserData?.office_id) {
         //   const office = await base44.entities.Office.get(currentUserData.office_id);
@@ -125,7 +127,7 @@ export default function AdminUsers() {
         finalUpdates.assigned_cities = [];
         finalUpdates.host_approved = false;
         finalUpdates.visible_in_city = false;
-        console.log('🔒 Making user admin - removing all other roles');
+        console.log('Making user admin - removing all other roles');
       }
 
       //  قاعدة 2: Office حصرياً (إلا إذا كان host)
@@ -136,7 +138,7 @@ export default function AdminUsers() {
         finalUpdates.admin_access_type = null;
         finalUpdates.role = 'user';
         // ما نشيل host_approved إذا موجود
-        console.log('🏢 Making user office manager');
+        console.log('Making user office manager');
       }
 
       //  قاعدة 3: Host (ممكن يكون مع Office)
@@ -167,7 +169,7 @@ export default function AdminUsers() {
         finalUpdates.office_id = null;
         finalUpdates.host_approved = false;
         finalUpdates.visible_in_city = false;
-        console.log('📊 Making user marketing');
+        console.log('Making user marketing');
       }
 
       await updateDocument('users', userId, {
@@ -188,7 +190,7 @@ export default function AdminUsers() {
       // TODO: HostProfile updates removed - HostProfile collection not yet migrated to Firestore
       //  تحديث HostProfile
       if (updates.host_approved !== undefined) {
-        console.log('⚠️ HostProfile update skipped - not yet migrated to Firestore');
+        console.log(' HostProfile update skipped - not yet migrated to Firestore');
         // const hostProfiles = await queryDocuments('host_profiles', [{
         //   user_email: updatedUser.email,
         // });
@@ -235,7 +237,7 @@ export default function AdminUsers() {
       // TODO: Booking notifications removed - Bookings not fully migrated yet
       //  إرسال إشعارات عن جميع الحجوزات المفتوحة في المدينة
       if (updates.host_approved === true && city) {
-        console.log('⚠️ Booking notifications skipped - not yet migrated to Firestore');
+        console.log(' Booking notifications skipped - not yet migrated to Firestore');
         // try {
         //   const openBookings = await base44.entities.Booking.filter({
         //     city: city,
@@ -259,7 +261,7 @@ export default function AdminUsers() {
         //
         //   console.log(` Notified new host about ${openBookings.length} open bookings`);
         // } catch (error) {
-        //   console.error('⚠️ Failed to notify about existing bookings:', error);
+        //   console.error(' Failed to notify about existing bookings:', error);
         // }
       }
 
@@ -288,7 +290,7 @@ export default function AdminUsers() {
       } else if (action === 'make_office') {
         toast.success(`🏢 User assigned to office.`);
       } else if (action === 'make_marketing') {
-        toast.success(`📊 User is now Marketing (all other roles removed).`);
+        toast.success(`User is now Marketing (all other roles removed).`);
       } else if (action === 'revoke_marketing') {
         toast.success(`User is no longer Marketing.`);
       } else {
@@ -408,417 +410,425 @@ export default function AdminUsers() {
     <PermissionGuard pageId='users'>
       <AdminLayout>
         <div className='space-y-6'>
-        <Card className='bg-gradient-to-r from-[#330066] to-[#5C00B8] text-white shadow-2xl'>
-          <CardHeader>
-            <CardTitle className='text-slate-50 text-xl sm:text-2xl font-semibold tracking-tight flex items-center gap-3'>
-              <Users className='w-6 h-6 sm:w-7 sm:h-7' />
-              Manage All Users ({users?.length || 0})
-            </CardTitle>
-          </CardHeader>
-        </Card>
+          <Card className='bg-gradient-to-r from-[#330066] to-[#5C00B8] text-white shadow-2xl'>
+            <CardHeader>
+              <CardTitle className='text-slate-50 text-xl sm:text-2xl font-semibold tracking-tight flex items-center gap-3'>
+                <Users className='w-6 h-6 sm:w-7 sm:h-7' />
+                Manage All Users ({users?.length || 0})
+              </CardTitle>
+            </CardHeader>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <div className='flex flex-col gap-3 sm:gap-4'>
-              <div className='relative'>
-                <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400' />
-                <Input
-                  type='text'
-                  placeholder='Search by name or email...'
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className='pl-9 sm:pl-10 h-10 sm:h-11 text-sm sm:text-base'
-                />
-              </div>
-              <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3'>
-                <div className='flex items-center gap-2 flex-1'>
-                  <Filter className='w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0' />
-                  <Select value={roleFilter} onValueChange={setRoleFilter}>
-                    <SelectTrigger className='h-10 sm:h-11 text-sm sm:text-base'>
-                      <SelectValue placeholder='Filter by role' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='all'>All Roles</SelectItem>
-                      <SelectItem value='admin'>Admins</SelectItem>
-                      <SelectItem value='host'>Hosts</SelectItem>
-                      <SelectItem value='office'>Office Managers</SelectItem>
-                      <SelectItem value='marketing'>Marketing</SelectItem>{' '}
-                      {/* Added Marketing to filter */}
-                      <SelectItem value='user'>Regular Users</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className='relative flex-1'>
-                  <MapPin className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400' />
+          <Card>
+            <CardHeader>
+              <div className='flex flex-col gap-3 sm:gap-4'>
+                <div className='relative'>
+                  <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400' />
                   <Input
                     type='text'
-                    placeholder='Filter by city...'
-                    value={cityFilter}
-                    onChange={(e) => setCityFilter(e.target.value)}
+                    placeholder='Search by name or email...'
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className='pl-9 sm:pl-10 h-10 sm:h-11 text-sm sm:text-base'
                   />
                 </div>
+                <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3'>
+                  <div className='flex items-center gap-2 flex-1'>
+                    <Filter className='w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0' />
+                    <Select value={roleFilter} onValueChange={setRoleFilter}>
+                      <SelectTrigger className='h-10 sm:h-11 text-sm sm:text-base'>
+                        <SelectValue placeholder='Filter by role' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='all'>All Roles</SelectItem>
+                        <SelectItem value='admin'>Admins</SelectItem>
+                        <SelectItem value='host'>Hosts</SelectItem>
+                        <SelectItem value='office'>Office Managers</SelectItem>
+                        <SelectItem value='marketing'>Marketing</SelectItem>{' '}
+                        {/* Added Marketing to filter */}
+                        <SelectItem value='user'>Regular Users</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className='relative flex-1'>
+                    <MapPin className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400' />
+                    <Input
+                      type='text'
+                      placeholder='Filter by city...'
+                      value={cityFilter}
+                      onChange={(e) => setCityFilter(e.target.value)}
+                      className='pl-9 sm:pl-10 h-10 sm:h-11 text-sm sm:text-base'
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          </CardHeader>
+            </CardHeader>
 
-          <CardContent className='space-y-3 sm:space-y-4'>
-            <div className='space-y-3 sm:space-y-4'>
-              {filteredUsers.map((user, index) => {
-                const isHost = user.host_approved;
-                const isAdmin = user.role_type === 'admin' || user.role === 'admin';
-                const isOffice = user.role_type === 'office';
-                const isMarketing = user.role_type === 'marketing'; // Added for Marketing role
-                const userCity = user.city;
+            <CardContent className='space-y-3 sm:space-y-4'>
+              <div className='space-y-3 sm:space-y-4'>
+                {filteredUsers.map((user, index) => {
+                  const isHost = user.host_approved;
+                  const isAdmin = user.role_type === 'admin' || user.role === 'admin';
+                  const isOffice = user.role_type === 'office';
+                  const isMarketing = user.role_type === 'marketing'; // Added for Marketing role
+                  const userCity = user.city;
 
-                return (
-                  <motion.div
-                    key={user.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    className='bg-white rounded-xl border border-gray-200/80 p-3 sm:p-4 shadow-sm hover:shadow-lg hover:border-purple-200 transition-all duration-300'
-                  >
-                    <div className='flex flex-col gap-3 sm:gap-4'>
-                      {/* User Info Row */}
-                      <div className='flex items-center gap-3 sm:gap-4'>
-                        <div className='relative flex-shrink-0'>
-                          {user.profile_photo ? (
-                            <img
-                              src={user.profile_photo}
-                              alt={user.full_name}
-                              className='w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover ring-2 ring-offset-2 ring-purple-100'
-                              loading='lazy'
-                            />
+                  return (
+                    <motion.div
+                      key={user.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      className='bg-white rounded-xl border border-gray-200/80 p-3 sm:p-4 shadow-sm hover:shadow-lg hover:border-purple-200 transition-all duration-300'
+                    >
+                      <div className='flex flex-col gap-3 sm:gap-4'>
+                        {/* User Info Row */}
+                        <div className='flex items-center gap-3 sm:gap-4'>
+                          <div className='relative flex-shrink-0'>
+                            {user.profile_photo ? (
+                              <img
+                                src={user.profile_photo}
+                                alt={user.full_name}
+                                className='w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover ring-2 ring-offset-2 ring-purple-100'
+                                loading='lazy'
+                              />
+                            ) : (
+                              <div className='w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-[#9933CC] to-[#330066] flex items-center justify-center text-white font-bold text-sm sm:text-lg ring-2 ring-offset-2 ring-purple-100'>
+                                {(
+                                  user.full_name?.charAt(0) || user.email?.charAt(0)
+                                )?.toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <div className='flex-1 min-w-0'>
+                            <h4 className='font-bold text-gray-800 text-sm sm:text-base lg:text-lg truncate'>
+                              {user.full_name || 'No Name'}
+                            </h4>
+                            <p className='text-xs sm:text-sm text-gray-500 truncate'>
+                              {user.email}
+                            </p>
+                            <div className='flex items-center gap-1.5 sm:gap-2 mt-1.5 sm:mt-2 flex-wrap'>
+                              {isAdmin && (
+                                <Badge
+                                  variant='outline'
+                                  className='bg-purple-50 text-purple-700 border-purple-200 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5'
+                                >
+                                  <Shield className='w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1' />
+                                  Admin
+                                </Badge>
+                              )}
+                              {isMarketing && (
+                                <Badge
+                                  variant='outline'
+                                  className='bg-blue-50 text-blue-700 border-blue-200 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5'
+                                >
+                                  <BarChart3 className='w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1' />
+                                  Marketing
+                                </Badge>
+                              )}{' '}
+                              {/* Marketing Badge */}
+                              {isOffice && (
+                                <Badge
+                                  variant='outline'
+                                  className='bg-blue-50 text-blue-700 border-blue-200 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5'
+                                >
+                                  <Building2 className='w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1' />
+                                  Office {user.company_name ? `• ${user.company_name}` : ''}
+                                </Badge>
+                              )}
+                              {isHost && (
+                                <Badge
+                                  variant='outline'
+                                  className='bg-green-50 text-green-700 border-green-200 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5'
+                                >
+                                  <UserCheck className='w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1' />
+                                  Host {userCity ? `• ${userCity}` : ''}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Actions Row */}
+                        <div className='flex-shrink-0'>
+                          {updatingUserId === user.id ? (
+                            <div className='flex items-center justify-center w-full h-full min-h-[36px]'>
+                              <Loader2 className='w-5 h-5 sm:w-6 sm:h-6 animate-spin text-purple-600' />
+                            </div>
                           ) : (
-                            <div className='w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-[#9933CC] to-[#330066] flex items-center justify-center text-white font-bold text-sm sm:text-lg ring-2 ring-offset-2 ring-purple-100'>
-                              {(user.full_name?.charAt(0) || user.email?.charAt(0))?.toUpperCase()}
+                            <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-1.5 sm:gap-2'>
+                              {' '}
+                              {/* Changed to lg:grid-cols-7 */}
+                              {/*  Preview Profile Button */}
+                              {isHost && (
+                                <Button
+                                  size='sm'
+                                  variant='outline'
+                                  onClick={() => handlePreviewProfile(user)}
+                                  className='flex items-center justify-center gap-1 sm:gap-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 h-8 sm:h-9 text-[10px] sm:text-xs px-2 sm:px-3'
+                                >
+                                  <Eye className='w-3 h-3 sm:w-4 sm:h-4' />
+                                  <span className='font-semibold hidden sm:inline'>
+                                    Preview Profile
+                                  </span>
+                                  <span className='font-semibold sm:hidden'>Profile</span>
+                                </Button>
+                              )}
+                              {isHost ? (
+                                <Button
+                                  size='sm'
+                                  onClick={() => {
+                                    updateUserMutation.mutate({
+                                      userId: user.id,
+                                      updates: {
+                                        host_approved: false,
+                                        visible_in_city: false,
+                                        city: null,
+                                        assigned_cities: [],
+                                      },
+                                      action: 'revoke_host',
+                                      affectedUserEmail: user.email,
+                                    });
+                                  }}
+                                  className='flex items-center justify-center gap-1 sm:gap-1.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 h-8 sm:h-9 text-[10px] sm:text-xs px-2 sm:px-3'
+                                >
+                                  <UserX className='w-3 h-3 sm:w-4 sm:h-4' />
+                                  <span className='font-semibold hidden sm:inline'>
+                                    Revoke Host
+                                  </span>
+                                  <span className='font-semibold sm:hidden'>Revoke</span>
+                                </Button>
+                              ) : (
+                                <Button
+                                  size='sm'
+                                  onClick={() => setUserToApprove(user)}
+                                  disabled={isAdmin || isMarketing} // Disabled if Marketing
+                                  className='flex items-center justify-center gap-1 sm:gap-1.5 bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 disabled:opacity-50 disabled:cursor-not-allowed h-8 sm:h-9 text-[10px] sm:text-xs px-2 sm:px-3'
+                                >
+                                  <UserPlus className='w-3 h-3 sm:w-4 sm:h-4' />
+                                  <span className='font-semibold hidden sm:inline'>
+                                    Approve Host
+                                  </span>
+                                  <span className='font-semibold sm:hidden'>Approve</span>
+                                </Button>
+                              )}
+                              {hasFullAccess && (
+                                <>
+                                  <Button
+                                    size='sm'
+                                    variant='outline'
+                                    onClick={() => {
+                                      if (isAdmin) {
+                                        updateUserMutation.mutate({
+                                          userId: user.id,
+                                          updates: {
+                                            role: 'user',
+                                            role_type: 'user',
+                                            admin_access_type: null,
+                                          },
+                                          action: 'revoke_admin',
+                                          affectedUserEmail: user.email,
+                                        });
+                                      } else {
+                                        updateUserMutation.mutate({
+                                          userId: user.id,
+                                          updates: {
+                                            role: 'admin',
+                                            role_type: 'admin',
+                                            admin_access_type: 'full',
+                                          },
+                                          action: 'make_admin',
+                                          affectedUserEmail: user.email,
+                                        });
+                                      }
+                                    }}
+                                    className={cn(
+                                      'flex items-center justify-center gap-1 sm:gap-1.5 h-8 sm:h-9 text-[10px] sm:text-xs px-2 sm:px-3',
+                                      isAdmin && 'bg-purple-50 border-purple-200'
+                                    )}
+                                  >
+                                    <Shield className='w-3 h-3 sm:w-4 sm:h-4' />
+                                    <span className='font-semibold'>
+                                      {isAdmin ? 'Revoke' : 'Admin'}
+                                    </span>
+                                  </Button>
+
+                                  {/* Marketing Role Button */}
+                                  <Button
+                                    size='sm'
+                                    variant='outline'
+                                    disabled={isAdmin} // Disabled if admin
+                                    title={isAdmin ? 'Admins cannot be Marketing.' : ''}
+                                    onClick={() => {
+                                      if (isMarketing) {
+                                        updateUserMutation.mutate({
+                                          userId: user.id,
+                                          updates: { role_type: 'user' }, // Revoke marketing role
+                                          action: 'revoke_marketing',
+                                          affectedUserEmail: user.email,
+                                        });
+                                      } else {
+                                        updateUserMutation.mutate({
+                                          userId: user.id,
+                                          updates: { role_type: 'marketing' }, // Set marketing role
+                                          action: 'make_marketing',
+                                          affectedUserEmail: user.email,
+                                        });
+                                      }
+                                    }}
+                                    className={cn(
+                                      'flex items-center justify-center gap-1 sm:gap-1.5 h-8 sm:h-9 text-[10px] sm:text-xs px-2 sm:px-3',
+                                      isMarketing && 'bg-blue-50 border-blue-200',
+                                      isAdmin && 'cursor-not-allowed opacity-50'
+                                    )}
+                                  >
+                                    <BarChart3 className='w-3 h-3 sm:w-4 sm:h-4' />
+                                    <span className='font-semibold'>
+                                      {isMarketing ? 'Revoke' : 'Marketing'}
+                                    </span>
+                                  </Button>
+
+                                  <Button
+                                    size='sm'
+                                    variant='outline'
+                                    disabled={isAdmin}
+                                    title={isAdmin ? 'Admins cannot be assigned to an office.' : ''}
+                                    onClick={() => {
+                                      if (isOffice) {
+                                        updateUserMutation.mutate({
+                                          userId: user.id,
+                                          updates: {
+                                            role_type: 'user',
+                                            company_name: null,
+                                            office_id: null,
+                                          },
+                                          action: 'revoke_office',
+                                          affectedUserEmail: user.email,
+                                        });
+                                      } else {
+                                        setUserToAssignOffice(user);
+                                      }
+                                    }}
+                                    className={cn(
+                                      'flex items-center justify-center gap-1 sm:gap-1.5 h-8 sm:h-9 text-[10px] sm:text-xs px-2 sm:px-3',
+                                      isOffice && 'bg-blue-50 border-blue-200',
+                                      isAdmin && 'cursor-not-allowed opacity-50'
+                                    )}
+                                  >
+                                    <Building2 className='w-3 h-3 sm:w-4 sm:h-4' />
+                                    <span className='font-semibold'>
+                                      {isOffice ? 'Revoke' : 'Office'}
+                                    </span>
+                                  </Button>
+                                  <Button
+                                    size='sm'
+                                    variant='outline'
+                                    className='flex items-center justify-center gap-1 sm:gap-1.5 h-8 sm:h-9 text-[10px] sm:text-xs px-2 sm:px-3'
+                                    onClick={() => handleOpenPermissions(user)}
+                                  >
+                                    <Lock className='w-3 h-3 sm:w-4 sm:h-4' />
+                                    <span className='font-semibold hidden lg:inline'>
+                                      Permissions
+                                    </span>
+                                    <span className='font-semibold lg:hidden'>Perms</span>
+                                  </Button>
+                                  <Button
+                                    size='sm'
+                                    variant='destructive'
+                                    onClick={() => {
+                                      setSelectedUserToDelete(user);
+                                      setShowDeleteConfirm(true);
+                                    }}
+                                    className='flex items-center justify-center gap-1 sm:gap-1.5 h-8 sm:h-9 text-[10px] sm:text-xs px-2 sm:px-3'
+                                  >
+                                    <Trash2 className='w-3 h-3 sm:w-4 sm:h-4' />
+                                    <span className='font-semibold'>Delete</span>
+                                  </Button>
+                                </>
+                              )}
                             </div>
                           )}
                         </div>
-                        <div className='flex-1 min-w-0'>
-                          <h4 className='font-bold text-gray-800 text-sm sm:text-base lg:text-lg truncate'>
-                            {user.full_name || 'No Name'}
-                          </h4>
-                          <p className='text-xs sm:text-sm text-gray-500 truncate'>{user.email}</p>
-                          <div className='flex items-center gap-1.5 sm:gap-2 mt-1.5 sm:mt-2 flex-wrap'>
-                            {isAdmin && (
-                              <Badge
-                                variant='outline'
-                                className='bg-purple-50 text-purple-700 border-purple-200 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5'
-                              >
-                                <Shield className='w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1' />
-                                Admin
-                              </Badge>
-                            )}
-                            {isMarketing && (
-                              <Badge
-                                variant='outline'
-                                className='bg-blue-50 text-blue-700 border-blue-200 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5'
-                              >
-                                <BarChart3 className='w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1' />
-                                Marketing
-                              </Badge>
-                            )}{' '}
-                            {/* Marketing Badge */}
-                            {isOffice && (
-                              <Badge
-                                variant='outline'
-                                className='bg-blue-50 text-blue-700 border-blue-200 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5'
-                              >
-                                <Building2 className='w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1' />
-                                Office {user.company_name ? `• ${user.company_name}` : ''}
-                              </Badge>
-                            )}
-                            {isHost && (
-                              <Badge
-                                variant='outline'
-                                className='bg-green-50 text-green-700 border-green-200 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5'
-                              >
-                                <UserCheck className='w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1' />
-                                Host {userCity ? `• ${userCity}` : ''}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
                       </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-                      {/* Actions Row */}
-                      <div className='flex-shrink-0'>
-                        {updatingUserId === user.id ? (
-                          <div className='flex items-center justify-center w-full h-full min-h-[36px]'>
-                            <Loader2 className='w-5 h-5 sm:w-6 sm:h-6 animate-spin text-purple-600' />
-                          </div>
-                        ) : (
-                          <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-1.5 sm:gap-2'>
-                            {' '}
-                            {/* Changed to lg:grid-cols-7 */}
-                            {/*  Preview Profile Button */}
-                            {isHost && (
-                              <Button
-                                size='sm'
-                                variant='outline'
-                                onClick={() => handlePreviewProfile(user)}
-                                className='flex items-center justify-center gap-1 sm:gap-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 h-8 sm:h-9 text-[10px] sm:text-xs px-2 sm:px-3'
-                              >
-                                <Eye className='w-3 h-3 sm:w-4 sm:h-4' />
-                                <span className='font-semibold hidden sm:inline'>
-                                  Preview Profile
-                                </span>
-                                <span className='font-semibold sm:hidden'>Profile</span>
-                              </Button>
-                            )}
-                            {isHost ? (
-                              <Button
-                                size='sm'
-                                onClick={() => {
-                                  updateUserMutation.mutate({
-                                    userId: user.id,
-                                    updates: {
-                                      host_approved: false,
-                                      visible_in_city: false,
-                                      city: null,
-                                      assigned_cities: [],
-                                    },
-                                    action: 'revoke_host',
-                                    affectedUserEmail: user.email,
-                                  });
-                                }}
-                                className='flex items-center justify-center gap-1 sm:gap-1.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 h-8 sm:h-9 text-[10px] sm:text-xs px-2 sm:px-3'
-                              >
-                                <UserX className='w-3 h-3 sm:w-4 sm:h-4' />
-                                <span className='font-semibold hidden sm:inline'>Revoke Host</span>
-                                <span className='font-semibold sm:hidden'>Revoke</span>
-                              </Button>
-                            ) : (
-                              <Button
-                                size='sm'
-                                onClick={() => setUserToApprove(user)}
-                                disabled={isAdmin || isMarketing} // Disabled if Marketing
-                                className='flex items-center justify-center gap-1 sm:gap-1.5 bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 disabled:opacity-50 disabled:cursor-not-allowed h-8 sm:h-9 text-[10px] sm:text-xs px-2 sm:px-3'
-                              >
-                                <UserPlus className='w-3 h-3 sm:w-4 sm:h-4' />
-                                <span className='font-semibold hidden sm:inline'>Approve Host</span>
-                                <span className='font-semibold sm:hidden'>Approve</span>
-                              </Button>
-                            )}
-                            {hasFullAccess && (
-                              <>
-                                <Button
-                                  size='sm'
-                                  variant='outline'
-                                  onClick={() => {
-                                    if (isAdmin) {
-                                      updateUserMutation.mutate({
-                                        userId: user.id,
-                                        updates: {
-                                          role: 'user',
-                                          role_type: 'user',
-                                          admin_access_type: null,
-                                        },
-                                        action: 'revoke_admin',
-                                        affectedUserEmail: user.email,
-                                      });
-                                    } else {
-                                      updateUserMutation.mutate({
-                                        userId: user.id,
-                                        updates: {
-                                          role: 'admin',
-                                          role_type: 'admin',
-                                          admin_access_type: 'full',
-                                        },
-                                        action: 'make_admin',
-                                        affectedUserEmail: user.email,
-                                      });
-                                    }
-                                  }}
-                                  className={cn(
-                                    'flex items-center justify-center gap-1 sm:gap-1.5 h-8 sm:h-9 text-[10px] sm:text-xs px-2 sm:px-3',
-                                    isAdmin && 'bg-purple-50 border-purple-200'
-                                  )}
-                                >
-                                  <Shield className='w-3 h-3 sm:w-4 sm:h-4' />
-                                  <span className='font-semibold'>
-                                    {isAdmin ? 'Revoke' : 'Admin'}
-                                  </span>
-                                </Button>
-
-                                {/* Marketing Role Button */}
-                                <Button
-                                  size='sm'
-                                  variant='outline'
-                                  disabled={isAdmin} // Disabled if admin
-                                  title={isAdmin ? 'Admins cannot be Marketing.' : ''}
-                                  onClick={() => {
-                                    if (isMarketing) {
-                                      updateUserMutation.mutate({
-                                        userId: user.id,
-                                        updates: { role_type: 'user' }, // Revoke marketing role
-                                        action: 'revoke_marketing',
-                                        affectedUserEmail: user.email,
-                                      });
-                                    } else {
-                                      updateUserMutation.mutate({
-                                        userId: user.id,
-                                        updates: { role_type: 'marketing' }, // Set marketing role
-                                        action: 'make_marketing',
-                                        affectedUserEmail: user.email,
-                                      });
-                                    }
-                                  }}
-                                  className={cn(
-                                    'flex items-center justify-center gap-1 sm:gap-1.5 h-8 sm:h-9 text-[10px] sm:text-xs px-2 sm:px-3',
-                                    isMarketing && 'bg-blue-50 border-blue-200',
-                                    isAdmin && 'cursor-not-allowed opacity-50'
-                                  )}
-                                >
-                                  <BarChart3 className='w-3 h-3 sm:w-4 sm:h-4' />
-                                  <span className='font-semibold'>
-                                    {isMarketing ? 'Revoke' : 'Marketing'}
-                                  </span>
-                                </Button>
-
-                                <Button
-                                  size='sm'
-                                  variant='outline'
-                                  disabled={isAdmin}
-                                  title={isAdmin ? 'Admins cannot be assigned to an office.' : ''}
-                                  onClick={() => {
-                                    if (isOffice) {
-                                      updateUserMutation.mutate({
-                                        userId: user.id,
-                                        updates: {
-                                          role_type: 'user',
-                                          company_name: null,
-                                          office_id: null,
-                                        },
-                                        action: 'revoke_office',
-                                        affectedUserEmail: user.email,
-                                      });
-                                    } else {
-                                      setUserToAssignOffice(user);
-                                    }
-                                  }}
-                                  className={cn(
-                                    'flex items-center justify-center gap-1 sm:gap-1.5 h-8 sm:h-9 text-[10px] sm:text-xs px-2 sm:px-3',
-                                    isOffice && 'bg-blue-50 border-blue-200',
-                                    isAdmin && 'cursor-not-allowed opacity-50'
-                                  )}
-                                >
-                                  <Building2 className='w-3 h-3 sm:w-4 sm:h-4' />
-                                  <span className='font-semibold'>
-                                    {isOffice ? 'Revoke' : 'Office'}
-                                  </span>
-                                </Button>
-                                <Button
-                                  size='sm'
-                                  variant='outline'
-                                  className='flex items-center justify-center gap-1 sm:gap-1.5 h-8 sm:h-9 text-[10px] sm:text-xs px-2 sm:px-3'
-                                  onClick={() => handleOpenPermissions(user)}
-                                >
-                                  <Lock className='w-3 h-3 sm:w-4 sm:h-4' />
-                                  <span className='font-semibold hidden lg:inline'>
-                                    Permissions
-                                  </span>
-                                  <span className='font-semibold lg:hidden'>Perms</span>
-                                </Button>
-                                <Button
-                                  size='sm'
-                                  variant='destructive'
-                                  onClick={() => {
-                                    setSelectedUserToDelete(user);
-                                    setShowDeleteConfirm(true);
-                                  }}
-                                  className='flex items-center justify-center gap-1 sm:gap-1.5 h-8 sm:h-9 text-[10px] sm:text-xs px-2 sm:px-3'
-                                >
-                                  <Trash2 className='w-3 h-3 sm:w-4 sm:h-4' />
-                                  <span className='font-semibold'>Delete</span>
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <ApproveHostDialog
-        user={userToApprove}
-        isOpen={!!userToApprove}
-        onClose={() => setUserToApprove(null)}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ['allUsers'] });
-          setUserToApprove(null);
-        }}
-      />
-
-      <AssignOfficeDialog
-        user={userToAssignOffice}
-        isOpen={!!userToAssignOffice}
-        onClose={() => setUserToAssignOffice(null)}
-        onConfirm={(office) => {
-          if (userToAssignOffice) {
-            updateUserMutation.mutate({
-              userId: userToAssignOffice.id,
-              updates: {},
-              officeData: office,
-              action: 'make_office',
-              affectedUserEmail: userToAssignOffice.email,
-            });
-          }
-          setUserToAssignOffice(null);
-        }}
-      />
-
-      {permissionsUser && (
-        <AdminPermissionsDialog
-          user={permissionsUser}
-          isOpen={!!permissionsUser}
-          onClose={() => setPermissionsUser(null)}
+        <ApproveHostDialog
+          user={userToApprove}
+          isOpen={!!userToApprove}
+          onClose={() => setUserToApprove(null)}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+            setUserToApprove(null);
+          }}
         />
-      )}
 
-      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription className='space-y-2'>
-              <p>
-                This will permanently delete{' '}
-                <span className='font-semibold'>
-                  {selectedUserToDelete?.full_name || selectedUserToDelete?.email}
-                </span>{' '}
-                from both Firebase Authentication and Firestore.
-              </p>
-              <p className='text-red-600 font-medium'>
-                ⚠️ This action cannot be undone. The user will be completely removed from the system.
-              </p>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => {
-                setSelectedUserToDelete(null);
-                setShowDeleteConfirm(false);
-              }}
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteUser}
-              className='bg-red-600 hover:bg-red-700 text-white'
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        <AssignOfficeDialog
+          user={userToAssignOffice}
+          isOpen={!!userToAssignOffice}
+          onClose={() => setUserToAssignOffice(null)}
+          onConfirm={(office) => {
+            if (userToAssignOffice) {
+              updateUserMutation.mutate({
+                userId: userToAssignOffice.id,
+                updates: {},
+                officeData: office,
+                action: 'make_office',
+                affectedUserEmail: userToAssignOffice.email,
+              });
+            }
+            setUserToAssignOffice(null);
+          }}
+        />
+
+        {permissionsUser && (
+          <AdminPermissionsDialog
+            user={permissionsUser}
+            isOpen={!!permissionsUser}
+            onClose={() => setPermissionsUser(null)}
+          />
+        )}
+
+        <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription className='space-y-2'>
+                <p>
+                  This will permanently delete{' '}
+                  <span className='font-semibold'>
+                    {selectedUserToDelete?.full_name || selectedUserToDelete?.email}
+                  </span>{' '}
+                  from both Firebase Authentication and Firestore.
+                </p>
+                <p className='text-red-600 font-medium'>
+                  This action cannot be undone. The user will be completely removed from the system.
+                </p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                onClick={() => {
+                  setSelectedUserToDelete(null);
+                  setShowDeleteConfirm(false);
+                }}
+              >
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteUser}
+                className='bg-red-600 hover:bg-red-700 text-white'
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </AdminLayout>
     </PermissionGuard>
   );

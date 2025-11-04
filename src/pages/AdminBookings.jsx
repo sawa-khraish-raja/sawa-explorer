@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getAllDocuments } from '@/utils/firestore';
-import PermissionGuard from '../components/admin/PermissionGuard';
-import AdminLayout from '../components/admin/AdminLayout';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Calendar, MapPin, Loader2, Eye, Briefcase, Sparkles } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { format } from 'date-fns';
+import { Search, MapPin, Loader2, Eye, Briefcase, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getAllDocuments } from '@/utils/firestore';
+
+import AdminLayout from '../components/admin/AdminLayout';
+import PermissionGuard from '../components/admin/PermissionGuard';
 import { BookingID } from '../components/common/BookingID';
 
 export default function AdminBookings() {

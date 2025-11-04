@@ -3,8 +3,6 @@
  * Integration with signed payment actions
  */
 
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
 
 /**
  * Create secure payment intent

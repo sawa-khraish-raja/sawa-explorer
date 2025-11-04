@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { useAppContext } from '../context/AppContext';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
 // createPageUrl is no longer used after the mutationFn update, so it's removed.
+import { MapPin, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner'; // Replaced showNotification with toast
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -12,12 +16,8 @@ import {
   DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { MapPin, Loader2 } from 'lucide-react';
-import { toast } from 'sonner'; // Replaced showNotification with toast
+import { queryDocuments, updateDocument } from '@/utils/firestore';
 
 const AVAILABLE_CITIES = ['Damascus', 'Amman', 'Istanbul', 'Cairo'];
 
@@ -26,13 +26,6 @@ export default function ManageCityAccessDialog({ user, isOpen, onClose, onSucces
   const queryClient = useQueryClient();
   const [selectedCities, setSelectedCities] = useState([]);
   const [visibleInCity, setVisibleInCity] = useState(true);
-
-  // The currentUser query is kept as it was not part of the outlined changes,
-  // although its usage in the original mutationFn (for audit logs) has been removed.
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => useAppContext().user,
-  });
 
   useEffect(() => {
     // Updated to use the 'user' prop
@@ -46,20 +39,20 @@ export default function ManageCityAccessDialog({ user, isOpen, onClose, onSucces
 
   const updateCityAccessMutation = useMutation({
     mutationFn: async () => {
-      console.log(`🏙️ Updating cities for ${user.email}:`, selectedCities);
+      console.log(`Updating cities for ${user.email}:`, selectedCities);
 
       // تحديث User entity
       await updateDocument('users', user.id, {
         assigned_cities: selectedCities,
         city: selectedCities[0] || null, // أول مدينة كـ primary
         visible_in_city: true, // تأكد من الرؤية
-        updated_date: new Date().toISOString()
+        updated_date: new Date().toISOString(),
       });
 
       // تحديث HostProfile إذا موجود
       try {
         const hostProfiles = await queryDocuments('hostprofiles', [
-          ['user_email', '==', user.email]
+          ['user_email', '==', user.email],
         ]);
 
         if (hostProfiles && hostProfiles.length > 0) {
@@ -67,12 +60,12 @@ export default function ManageCityAccessDialog({ user, isOpen, onClose, onSucces
             city: selectedCities[0] || null,
             cities: selectedCities,
             last_synced: new Date().toISOString(),
-            updated_date: new Date().toISOString()
+            updated_date: new Date().toISOString(),
           });
-          console.log('✅ HostProfile updated');
+          console.log(' HostProfile updated');
         }
       } catch (error) {
-        console.log('⚠️ No HostProfile to update or error during update:', error);
+        console.log(' No HostProfile to update or error during update:', error);
       }
 
       return { email: user.email, cities: selectedCities };

@@ -1,4 +1,5 @@
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
 import { storage } from '@/config/firebase';
 
 /**
@@ -43,22 +44,9 @@ export const uploadImage = async (file, path = 'uploads') => {
       },
     };
 
-    console.log('📤 Uploading image to Firebase Storage:', `${path}/${filename}`);
-    console.log('📋 File details:', {
-      name: file.name,
-      type: file.type,
-      size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
-      path: `${path}/${filename}`,
-    });
-
     // Check auth before upload
     const { auth } = await import('@/config/firebase');
     const currentUser = auth.currentUser;
-    console.log('🔐 Auth status:', {
-      authenticated: !!currentUser,
-      uid: currentUser?.uid,
-      email: currentUser?.email,
-    });
 
     // Get auth token to verify it exists
     if (currentUser) {
@@ -66,7 +54,7 @@ export const uploadImage = async (file, path = 'uploads') => {
         const token = await currentUser.getIdToken();
         console.log('🎟️ Auth token exists:', !!token, 'Length:', token?.length);
       } catch (error) {
-        console.error('❌ Failed to get auth token:', error);
+        console.error('Failed to get auth token:', error);
       }
     } else {
       throw new Error('Not authenticated - please log in first');
@@ -79,11 +67,11 @@ export const uploadImage = async (file, path = 'uploads') => {
     // Get the download URL
     const downloadURL = await getDownloadURL(snapshot.ref);
 
-    console.log('✅ Image uploaded successfully:', downloadURL);
+    console.log(' Image uploaded successfully:', downloadURL);
 
     return downloadURL;
   } catch (error) {
-    console.error('❌ Error uploading image to Firebase Storage:', error);
+    console.error('Error uploading image to Firebase Storage:', error);
     throw new Error(`Failed to upload image: ${error.message}`);
   }
 };
@@ -161,11 +149,11 @@ export const uploadVideo = async (file, path = 'videos') => {
     // Get the download URL
     const downloadURL = await getDownloadURL(snapshot.ref);
 
-    console.log('✅ Video uploaded successfully:', downloadURL);
+    console.log(' Video uploaded successfully:', downloadURL);
 
     return downloadURL;
   } catch (error) {
-    console.error('❌ Error uploading video to Firebase Storage:', error);
+    console.error('Error uploading video to Firebase Storage:', error);
     throw new Error(`Failed to upload video: ${error.message}`);
   }
 };

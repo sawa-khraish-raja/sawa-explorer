@@ -1,10 +1,10 @@
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { AlertCircle, CheckCircle, Zap, TrendingUp, XCircle } from 'lucide-react';
 
+import { Badge } from '@/components/ui/badge';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+
 /**
- * 🔍 SEARCH BAR COMPREHENSIVE AUDIT
+ *  SEARCH BAR COMPREHENSIVE AUDIT
  * ==================================
  *
  * تقييم شامل لشريط البحث في الصفحة الرئيسية
@@ -14,7 +14,7 @@ export default function SearchBarAudit() {
   return (
     <div className='max-w-6xl mx-auto p-6 space-y-6'>
       <div className='text-center mb-8'>
-        <h1 className='text-4xl font-bold text-gray-900 mb-3'>🔍 تقييم شريط البحث</h1>
+        <h1 className='text-4xl font-bold text-gray-900 mb-3'> تقييم شريط البحث</h1>
         <p className='text-lg text-gray-600'>تحليل + تطوير احترافي</p>
       </div>
 
@@ -71,12 +71,12 @@ export default function SearchBarAudit() {
         </CardContent>
       </Card>
 
-      {/* ⚠️ ISSUES & IMPROVEMENTS */}
+      {/*  ISSUES & IMPROVEMENTS */}
       <Card className='border-2 border-yellow-200 bg-yellow-50'>
         <CardHeader>
           <CardTitle className='flex items-center gap-2 text-yellow-900'>
             <AlertCircle className='w-6 h-6' />
-            ⚠️ المشاكل والتحسينات المطلوبة
+            المشاكل والتحسينات المطلوبة
           </CardTitle>
         </CardHeader>
         <CardContent className='space-y-4 text-sm'>

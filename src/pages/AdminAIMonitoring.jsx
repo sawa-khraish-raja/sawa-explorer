@@ -3,25 +3,26 @@
  * Real-time monitoring of AI predictions and healing actions
  */
 
-import React, { useState, useEffect } from 'react';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
 import { useQuery } from '@tanstack/react-query';
-import { invokeFunction } from '@/utils/functions';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Loader2,
   Brain,
   Activity,
-  AlertTriangle,
   CheckCircle2,
   TrendingUp,
   Zap,
 } from 'lucide-react';
-import { metricsCollector } from '../components/monitoring/metrics';
+import { useState, useEffect } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getAllDocuments } from '@/utils/firestore';
+import { invokeFunction } from '@/utils/functions';
+
+
 import AdminLayout from '../components/admin/AdminLayout';
+import { metricsCollector } from '../components/monitoring/metrics';
 
 export default function AdminAIMonitoring() {
   const [aiStatus, setAiStatus] = useState(null);

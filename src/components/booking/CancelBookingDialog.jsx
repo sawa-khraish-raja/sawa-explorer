@@ -1,4 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import { format } from 'date-fns';
+import { AlertTriangle, DollarSign, Loader2, XCircle, Info } from 'lucide-react';
+import { useState, useMemo } from 'react';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -7,8 +13,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -16,18 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import {
-  AlertTriangle,
-  DollarSign,
-  Calendar,
-  TrendingDown,
-  Loader2,
-  XCircle,
-  Info,
-} from 'lucide-react';
-import { format } from 'date-fns';
+import { Textarea } from '@/components/ui/textarea';
+
 import { calculateRefund, CANCELLATION_REASONS } from './cancellationEngine';
 
 export default function CancelBookingDialog({
@@ -77,7 +71,7 @@ export default function CancelBookingDialog({
             <div className='grid grid-cols-2 gap-3 text-sm'>
               <div>
                 <p className='text-gray-600 text-xs mb-1'>Destination</p>
-                <p className='font-semibold text-gray-900'>📍 {booking.city}</p>
+                <p className='font-semibold text-gray-900'>{booking.city}</p>
               </div>
               <div>
                 <p className='text-gray-600 text-xs mb-1'>Check-in</p>

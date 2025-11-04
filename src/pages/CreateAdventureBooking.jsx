@@ -1,31 +1,33 @@
-import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getDocument, addDocument, updateDocument } from '@/utils/firestore';
-import { useAppContext } from '../components/context/AppContext';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { format } from 'date-fns';
 import {
   Calendar,
   Clock,
   Users,
   MapPin,
-  DollarSign,
   Loader2,
   Sparkles,
   AlertCircle,
-  CheckCircle,
   Zap,
   ArrowLeft,
   Plus,
   Minus,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { createPageUrl } from '@/utils';
+import { getDocument, addDocument, updateDocument } from '@/utils/firestore';
+
+import { useAppContext } from '../components/context/AppContext';
+
+
+
 
 export default function CreateAdventureBooking() {
   const navigate = useNavigate();

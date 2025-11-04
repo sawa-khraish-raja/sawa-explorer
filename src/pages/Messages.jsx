@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { subscribeToConversations, getAllDocuments } from '@/utils/firestore';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Loader2, MessageSquare, Search, Briefcase, Sparkles } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+
+import { useTranslation } from '@/components/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
-import { Loader2, MessageSquare, Search, Briefcase, Sparkles, ArrowLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
+import { subscribeToConversations, getAllDocuments } from '@/utils/firestore';
+
 import ConversationList from '../components/chat/ConversationList';
 import ConversationView from '../components/chat/ConversationView';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { useTranslation } from '@/components/i18n/LanguageContext';
-import { cn } from '@/lib/utils';
 import { useAppContext } from '../components/context/AppContext';
 
 export default function Messages() {
@@ -55,7 +55,7 @@ export default function Messages() {
   // Refetch function for compatibility
   const refetchConversations = useCallback(() => {
     // Real-time subscription handles updates automatically
-    console.log('📡 Refetch requested (handled by real-time subscription)');
+    console.log('Refetch requested (handled by real-time subscription)');
   }, []);
 
   //  Load users
@@ -297,7 +297,7 @@ export default function Messages() {
               )}
             </div>
 
-            {/* 💬 Conversation View */}
+            {/* Conversation View */}
             <div
               className={cn(
                 'flex-1 bg-gray-50 overflow-hidden',

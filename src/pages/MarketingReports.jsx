@@ -1,17 +1,7 @@
-import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { invokeFunction } from '@/utils/functions';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import MarketingLayout from '../components/marketing/MarketingLayout';
-import MarketingGuard from '../components/marketing/MarketingGuard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 import {
   FileText,
-  Download,
-  TrendingUp,
   Users,
   DollarSign,
   Calendar,
@@ -22,10 +12,22 @@ import {
   Brain,
   CheckCircle2,
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { toast } from 'sonner';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { createPageUrl } from '@/utils';
+import { getAllDocuments, queryDocuments } from '@/utils/firestore';
+import { invokeFunction } from '@/utils/functions';
+
+import MarketingGuard from '../components/marketing/MarketingGuard';
+import MarketingLayout from '../components/marketing/MarketingLayout';
+
+
+
 
 export default function MarketingReports() {
   const queryClient = useQueryClient();
@@ -161,7 +163,7 @@ export default function MarketingReports() {
 
   //  View Report
   const viewReport = (report) => {
-    navigate(createPageUrl('ReportView') + `?id=${report.id}`);
+    navigate(`${createPageUrl('ReportView')  }?id=${report.id}`);
   };
 
   if (reportsLoading) {

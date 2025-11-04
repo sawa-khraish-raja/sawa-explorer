@@ -1,13 +1,4 @@
-import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument } from '@/utils/firestore';
-import { useAppContext } from '@/components/context/AppContext';
-import { useNavigate, Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Loader2,
   Users,
@@ -21,9 +12,19 @@ import {
   Eye, // Added Eye icon
   Mail, // Added Mail icon
 } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+
+import { useAppContext } from '@/components/context/AppContext';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 // Added Dialog components
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { createPageUrl } from '@/utils';
+import { queryDocuments, getDocument } from '@/utils/firestore';
 
 export default function OfficeDashboard() {
   const navigate = useNavigate();
@@ -46,7 +47,7 @@ export default function OfficeDashboard() {
     queryKey: ['userOffice', user?.office_id],
     queryFn: async () => {
       if (!user?.office_id) return null;
-      return await getDocument('agencies', user.office_id);
+      return getDocument('agencies', user.office_id);
     },
     enabled: !!user?.office_id,
   });
@@ -59,7 +60,7 @@ export default function OfficeDashboard() {
       if (!office?.id) return [];
 
       //  Only hosts that are CURRENTLY assigned to this office
-      return await queryDocuments('users', [
+      return queryDocuments('users', [
         ['office_id', '==', office.id],
         ['host_approved', '==', true],
       ]);

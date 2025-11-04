@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
-import { addDocument } from '@/utils/firestore';
-import { useAppContext } from '../context/AppContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input'; // Keeping this as per outline, though not used in the final JSX
-import { Textarea } from '@/components/ui/textarea';
-import { showSuccess, showError } from '../utils/notifications';
-import { useTranslation } from '../i18n/LanguageContext';
-import { trackBookingStart, trackBookingComplete } from '../analytics/GoogleAnalytics'; // New import
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { addDocument } from '@/utils/firestore';
+
+import { trackBookingStart, trackBookingComplete } from '../analytics/GoogleAnalytics'; // New import
+import { useAppContext } from '../context/AppContext';
+// Keeping this as per outline, though not used in the final JSX
+
+import { useTranslation } from '../i18n/LanguageContext';
+import { showSuccess, showError } from '../utils/notifications';
+
 
 export default function BookingForm({
   city,

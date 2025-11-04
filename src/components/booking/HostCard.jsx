@@ -1,10 +1,12 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Star, CheckCircle, Building2, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { createPageUrl } from '@/utils';
+
+
 
 export default function HostCard({ host }) {
   const navigate = useNavigate();
@@ -33,7 +35,7 @@ export default function HostCard({ host }) {
             className='w-full h-full object-cover'
             loading='lazy'
           />
-          <div className='absolute inset-0 bg-gradient-to-t from-black/60 to-transparent'></div>
+          <div className='absolute inset-0 bg-gradient-to-t from-black/60 to-transparent' />
           <div className='absolute bottom-3 left-4'>
             <h3 className='text-white text-lg font-bold drop-shadow-md'>
               {host.display_name || host.full_name}

@@ -890,7 +890,6 @@ export default function HostConversationView({
                 value={displayLanguage}
                 onChange={(e) => {
                   const lang = normLang(e.target.value);
-                  console.log('🌍 [Host] User changed display language to:', lang);
                   setDisplayLanguage(lang);
                   localStorage.setItem('sawa_display_lang', lang);
                 }}
@@ -964,7 +963,7 @@ export default function HostConversationView({
           <div className='flex justify-center items-center h-full min-h-[100px]'>
             <div className='flex flex-col items-center gap-2'>
               <Loader2 className='w-6 h-6 animate-spin text-purple-600' />
-              <p className='text-sm text-gray-500'>🔄 Translating messages...</p>
+              <p className='text-sm text-gray-500'>Translating messages...</p>
             </div>
           </div>
         ) : (
@@ -1039,7 +1038,7 @@ export default function HostConversationView({
             <Alert className='bg-red-50 border-red-200'>
               <AlertTriangle className='h-4 w-4 text-red-600' />
               <AlertDescription className='text-xs text-red-800'>
-                <strong>⚠️ Warning:</strong>{' '}
+                <strong> Warning:</strong>{' '}
                 {violations.map((v, idx) => (
                   <span key={idx}>
                     {v.message}

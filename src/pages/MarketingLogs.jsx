@@ -1,12 +1,12 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import MarketingLayout from '../components/marketing/MarketingLayout';
-import MarketingGuard from '../components/marketing/MarketingGuard';
-import { Card, CardContent } from '@/components/ui/card';
-import { ScrollText, Loader2, Eye } from 'lucide-react';
 import { format } from 'date-fns';
+import { ScrollText, Loader2, Eye } from 'lucide-react';
+
+import { Card, CardContent } from '@/components/ui/card';
+import { queryDocuments } from '@/utils/firestore';
+
+import MarketingGuard from '../components/marketing/MarketingGuard';
+import MarketingLayout from '../components/marketing/MarketingLayout';
 
 export default function MarketingLogs() {
   const { data: logs = [], isLoading } = useQuery({

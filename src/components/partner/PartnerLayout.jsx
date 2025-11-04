@@ -1,7 +1,3 @@
-import React, { useState, useEffect } from 'react';
-import { useAppContext } from '../context/AppContext';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import {
   LayoutDashboard,
   UserCircle,
@@ -19,9 +15,13 @@ import {
   Menu,
   Loader2,
 } from 'lucide-react';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
+import { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+
 import { Button } from '@/components/ui/button';
+import { createPageUrl } from '@/utils';
+
+import { useAppContext } from '../context/AppContext';
 
 const navItems = [
   { name: 'Overview', icon: LayoutDashboard, href: 'PartnerDashboard' },
@@ -36,7 +36,7 @@ const navItems = [
 ];
 
 export default function PartnerLayout({ children }) {
-  const { logout } = useAppContext();
+  const { logout, user: contextUser } = useAppContext();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [language, setLanguage] = useState('en');
@@ -47,17 +47,21 @@ export default function PartnerLayout({ children }) {
   useEffect(() => {
     async function checkAuth() {
       try {
-        const currentUser = await useAppContext().user;
+        if (!contextUser) {
+          navigate('/login');
+          return;
+        }
+
         if (
-          !currentUser.host_approved &&
-          currentUser.role !== 'admin' &&
-          currentUser.partner_type !== 'agency'
+          !contextUser.host_approved &&
+          contextUser.role !== 'admin' &&
+          contextUser.partner_type !== 'agency'
         ) {
           alert('Access denied. You are not an approved partner.');
           navigate(createPageUrl('Home'));
           return;
         }
-        setUser(currentUser);
+        setUser(contextUser);
       } catch (error) {
         navigate('/login');
       } finally {
@@ -65,7 +69,7 @@ export default function PartnerLayout({ children }) {
       }
     }
     checkAuth();
-  }, [navigate, location.pathname]);
+  }, [navigate, location.pathname, contextUser]);
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -156,7 +160,7 @@ export default function PartnerLayout({ children }) {
           >
             {isSidebarOpen ? <X className='h-6 w-6' /> : <Menu className='h-6 w-6' />}
           </Button>
-          <div className='flex-1'></div>
+          <div className='flex-1' />
           <div className='flex items-center gap-4'>
             <Button variant='ghost' size='icon' onClick={toggleLanguage}>
               <Globe className='w-5 h-5' />

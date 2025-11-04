@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import { Trash2, Loader2, AlertTriangle, Info } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
+import { toast } from 'sonner';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -10,10 +14,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -21,10 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Trash2, Loader2, AlertTriangle, Info } from 'lucide-react';
-import { toast } from 'sonner';
+import { Textarea } from '@/components/ui/textarea';
 import { createPageUrl } from '@/utils';
 
 export default function DeleteAccountDialog({ open, onClose, user }) {
@@ -317,7 +316,7 @@ export default function DeleteAccountDialog({ open, onClose, user }) {
                     <a
                       href={createPageUrl('PrivacyPolicy')}
                       target='_blank'
-                      className='text-purple-600 hover:underline'
+                      className='text-purple-600 hover:underline' rel="noreferrer"
                     >
                       data deletion policy
                     </a>

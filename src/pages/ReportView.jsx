@@ -1,13 +1,6 @@
-import React from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import MarketingLayout from '../components/marketing/MarketingLayout';
-import MarketingGuard from '../components/marketing/MarketingGuard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
+import { jsPDF } from 'jspdf';
 import {
   FileText,
   Download,
@@ -19,13 +12,20 @@ import {
   Loader2,
   CheckCircle2,
   Target,
-  DollarSign,
   Users,
   Sparkles, // Added Sparkles icon
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { jsPDF } from 'jspdf';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { queryDocuments } from '@/utils/firestore';
+
+import MarketingGuard from '../components/marketing/MarketingGuard';
+import MarketingLayout from '../components/marketing/MarketingLayout';
+
 
 export default function ReportView() {
   const [searchParams] = useSearchParams();

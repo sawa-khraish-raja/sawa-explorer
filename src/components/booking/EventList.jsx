@@ -1,11 +1,12 @@
-import React, { useMemo } from 'react';
-import EventCard from './EventCard';
-import { Loader2, Calendar, Sparkles, Clock } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { formatDistanceToNow } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
+import { formatDistanceToNow } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2, Calendar, Sparkles, Clock } from 'lucide-react';
+import { useMemo } from 'react';
+
+import { queryDocuments } from '@/utils/firestore';
+
+import EventCard from './EventCard';
 
 export default function EventList({ city, events = [], isLoading = false, filters = {} }) {
   const { data: lastSync } = useQuery({

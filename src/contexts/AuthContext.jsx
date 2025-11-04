@@ -1,4 +1,3 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -8,6 +7,8 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { createContext, useContext, useState, useEffect } from 'react';
+
 import { auth, db } from '../config/firebase';
 
 const AuthContext = createContext({});
@@ -28,10 +29,10 @@ export const AuthProvider = ({ children }) => {
   // Sign up with email and password
   const signup = async (email, password, displayName) => {
     try {
-      console.log('🔵 Starting signup...');
+      console.log('Starting signup...');
       setError(null);
 
-      console.log('🔵 Creating user in Firebase Auth...');
+      console.log('Creating user in Firebase Auth...');
       const result = await createUserWithEmailAndPassword(auth, email, password);
       console.log(' User created in Firebase Auth');
 
@@ -40,18 +41,18 @@ export const AuthProvider = ({ children }) => {
       const promises = [];
 
       if (displayName) {
-        console.log('🔵 Updating profile with display name...');
+        console.log('Updating profile with display name...');
         const profilePromise = updateProfile(result.user, { displayName })
           .then(() => console.log(' Profile updated'))
           .catch((err) => {
-            console.error('⚠️ Profile update failed:', err);
+            console.error(' Profile update failed:', err);
             // Don't throw - profile update is non-critical
           });
         promises.push(profilePromise);
       }
 
       // Create user document in Firestore
-      console.log('🔵 Creating user document in Firestore...');
+      console.log('Creating user document in Firestore...');
       const firestorePromise = setDoc(doc(db, 'users', result.user.uid), {
         full_name: displayName,
         email: email,
@@ -62,7 +63,7 @@ export const AuthProvider = ({ children }) => {
       })
         .then(() => console.log(' User document created in Firestore'))
         .catch((err) => {
-          console.error('⚠️ Firestore document creation failed:', err);
+          console.error(' Firestore document creation failed:', err);
           // Don't throw - we can create it later
         });
       promises.push(firestorePromise);
@@ -74,11 +75,11 @@ export const AuthProvider = ({ children }) => {
           setTimeout(() => reject(new Error('Signup operations timed out')), 10000)
         ),
       ]).catch((err) => {
-        console.warn('⚠️ Some signup operations did not complete:', err.message);
+        console.warn(' Some signup operations did not complete:', err.message);
         // Don't throw - user is already created
       });
 
-      console.log('🎉 Signup complete!');
+      console.log('Signup complete!');
       return result;
     } catch (err) {
       console.error(' Signup error:', err);
@@ -91,7 +92,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       setError(null);
-      return await signInWithEmailAndPassword(auth, email, password);
+      return signInWithEmailAndPassword(auth, email, password);
     } catch (err) {
       setError(err.message);
       throw err;
@@ -102,7 +103,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       setError(null);
-      return await signOut(auth);
+      return signOut(auth);
     } catch (err) {
       setError(err.message);
       throw err;
@@ -113,7 +114,7 @@ export const AuthProvider = ({ children }) => {
   const resetPassword = async (email) => {
     try {
       setError(null);
-      return await sendPasswordResetEmail(auth, email);
+      return sendPasswordResetEmail(auth, email);
     } catch (err) {
       setError(err.message);
       throw err;
@@ -124,7 +125,7 @@ export const AuthProvider = ({ children }) => {
   const updateUserProfile = async (updates) => {
     try {
       setError(null);
-      return await updateProfile(auth.currentUser, updates);
+      return updateProfile(auth.currentUser, updates);
     } catch (err) {
       setError(err.message);
       throw err;

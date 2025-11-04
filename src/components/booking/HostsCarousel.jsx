@@ -4,10 +4,11 @@
  * Beautiful carousel for displaying city hosts
  */
 
-import React, { useRef } from 'react';
-import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, User } from 'lucide-react';
+import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
 
 export default function HostsCarousel({ hosts }) {

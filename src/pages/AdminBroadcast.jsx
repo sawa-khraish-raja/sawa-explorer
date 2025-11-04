@@ -1,15 +1,5 @@
-import React, { useState } from 'react';
-import { useAppContext } from '../components/context/AppContext';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { invokeFunction } from '@/utils/functions';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import AdminLayout from '../components/admin/AdminLayout';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Send,
   Loader2,
@@ -22,29 +12,27 @@ import {
   CheckCircle2,
   Info,
 } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { getAllDocuments } from '@/utils/firestore';
+import { invokeFunction } from '@/utils/functions';
+
+import AdminLayout from '../components/admin/AdminLayout';
 
 export default function AdminBroadcast() {
+  const { user } = useAppContext();
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [link, setLink] = useState('');
   const [notificationType, setNotificationType] = useState('message_received');
   const [showPreview, setShowPreview] = useState(false);
-
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => useAppContext().user,
-    staleTime: 5 * 60 * 1000,
-  });
 
   const { data: allUsers = [] } = useQuery({
     queryKey: ['allUsersCount'],
@@ -174,7 +162,7 @@ export default function AdminBroadcast() {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleTemplateSelect(template)}
-                        className={`relative overflow-hidden p-4 rounded-xl border-2 border-gray-200 hover:border-purple-300 transition-all text-left group`}
+                        className='relative overflow-hidden p-4 rounded-xl border-2 border-gray-200 hover:border-purple-300 transition-all text-left group'
                       >
                         <div
                           className={`absolute inset-0 bg-gradient-to-br ${template.color} opacity-0 group-hover:opacity-10 transition-opacity`}

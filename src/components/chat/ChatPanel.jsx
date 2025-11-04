@@ -1,22 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useAppContext } from '../context/AppContext';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import { useQuery } from '@tanstack/react-query';
-import { X, Send, Loader2, Globe, ChevronDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
-import { toast } from 'sonner';
+import { X, Send, Loader2, Globe, ChevronDown } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { cn } from '@/lib/utils';
-import { assistantChat, messageTranslator, translateText, confirmBooking, deleteAccount, notifyHostsOfNewBooking, createPaymentIntent, verifySignature } from '@/utils/functions';
+import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
+import { assistantChat } from '@/utils/functions';
+
+import { useAppContext } from '../context/AppContext';
+
 
 const SUPPORTED_LANGUAGES = [
   { code: 'ar', name: 'العربية', flag: '🇸🇦' },
@@ -31,22 +31,12 @@ const SUPPORTED_LANGUAGES = [
 ];
 
 export default function ChatPanel({ onClose }) {
+  const { user } = useAppContext();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [language, setLanguage] = useState('ar');
   const messagesEndRef = useRef(null);
-
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: async () => {
-      try {
-        return await useAppContext().user;
-      } catch {
-        return null;
-      }
-    },
-  });
 
   useEffect(() => {
     const savedLang = localStorage.getItem('chat_language') || 'ar';

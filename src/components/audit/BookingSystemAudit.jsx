@@ -1,21 +1,10 @@
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { AlertCircle, CheckCircle, TrendingUp, Shield, BarChart } from 'lucide-react';
+
 import { Badge } from '@/components/ui/badge';
-import {
-  AlertCircle,
-  CheckCircle,
-  Zap,
-  TrendingUp,
-  Star,
-  XCircle,
-  Shield,
-  BarChart,
-  Clock,
-  Lightbulb,
-} from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 /**
- * 🔍 SAWA Booking System - Professional Audit Report
+ *  SAWA Booking System - Professional Audit Report
  * ==================================================
  * تقييم شامل واحترافي لنظام إدارة الحجوزات
  */
@@ -61,7 +50,7 @@ export const BOOKING_SYSTEM_AUDIT = {
     },
   ],
 
-  // ⚠️ AREAS FOR IMPROVEMENT
+  //  AREAS FOR IMPROVEMENT
   improvements: [
     {
       priority: 'HIGH',
@@ -85,7 +74,7 @@ export const BOOKING_SYSTEM_AUDIT = {
       current: 'Separate host pages',
       recommended: 'Unified booking management with same detail modal',
       impact: 'Consistency across all user types',
-      status: '🔄 IN PROGRESS',
+      status: 'IN PROGRESS',
     },
     {
       priority: 'MEDIUM',
@@ -137,7 +126,7 @@ export const BOOKING_SYSTEM_AUDIT = {
     },
   ],
 
-  // 📊 METRICS TO TRACK
+  // METRICS TO TRACK
   metricsToTrack: [
     'Booking conversion rate (created → confirmed)',
     'Average time from booking to first offer',
@@ -153,8 +142,8 @@ export const BOOKING_SYSTEM_AUDIT = {
     '✓ Service role used appropriately for admin actions',
     '✓ Personal data masked for privacy (first names only)',
     '✓ Cancellation reasons tracked for fraud detection',
-    '⚠️ TODO: Add rate limiting on booking creation',
-    '⚠️ TODO: Implement booking modification audit trail',
+    ' TODO: Add rate limiting on booking creation',
+    ' TODO: Implement booking modification audit trail',
   ],
 
   overallScore: 8.5,
@@ -162,7 +151,7 @@ export const BOOKING_SYSTEM_AUDIT = {
     'نظام حجوزات قوي ومتكامل مع فرص تحسين واضحة. التحديثات الأخيرة عززت الشفافية وتجربة المستخدم بشكل كبير.',
 };
 
-console.log('📋 Booking System Audit Report:', BOOKING_SYSTEM_AUDIT);
+console.log('Booking System Audit Report:', BOOKING_SYSTEM_AUDIT);
 
 export default function BookingSystemAudit() {
   const getPriorityBadgeClass = (priority) => {
@@ -182,7 +171,7 @@ export default function BookingSystemAudit() {
     switch (status) {
       case ' IMPLEMENTED':
         return 'bg-green-600';
-      case '🔄 IN PROGRESS':
+      case 'IN PROGRESS':
         return 'bg-indigo-600';
       case '⏳ PLANNED':
         return 'bg-blue-600';
@@ -232,12 +221,12 @@ export default function BookingSystemAudit() {
         </CardContent>
       </Card>
 
-      {/* ⚠️ AREAS FOR IMPROVEMENT */}
+      {/*  AREAS FOR IMPROVEMENT */}
       <Card className='border-2 border-yellow-200 bg-yellow-50'>
         <CardHeader>
           <CardTitle className='flex items-center gap-2 text-yellow-900'>
             <AlertCircle className='w-6 h-6' />
-            ⚠️ مجالات التحسين (Areas for Improvement)
+            مجالات التحسين (Areas for Improvement)
           </CardTitle>
         </CardHeader>
         <CardContent className='space-y-4 text-sm'>
@@ -317,12 +306,12 @@ export default function BookingSystemAudit() {
         </CardContent>
       </Card>
 
-      {/* 📊 METRICS TO TRACK */}
+      {/* METRICS TO TRACK */}
       <Card className='border-2 border-blue-200 bg-blue-50'>
         <CardHeader>
           <CardTitle className='flex items-center gap-2 text-blue-900'>
             <BarChart className='w-6 h-6' />
-            📊 المقاييس التي يجب تتبعها
+            المقاييس التي يجب تتبعها
           </CardTitle>
         </CardHeader>
         <CardContent className='text-sm'>
@@ -374,7 +363,7 @@ export default function BookingSystemAudit() {
             <div className='flex flex-wrap justify-center gap-3 text-sm'>
               <Badge className='bg-green-600 text-white px-4 py-2'>تحسين تجربة المستخدم</Badge>
               <Badge className='bg-yellow-600 text-white px-4 py-2'>⏳ كفاءة العمليات</Badge>
-              <Badge className='bg-blue-600 text-white px-4 py-2'>📊 مراقبة الأداء</Badge>
+              <Badge className='bg-blue-600 text-white px-4 py-2'>مراقبة الأداء</Badge>
             </div>
             <p className='text-xs text-indigo-600 mt-4'>
               💡 نهدف إلى تنفيذ هذه التحسينات بدقة وعناية لضمان أفضل النتائج.

@@ -1,13 +1,4 @@
-import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { invokeFunction } from '@/utils/functions';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import MarketingLayout from '../components/marketing/MarketingLayout';
-import MarketingGuard from '../components/marketing/MarketingGuard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   TrendingUp,
   Target,
@@ -16,15 +7,24 @@ import {
   Sparkles,
   MapPin,
   DollarSign,
-  Calendar,
   Loader2,
   RefreshCw,
-  Download,
   Brain,
-  BarChart3,
   Lightbulb,
 } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { queryDocuments } from '@/utils/firestore';
+import { invokeFunction } from '@/utils/functions';
+
+import MarketingGuard from '../components/marketing/MarketingGuard';
+import MarketingLayout from '../components/marketing/MarketingLayout';
+
+
 
 export default function SmartGrowthPlan() {
   const queryClient = useQueryClient();

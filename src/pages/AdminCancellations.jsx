@@ -1,13 +1,7 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import AdminLayout from '../components/admin/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
 import {
   Loader2,
-  XCircle,
   CheckCircle,
   Clock,
   DollarSign,
@@ -16,8 +10,14 @@ import {
   Calendar,
   List,
 } from 'lucide-react';
-import { format } from 'date-fns';
+
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { getAllDocuments } from '@/utils/firestore';
+
+import AdminLayout from '../components/admin/AdminLayout';
+
 
 export default function AdminCancellations() {
   const { data: cancellationRequests = [], isLoading } = useQuery({

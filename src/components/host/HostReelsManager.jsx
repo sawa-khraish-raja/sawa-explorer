@@ -50,7 +50,7 @@ export default function HostReelsManager({ user }) {
 
   const createReelMutation = useMutation({
     mutationFn: async (reelData) => {
-      return await addDocument('hostreels', { ...reelData, created_date: new Date().toISOString() });
+      return addDocument('hostreels', { ...reelData, created_date: new Date().toISOString() });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['hostReels'] });
@@ -127,11 +127,11 @@ export default function HostReelsManager({ user }) {
     setUploading(true);
 
     try {
-      console.log('📤 Starting upload...');
+
 
       // Upload file
       const { file_url } = await uploadImage(selectedFile,
-      , 'uploads');
+       'uploads');
 
       console.log(' File uploaded:', file_url);
 

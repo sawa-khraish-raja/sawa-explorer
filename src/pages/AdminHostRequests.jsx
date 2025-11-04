@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, updateDocument, addDocument } from '@/utils/firestore';
-import { useAppContext } from '../components/context/AppContext';
-import AdminLayout from '../components/admin/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Search,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Eye,
+  Users,
+  Loader2,
+} from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -15,21 +22,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  UserPlus,
-  Search,
-  Filter,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  Eye,
-  TrendingUp,
-  Users,
-  Loader2,
-} from 'lucide-react';
-import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getAllDocuments, updateDocument, addDocument } from '@/utils/firestore';
+
+import AdminLayout from '../components/admin/AdminLayout';
 import HostApprovalCard from '../components/admin/HostApprovalCard';
+import { useAppContext } from '../components/context/AppContext';
 
 export default function AdminHostRequests() {
   const queryClient = useQueryClient();

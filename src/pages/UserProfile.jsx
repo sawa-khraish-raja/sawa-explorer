@@ -1,36 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { queryDocuments, updateDocument, addDocument } from '@/utils/firestore';
-import { uploadImage } from '@/utils/storage';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import {
   Loader2,
   Camera,
   Save,
   User,
-  Mail,
-  Phone,
-  Globe,
-  MapPin,
-  Calendar,
-  ArrowLeft,
   Briefcase,
   Shield,
   Bell,
-  Lock,
   Trash2,
   AlertTriangle,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { toast } from 'sonner';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { useAppContext } from '../components/context/AppContext';
+import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { createPageUrl } from '@/utils';
+import { queryDocuments, updateDocument } from '@/utils/firestore';
+import { uploadImage } from '@/utils/storage';
+
+import { useAppContext } from '../components/context/AppContext';
 import NotificationSettings from '../components/notifications/NotificationSettings';
 import DeleteAccountDialog from '../components/user/DeleteAccountDialog';
 

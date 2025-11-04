@@ -1,9 +1,6 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
+import { motion } from 'framer-motion';
 import {
   Heart,
   MessageCircle,
@@ -13,11 +10,13 @@ import {
   Video,
   MapPin,
   Users,
-  DollarSign,
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { motion } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { createPageUrl } from '@/utils';
 import { queryDocuments } from '@/utils/firestore';
 
 export default function PostCard({ post }) {

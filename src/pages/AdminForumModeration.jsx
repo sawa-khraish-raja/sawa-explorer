@@ -1,24 +1,18 @@
-import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import AdminLayout from '@/components/admin/AdminLayout';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+import { format } from 'date-fns';
 import {
   MessageSquare,
   CheckCircle,
   XCircle,
-  Archive,
-  Eye,
   Loader2,
-  AlertCircle,
 } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+
+import AdminLayout from '@/components/admin/AdminLayout';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +20,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { queryDocuments, updateDocument } from '@/utils/firestore';
 
 export default function AdminForumModeration() {
   const queryClient = useQueryClient();
@@ -37,7 +34,7 @@ export default function AdminForumModeration() {
   const { data: pendingPosts = [], isLoading: postsLoading } = useQuery({
     queryKey: ['adminForumPosts', 'pending'],
     queryFn: async () => {
-      return await queryDocuments('forum_posts', [['status', '==', 'pending_review']], '-created_date');
+      return queryDocuments('forum_posts', [['status', '==', 'pending_review']], '-created_date');
     },
   });
 
@@ -45,7 +42,7 @@ export default function AdminForumModeration() {
   const { data: pendingComments = [], isLoading: commentsLoading } = useQuery({
     queryKey: ['adminForumComments', 'pending'],
     queryFn: async () => {
-      return await queryDocuments(
+      return queryDocuments(
         'forum_comments',
         [['status', '==', 'pending_review']],
         '-created_date'

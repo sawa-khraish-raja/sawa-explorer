@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import AdminLayout from '../components/admin/AdminLayout';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Check, X, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -15,8 +14,12 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Check, X, Eye, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { Textarea } from '@/components/ui/textarea';
+import { getAllDocuments, addDocument, updateDocument } from '@/utils/firestore';
+
+import AdminLayout from '../components/admin/AdminLayout';
+
+
 
 export default function AdminAdventurePosts() {
   const queryClient = useQueryClient();

@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { MessageCircle, X } from 'lucide-react';
-import ChatPanel from './ChatPanel';
 import { motion, AnimatePresence } from 'framer-motion';
+import { X } from 'lucide-react';
+import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
+
+import ChatPanel from './ChatPanel';
+
 
 export default function ChatLauncher() {
   const [isOpen, setIsOpen] = useState(false);
@@ -50,8 +52,7 @@ export default function ChatLauncher() {
         {isOpen ? (
           <X className='w-7 h-7 sm:w-6 sm:h-6 text-white' />
         ) : (
-          <>
-            <div className='relative'>
+          <div className='relative'>
               <img
                 src='https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68e8bf2aebfc9660599d11a9/e62457e5e_WhatsAppImage2025-10-16at235513_248ceca9.jpg'
                 alt='SAWA AI'
@@ -63,7 +64,6 @@ export default function ChatLauncher() {
                 </div>
               )}
             </div>
-          </>
         )}
       </motion.button>
 

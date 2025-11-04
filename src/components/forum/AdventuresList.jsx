@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
+import { motion } from 'framer-motion';
 import { Loader2, Search, MapPin, Compass } from 'lucide-react';
+import { useState } from 'react';
+
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -11,7 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { motion } from 'framer-motion';
+import { queryDocuments } from '@/utils/firestore';
+
+
+
+
 import AdventureCard from './AdventureCard';
 
 export default function AdventuresList() {

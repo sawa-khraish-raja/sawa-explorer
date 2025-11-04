@@ -1,12 +1,4 @@
-import React, { useState } from 'react';
-import { useAppContext } from '../components/context/AppContext';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   MapPin,
   Star,
@@ -22,21 +14,27 @@ import {
   ShieldCheck,
   CheckCircle,
   Globe,
-  Phone,
-  Mail,
   Instagram,
   Facebook,
   Image as ImageIcon,
   Sparkles,
   TrendingUp,
 } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { getUserDisplayName } from '../components/utils/userHelpers';
-import { normalizeText } from '../components/utils/textHelpers';
 import { toast } from 'sonner';
-import ReviewsList from '../components/reviews/ReviewsList';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { createPageUrl } from '@/utils';
+import { queryDocuments } from '@/utils/firestore';
+
 import Lightbox from '../components/booking/Lightbox';
+import ReviewsList from '../components/reviews/ReviewsList';
+import { normalizeText } from '../components/utils/textHelpers';
+import { getUserDisplayName } from '../components/utils/userHelpers';
 
 const EXPERTISE_ICONS = {
   Photography: Camera,
@@ -54,6 +52,7 @@ const EXPERTISE_ICONS = {
 };
 
 export default function HostProfile() {
+  const { user } = useAppContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -66,7 +65,7 @@ export default function HostProfile() {
     queryKey: ['currentUser'],
     queryFn: async () => {
       try {
-        return await useAppContext().user;
+        return user;
       } catch {
         return null;
       }

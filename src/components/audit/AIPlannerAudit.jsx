@@ -1,7 +1,7 @@
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { CheckCircle, XCircle, Zap, TrendingUp, MapPin } from 'lucide-react';
+
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, CheckCircle, XCircle, Zap, TrendingUp, MapPin } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 /**
  * 🤖 AI TRIP PLANNER AUDIT
@@ -112,12 +112,12 @@ export default function AIPlannerAudit() {
         </CardContent>
       </Card>
 
-      {/* 📊 PLACEMENT ANALYSIS */}
+      {/* PLACEMENT ANALYSIS */}
       <Card className='border-2 border-yellow-200 bg-yellow-50'>
         <CardHeader>
           <CardTitle className='flex items-center gap-2 text-yellow-900'>
             <MapPin className='w-6 h-6' />
-            📊 تحليل الموقع الحالي vs المقترح
+            تحليل الموقع الحالي vs المقترح
           </CardTitle>
         </CardHeader>
         <CardContent className='space-y-4 text-sm'>
@@ -167,7 +167,7 @@ export default function AIPlannerAudit() {
           </div>
 
           <div className='bg-white p-4 rounded-lg border border-yellow-200'>
-            <h4 className='font-bold text-yellow-900 mb-2'>📍 ترتيب الصفحة المقترح:</h4>
+            <h4 className='font-bold text-yellow-900 mb-2'>ترتيب الصفحة المقترح:</h4>
             <ol className='space-y-1 text-yellow-800 text-xs'>
               <li className='flex items-center gap-2'>
                 <Badge className='bg-purple-600'>1</Badge>

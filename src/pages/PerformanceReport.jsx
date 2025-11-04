@@ -1,7 +1,3 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Zap,
   AlertCircle,
@@ -12,10 +8,13 @@ import {
   Code,
   Smartphone,
   Wifi,
-  Clock,
   HardDrive,
   Activity,
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 export default function PerformanceReport() {
@@ -220,7 +219,7 @@ export default function PerformanceReport() {
                   <p className='text-gray-600'>
                     {overallScore >= 90 && '🎉 ممتاز! الأداء عالي جداً'}
                     {overallScore >= 70 && overallScore < 90 && '👍 جيد! في مجال للتحسين'}
-                    {overallScore < 70 && '⚠️ يحتاج تحسينات'}
+                    {overallScore < 70 && ' يحتاج تحسينات'}
                   </p>
                 </div>
               </div>

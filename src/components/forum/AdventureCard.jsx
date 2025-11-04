@@ -1,12 +1,13 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Users, DollarSign, Clock, Star } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
+import { Calendar, MapPin, Users, DollarSign, Clock, Star } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { createPageUrl } from '@/utils';
+
 
 export default function AdventureCard({ post }) {
   const navigate = useNavigate();

@@ -1,9 +1,10 @@
-import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import express from 'express';
+
 import { initializeFirebase } from './config/firebase.js';
-import userRoutes from './routes/userRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -36,7 +37,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 // Error handling middleware
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });

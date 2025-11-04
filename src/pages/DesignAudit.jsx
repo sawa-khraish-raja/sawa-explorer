@@ -1,7 +1,3 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Palette,
   Type,
@@ -13,9 +9,12 @@ import {
   Ruler,
   Eye,
   Smartphone,
-  Monitor,
   Zap,
 } from 'lucide-react';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 export default function DesignAudit() {
@@ -319,22 +318,27 @@ export default function DesignAudit() {
           </CardHeader>
           <CardContent className='p-8'>
             <div className='flex flex-col md:flex-row items-center justify-between gap-8 mb-8'>
-              <div className={cn('w-40 h-40 rounded-full flex flex-col items-center justify-center border-4', getScoreColor(overallScore))}>
+              <div
+                className={cn(
+                  'w-40 h-40 rounded-full flex flex-col items-center justify-center border-4',
+                  getScoreColor(overallScore)
+                )}
+              >
                 <div className='text-5xl font-bold'>{overallScore}</div>
                 <div className='text-xs font-medium mt-1'>من 100</div>
               </div>
               <div>
-                  <h2 className='text-2xl font-bold text-gray-900 mb-2'>
-                    {overallScore >= 85 && '🎉 تصميم ممتاز!'}
-                    {overallScore >= 70 && overallScore < 85 && '👍 تصميم جيد'}
-                    {overallScore < 70 && '⚠️ يحتاج تحسينات'}
-                  </h2>
-                  <p className='text-gray-600 text-sm'>
-                    {overallScore >= 85 && 'التناسق عالي وجودة التصميم ممتازة'}
-                    {overallScore >= 70 && overallScore < 85 && 'تصميم جيد لكن في مجال للتحسين'}
-                    {overallScore < 70 && 'التصميم يحتاج تحسينات جوهرية'}
-                  </p>
-                </div>
+                <h2 className='text-2xl font-bold text-gray-900 mb-2'>
+                  {overallScore >= 85 && '🎉 تصميم ممتاز!'}
+                  {overallScore >= 70 && overallScore < 85 && '👍 تصميم جيد'}
+                  {overallScore < 70 && ' يحتاج تحسينات'}
+                </h2>
+                <p className='text-gray-600 text-sm'>
+                  {overallScore >= 85 && 'التناسق عالي وجودة التصميم ممتازة'}
+                  {overallScore >= 70 && overallScore < 85 && 'تصميم جيد لكن في مجال للتحسين'}
+                  {overallScore < 70 && 'التصميم يحتاج تحسينات جوهرية'}
+                </p>
+              </div>
 
               <div className='grid grid-cols-2 gap-4'>
                 <div className='text-center p-4 bg-red-50 rounded-xl border border-red-200'>

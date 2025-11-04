@@ -1,5 +1,4 @@
-import React from 'react';
-import { cn } from '@/lib/utils';
+
 import { formatDistanceToNow } from 'date-fns';
 import {
   Bell,
@@ -11,7 +10,9 @@ import {
   Star,
   Trash2,
 } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const NOTIFICATION_ICONS = {
   booking_request: Briefcase,

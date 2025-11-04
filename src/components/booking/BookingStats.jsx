@@ -1,16 +1,16 @@
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { motion } from 'framer-motion';
 import {
   Clock,
   CheckCircle,
   XCircle,
   Package,
   DollarSign,
-  TrendingUp,
   Calendar,
   MapPin,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+
+import { Card, CardContent } from '@/components/ui/card';
+
 
 export default function BookingStats({ bookings }) {
   const stats = {

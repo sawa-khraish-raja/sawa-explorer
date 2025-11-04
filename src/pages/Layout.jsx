@@ -1,36 +1,36 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useCallback,
-  useRef,
-  useState,
-  useMemo,
-  memo,
-} from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   Menu,
   User,
   LogOut,
   LayoutDashboard,
-  MessageSquare,
   Youtube,
   Instagram,
   Briefcase,
-  Home,
   Info,
-  Compass,
-  Bell,
-  Globe,
   ChevronLeft,
   MapPin,
   Users,
   BarChart3,
 } from 'lucide-react';
+import { useEffect, useCallback, useState, useMemo, memo } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Toaster } from 'sonner';
+
+import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
+import { AuthModal } from '@/components/auth/AuthModal';
+import ChatLauncher from '@/components/chat/ChatLauncher';
+import MessagesBadge from '@/components/chat/MessagesBadge';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
+import GlobalStyles from '@/components/common/GlobalStyles';
+import ResponsiveStyles from '@/components/common/ResponsiveStyles';
+import { AppProvider, useAppContext } from '@/components/context/AppContext';
+import { LanguageProvider, useTranslation } from '@/components/i18n/LanguageContext';
+import { FCMProvider } from '@/components/notifications/FCMProvider';
+import NotificationBell from '@/components/notifications/NotificationBell';
+import NotificationPrompt from '@/components/notifications/NotificationPrompt';
+import NotificationWelcomePrompt from '@/components/notifications/NotificationWelcomePrompt';
 import { Button } from '@/components/ui/button';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,23 +38,10 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import NotificationBell from '@/components/notifications/NotificationBell';
-import NotificationPrompt from '@/components/notifications/NotificationPrompt';
-import NotificationWelcomePrompt from '@/components/notifications/NotificationWelcomePrompt';
-import MessagesBadge from '@/components/chat/MessagesBadge';
-import { cn } from '@/lib/utils';
-import { LanguageProvider, useTranslation } from '@/components/i18n/LanguageContext';
-import ChatLauncher from '@/components/chat/ChatLauncher';
-import ResponsiveStyles from '@/components/common/ResponsiveStyles';
-import GlobalStyles from '@/components/common/GlobalStyles';
-import ErrorBoundary from '@/components/common/ErrorBoundary';
-import { Toaster } from 'sonner';
-import { AppProvider, useAppContext } from '@/components/context/AppContext';
-import { FCMProvider } from '@/components/notifications/FCMProvider';
-import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
-import { AUTH_MODAL_EVENT } from '@/services/firebaseAuthAdapter';
-import { AuthModal } from '@/components/auth/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
+import { AUTH_MODAL_EVENT } from '@/services/firebaseAuthAdapter';
+import { createPageUrl } from '@/utils';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -705,7 +692,7 @@ const AppContent = memo(({ children, currentPageName }) => {
                             )}
                             {isMarketing && (
                               <p className='text-xs text-purple-600 font-semibold mt-1'>
-                                📊 Marketing
+                                Marketing
                               </p>
                             )}
                           </div>

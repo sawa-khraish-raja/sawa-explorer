@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
+import { Loader2, Plus, Building2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,6 +12,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -17,11 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader2, Plus, Building2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { addDocument, updateDocument } from '@/utils/firestore';
+
 
 export default function CreateOfficeDialog({ isOpen, onClose, office }) {
   const queryClient = useQueryClient();
@@ -52,9 +53,9 @@ export default function CreateOfficeDialog({ isOpen, onClose, office }) {
     mutationFn: (officeData) => {
       if (isEditing) {
         return updateDocument('offices', office.id, { ...officeData, updated_date: new Date().toISOString() });
-      } else {
+      } 
         return addDocument('offices', { ...officeData, created_date: new Date().toISOString() });
-      }
+      
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allOffices'] });

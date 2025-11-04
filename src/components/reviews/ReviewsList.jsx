@@ -1,9 +1,8 @@
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Star, ThumbsUp } from 'lucide-react';
-import { getUserDisplayName } from '../utils/userHelpers';
 import { format } from 'date-fns';
+import { Star, ThumbsUp } from 'lucide-react';
+
+import { Card, CardContent } from '@/components/ui/card';
+
 
 export default function ReviewsList({ reviews, hostEmail }) {
   if (!reviews || reviews.length === 0) {

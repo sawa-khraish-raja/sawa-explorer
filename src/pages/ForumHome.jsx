@@ -1,35 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { useAppContext } from '../components/context/AppContext';
-import { useQuery } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { MessageSquare, Compass, Plus, Sparkles } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
-import ForumPostsList from '../components/forum/ForumPostsList';
+import { MessageSquare, Compass, Plus, Sparkles } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+
+import PageHeroVideo from '../components/common/PageHeroVideo';
+import { useAppContext } from '../components/context/AppContext';
 import AdventuresList from '../components/forum/AdventuresList';
 import CreatePostModal from '../components/forum/CreatePostModal';
-import PageHeroVideo from '../components/common/PageHeroVideo';
+import ForumPostsList from '../components/forum/ForumPostsList';
 
 export default function ForumHome() {
+  const { user } = useAppContext();
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('discussions');
   const [showCreatePost, setShowCreatePost] = useState(false);
-
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: async () => {
-      try {
-        return await useAppContext().user;
-      } catch (e) {
-        return null;
-      }
-    },
-  });
 
   // Read tab from URL
   useEffect(() => {

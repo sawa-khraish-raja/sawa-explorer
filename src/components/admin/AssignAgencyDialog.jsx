@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { useAppContext } from '../context/AppContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
+import { Building2, Loader2, User, DollarSign } from 'lucide-react';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,20 +11,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Building2, Loader2, User, DollarSign } from 'lucide-react';
+import { queryDocuments, addDocument, updateDocument } from '@/utils/firestore';
+
 import { showNotification } from '../notifications/NotificationManager';
 
 export default function AssignAgencyDialog({ host, isOpen, onClose }) {
+  const { user } = useAppContext();
   const queryClient = useQueryClient();
   const [selectedAgencyId, setSelectedAgencyId] = useState(host?.agency_id || '');
 
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => useAppContext().user,
-  });
 
   const { data: agencies = [] } = useQuery({
     queryKey: ['allAgencies'],

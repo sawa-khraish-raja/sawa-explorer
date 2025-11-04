@@ -1,29 +1,26 @@
-import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { queryDocuments, addDocument, updateDocument } from '@/utils/firestore';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import {
   Bell,
-  BellOff,
   Mail,
   Volume2,
   VolumeX,
   Moon,
   Briefcase,
   MessageSquare,
-  Star,
   DollarSign,
-  Megaphone,
-  Save,
   Loader2,
   Check,
 } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { queryDocuments, addDocument, updateDocument } from '@/utils/firestore';
+
 import { useAppContext } from '../context/AppContext';
 
 export default function NotificationSettings() {
@@ -71,7 +68,7 @@ export default function NotificationSettings() {
   const updatePreferences = useMutation({
     mutationFn: async (updates) => {
       if (!preferences?.id) return;
-      return await updateDocument('notification_preferences', preferences.id, {
+      return updateDocument('notification_preferences', preferences.id, {
         ...updates,
         updated_date: new Date().toISOString(),
       });

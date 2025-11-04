@@ -1,13 +1,5 @@
-import React, { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import MarketingLayout from '../components/marketing/MarketingLayout';
-import MarketingGuard from '../components/marketing/MarketingGuard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { format, subDays } from 'date-fns';
 import {
   Users,
   TrendingUp,
@@ -17,19 +9,14 @@ import {
   MapPin,
   DollarSign,
   Calendar,
-  Target,
   MessageSquare,
   Sparkles,
-  RefreshCw,
   Building2,
   UserCheck,
 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   PieChart,
@@ -37,8 +24,13 @@ import {
   Cell,
   Legend,
 } from 'recharts';
-import { format, subDays } from 'date-fns';
-import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getAllDocuments } from '@/utils/firestore';
+
+import MarketingGuard from '../components/marketing/MarketingGuard';
+import MarketingLayout from '../components/marketing/MarketingLayout';
 
 const COLORS = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#6366F1'];
 

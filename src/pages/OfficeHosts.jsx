@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments } from '@/utils/firestore';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Loader2, ArrowLeft, Search, UserPlus } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import { useAppContext } from '@/components/context/AppContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   Table,
@@ -13,11 +16,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowLeft, Search, Plus, UserPlus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { toast } from 'sonner';
+import { getAllDocuments, queryDocuments } from '@/utils/firestore';
 
 export default function OfficeHosts() {
   const navigate = useNavigate();
@@ -40,7 +40,7 @@ export default function OfficeHosts() {
     queryKey: ['officeHosts', office?.id],
     queryFn: async () => {
       if (!office?.id) return [];
-      return await queryDocuments('users', [
+      return queryDocuments('users', [
         ['office_id', '==', office.id],
         ['host_approved', '==', true],
       ]);

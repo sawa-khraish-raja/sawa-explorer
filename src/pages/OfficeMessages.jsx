@@ -1,11 +1,5 @@
-import React, { useState } from 'react';
-import { useAppContext } from '../components/context/AppContext';
 import { useQuery } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { formatDistanceToNow, format } from 'date-fns';
 import {
   MessageSquare,
   Loader2,
@@ -13,30 +7,31 @@ import {
   MapPin,
   Calendar,
   Eye,
-  CheckCircle,
   DollarSign,
 } from 'lucide-react';
-import { formatDistanceToNow, format } from 'date-fns';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { BookingID } from '../components/common/BookingID';
-import { useSawaTranslation } from '../components/chat/useSawaTranslation';
+
+
 import { normLang } from '@/components/i18n/i18nVoice';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { createPageUrl } from '@/utils';
+import { getAllDocuments, queryDocuments, getDocument } from '@/utils/firestore';
+
 import MessageBubble from '../components/chat/MessageBubble';
+import { useSawaTranslation } from '../components/chat/useSawaTranslation';
 
 export default function OfficeMessages() {
+  const { user } = useAppContext();
   const navigate = useNavigate();
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [showConversationDialog, setShowConversationDialog] = useState(false);
   const [displayLanguage, setDisplayLanguage] = useState(() =>
     normLang(localStorage.getItem('sawa_display_lang') || 'ar')
   );
-
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => useAppContext().user,
-  });
 
   const { data: office } = useQuery({
     queryKey: ['office', user?.email],
@@ -86,7 +81,7 @@ export default function OfficeMessages() {
     queryKey: ['conversationMessages', selectedConversation?.id],
     queryFn: async () => {
       if (!selectedConversation) return [];
-      return await queryDocuments(
+      return queryDocuments(
         'messages',
         [['conversation_id', '==', selectedConversation.id]],
         'created_date'
@@ -105,7 +100,7 @@ export default function OfficeMessages() {
     queryKey: ['conversationBooking', selectedConversation?.booking_id],
     queryFn: async () => {
       if (!selectedConversation?.booking_id) return null;
-      return await getDocument('bookings', selectedConversation.booking_id);
+      return getDocument('bookings', selectedConversation.booking_id);
     },
     enabled: !!selectedConversation?.booking_id,
   });
@@ -114,7 +109,7 @@ export default function OfficeMessages() {
     queryKey: ['conversationOffers', selectedConversation?.booking_id],
     queryFn: async () => {
       if (!selectedConversation?.booking_id) return [];
-      return await queryDocuments('offers', [['booking_id', '==', selectedConversation.booking_id,
+      return queryDocuments('offers', [['booking_id', '==', selectedConversation.booking_id,
       ]]);
     },
     enabled: !!selectedConversation?.booking_id,

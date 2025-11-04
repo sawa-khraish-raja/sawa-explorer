@@ -1,14 +1,14 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments } from '@/utils/firestore';
-import { useAppContext } from '@/components/context/AppContext';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, Loader2, ArrowLeft, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
+import { Calendar, Loader2, ArrowLeft, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+import { useAppContext } from '@/components/context/AppContext';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { createPageUrl } from '@/utils';
+import { getAllDocuments, queryDocuments } from '@/utils/firestore';
 
 export default function OfficeBookings() {
   const navigate = useNavigate();

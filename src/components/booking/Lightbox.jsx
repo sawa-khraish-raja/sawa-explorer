@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useCallback, useEffect } from 'react';
+
 
 export default function Lightbox({ photos, currentIndex, onClose, onNavigate }) {
   if (!photos || photos.length === 0) return null;

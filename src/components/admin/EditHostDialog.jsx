@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -7,11 +10,8 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -19,7 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function EditHostDialog({ host, onOpenChange, onSave, isSaving }) {
   const [formData, setFormData] = useState({});

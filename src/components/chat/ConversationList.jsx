@@ -1,9 +1,13 @@
-import React from 'react';
-import { cn } from '@/lib/utils';
 import { format, isToday, isYesterday } from 'date-fns';
-import { MessageSquare, Check, CheckCheck, Pin, Lock } from 'lucide-react';
-import { getUserDisplayName } from '../utils/userHelpers';
 import { motion } from 'framer-motion';
+import { MessageSquare, Pin, Lock } from 'lucide-react';
+
+import { cn } from '@/lib/utils';
+
+
+import { getUserDisplayName } from '../utils/userHelpers';
+
+
 import UnreadBadge from './UnreadBadge';
 
 export default function ConversationList({
@@ -45,9 +49,9 @@ export default function ConversationList({
         conversation.unread_by_hosts.includes(currentUserEmail)
         ? 1
         : 0;
-    } else {
+    } 
       return conversation.unread_by_traveler ? 1 : 0;
-    }
+    
   };
 
   return (

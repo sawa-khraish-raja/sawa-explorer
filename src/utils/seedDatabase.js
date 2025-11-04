@@ -1,4 +1,4 @@
-import { addDocument, setDocument } from './firestore';
+import { addDocument } from './firestore';
 
 /**
  * Seed Database with Sample Data
@@ -148,128 +148,128 @@ const getAdventures = (cityIds, cityMap) => {
       min_guests: 2,
       current_participants: 3,
       category: 'Boat Tour',
-    tags: ['romantic', 'scenic', 'photography'],
-    images: [
-      'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=800',
-      'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800',
-    ],
-    meeting_point: 'Eminönü Pier, Gate 3',
-    what_included: ['Boat cruise', 'Welcome drink', 'Snacks', 'Guide'],
-    what_to_bring: ['Light jacket', 'Camera', 'Sunglasses'],
-    languages: ['English', 'Turkish'],
-    cancellation_policy: 'Free cancellation up to 48 hours before',
-    is_active: true,
-    approval_status: 'approved',
-    status: 'upcoming',
-    rating: 4.9,
-    total_reviews: 87,
-    total_bookings: 342,
-  },
-  {
-    title: 'Pyramid & Sphinx Tour',
-    city_id: cityIds[2],
-    city_name: 'Cairo',
-    host_id: 'demo-host-3',
-    host_name: 'Mohammed Ibrahim',
-    host_email: 'mohammed@example.com',
-    description:
-      'Visit the iconic Pyramids of Giza and the Great Sphinx. Learn about ancient Egyptian civilization from an expert Egyptologist guide.',
-    short_description: 'Discover the wonders of ancient Egypt.',
-    date: getFutureDate(14), // 14 days from now
-    duration: '4 hours',
-    price: 80,
-    currency: 'USD',
-    max_guests: 15,
-    min_guests: 1,
-    current_participants: 5,
-    category: 'Historical Tour',
-    tags: ['historical', 'archaeology', 'iconic'],
-    images: [
-      'https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=800',
-      'https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=800',
-    ],
-    meeting_point: 'Giza Plateau Visitor Center',
-    what_included: ['Expert guide', 'Transportation', 'Entrance tickets', 'Lunch'],
-    what_to_bring: ['Hat', 'Sunscreen', 'Comfortable shoes', 'Water'],
-    languages: ['English', 'Arabic', 'French'],
-    cancellation_policy: 'Free cancellation up to 24 hours before',
-    is_active: true,
-    approval_status: 'approved',
-    status: 'upcoming',
-    rating: 4.7,
-    total_reviews: 134,
-    total_bookings: 523,
-  },
-  {
-    title: 'Petra Day Trip',
-    city_id: cityIds[3],
-    city_name: 'Amman',
-    host_id: 'demo-host-4',
-    host_name: 'Omar Al-Rashid',
-    host_email: 'omar@example.com',
-    description:
-      'Full day excursion to the ancient city of Petra. Walk through the Siq, marvel at the Treasury, and explore this UNESCO World Heritage site.',
-    short_description: 'Journey to the ancient Rose City of Petra.',
-    date: getFutureDate(21), // 21 days from now
-    duration: 'Full day',
-    price: 120,
-    currency: 'USD',
-    max_guests: 12,
-    min_guests: 2,
-    current_participants: 7,
-    category: 'Day Trip',
-    tags: ['adventure', 'historical', 'unesco'],
-    images: [
-      'https://images.unsplash.com/photo-1577717903315-1691ae25f87e?w=800',
-      'https://images.unsplash.com/photo-1578895101408-1a36b834405b?w=800',
-    ],
-    meeting_point: 'Amman City Center, specified hotel pickup',
-    what_included: ['Transportation', 'Guide', 'Entrance fees', 'Lunch', 'Water'],
-    what_to_bring: ['Hiking shoes', 'Hat', 'Sunscreen', 'Camera'],
-    languages: ['English', 'Arabic'],
-    cancellation_policy: 'Free cancellation up to 72 hours before',
-    is_active: true,
-    approval_status: 'approved',
-    status: 'upcoming',
-    rating: 5.0,
-    total_reviews: 67,
-    total_bookings: 198,
-  },
-  {
-    title: 'Medina Food Tour',
-    city_id: cityIds[4],
-    city_name: 'Tunis',
-    host_id: 'demo-host-5',
-    host_name: 'Fatima Ben Ali',
-    host_email: 'fatima@example.com',
-    description:
-      'Taste authentic Tunisian cuisine in the historic Medina. Sample traditional dishes, visit local markets, and learn about Tunisian food culture.',
-    short_description: 'Culinary journey through the historic Medina.',
-    date: getFutureDate(5), // 5 days from now
-    duration: '3 hours',
-    price: 50,
-    currency: 'USD',
-    max_guests: 10,
-    min_guests: 1,
-    current_participants: 2,
-    category: 'Food Tour',
-    tags: ['food', 'cultural', 'local experience'],
-    images: [
-      'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800',
-      'https://images.unsplash.com/photo-1551632811-561732d1e306?w=800',
-    ],
-    meeting_point: 'Medina Main Gate',
-    what_included: ['Food tastings', 'Local guide', 'Traditional coffee', 'Market tour'],
-    what_to_bring: ['Appetite', 'Camera', 'Comfortable shoes'],
-    languages: ['English', 'French', 'Arabic'],
-    cancellation_policy: 'Free cancellation up to 24 hours before',
-    is_active: true,
-    approval_status: 'approved',
-    status: 'upcoming',
-    rating: 4.6,
-    total_reviews: 43,
-    total_bookings: 112,
-  },
+      tags: ['romantic', 'scenic', 'photography'],
+      images: [
+        'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=800',
+        'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800',
+      ],
+      meeting_point: 'Eminönü Pier, Gate 3',
+      what_included: ['Boat cruise', 'Welcome drink', 'Snacks', 'Guide'],
+      what_to_bring: ['Light jacket', 'Camera', 'Sunglasses'],
+      languages: ['English', 'Turkish'],
+      cancellation_policy: 'Free cancellation up to 48 hours before',
+      is_active: true,
+      approval_status: 'approved',
+      status: 'upcoming',
+      rating: 4.9,
+      total_reviews: 87,
+      total_bookings: 342,
+    },
+    {
+      title: 'Pyramid & Sphinx Tour',
+      city_id: cityIds[2],
+      city_name: 'Cairo',
+      host_id: 'demo-host-3',
+      host_name: 'Mohammed Ibrahim',
+      host_email: 'mohammed@example.com',
+      description:
+        'Visit the iconic Pyramids of Giza and the Great Sphinx. Learn about ancient Egyptian civilization from an expert Egyptologist guide.',
+      short_description: 'Discover the wonders of ancient Egypt.',
+      date: getFutureDate(14), // 14 days from now
+      duration: '4 hours',
+      price: 80,
+      currency: 'USD',
+      max_guests: 15,
+      min_guests: 1,
+      current_participants: 5,
+      category: 'Historical Tour',
+      tags: ['historical', 'archaeology', 'iconic'],
+      images: [
+        'https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=800',
+        'https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=800',
+      ],
+      meeting_point: 'Giza Plateau Visitor Center',
+      what_included: ['Expert guide', 'Transportation', 'Entrance tickets', 'Lunch'],
+      what_to_bring: ['Hat', 'Sunscreen', 'Comfortable shoes', 'Water'],
+      languages: ['English', 'Arabic', 'French'],
+      cancellation_policy: 'Free cancellation up to 24 hours before',
+      is_active: true,
+      approval_status: 'approved',
+      status: 'upcoming',
+      rating: 4.7,
+      total_reviews: 134,
+      total_bookings: 523,
+    },
+    {
+      title: 'Petra Day Trip',
+      city_id: cityIds[3],
+      city_name: 'Amman',
+      host_id: 'demo-host-4',
+      host_name: 'Omar Al-Rashid',
+      host_email: 'omar@example.com',
+      description:
+        'Full day excursion to the ancient city of Petra. Walk through the Siq, marvel at the Treasury, and explore this UNESCO World Heritage site.',
+      short_description: 'Journey to the ancient Rose City of Petra.',
+      date: getFutureDate(21), // 21 days from now
+      duration: 'Full day',
+      price: 120,
+      currency: 'USD',
+      max_guests: 12,
+      min_guests: 2,
+      current_participants: 7,
+      category: 'Day Trip',
+      tags: ['adventure', 'historical', 'unesco'],
+      images: [
+        'https://images.unsplash.com/photo-1577717903315-1691ae25f87e?w=800',
+        'https://images.unsplash.com/photo-1578895101408-1a36b834405b?w=800',
+      ],
+      meeting_point: 'Amman City Center, specified hotel pickup',
+      what_included: ['Transportation', 'Guide', 'Entrance fees', 'Lunch', 'Water'],
+      what_to_bring: ['Hiking shoes', 'Hat', 'Sunscreen', 'Camera'],
+      languages: ['English', 'Arabic'],
+      cancellation_policy: 'Free cancellation up to 72 hours before',
+      is_active: true,
+      approval_status: 'approved',
+      status: 'upcoming',
+      rating: 5.0,
+      total_reviews: 67,
+      total_bookings: 198,
+    },
+    {
+      title: 'Medina Food Tour',
+      city_id: cityIds[4],
+      city_name: 'Tunis',
+      host_id: 'demo-host-5',
+      host_name: 'Fatima Ben Ali',
+      host_email: 'fatima@example.com',
+      description:
+        'Taste authentic Tunisian cuisine in the historic Medina. Sample traditional dishes, visit local markets, and learn about Tunisian food culture.',
+      short_description: 'Culinary journey through the historic Medina.',
+      date: getFutureDate(5), // 5 days from now
+      duration: '3 hours',
+      price: 50,
+      currency: 'USD',
+      max_guests: 10,
+      min_guests: 1,
+      current_participants: 2,
+      category: 'Food Tour',
+      tags: ['food', 'cultural', 'local experience'],
+      images: [
+        'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800',
+        'https://images.unsplash.com/photo-1551632811-561732d1e306?w=800',
+      ],
+      meeting_point: 'Medina Main Gate',
+      what_included: ['Food tastings', 'Local guide', 'Traditional coffee', 'Market tour'],
+      what_to_bring: ['Appetite', 'Camera', 'Comfortable shoes'],
+      languages: ['English', 'French', 'Arabic'],
+      cancellation_policy: 'Free cancellation up to 24 hours before',
+      is_active: true,
+      approval_status: 'approved',
+      status: 'upcoming',
+      rating: 4.6,
+      total_reviews: 43,
+      total_bookings: 112,
+    },
   ];
 };
 
@@ -321,11 +321,9 @@ const services = [
  * Seed all data
  */
 export const seedAllData = async () => {
-  console.log('🌱 Starting database seeding...');
-
   try {
     // Seed Cities
-    console.log('\n📍 Seeding cities...');
+
     const cityIds = [];
     const cityMap = {};
     for (const city of cities) {
@@ -333,32 +331,23 @@ export const seedAllData = async () => {
       cityIds.push(id);
       cityMap[city.name] = id;
     }
-    console.log(` Created ${cityIds.length} cities`);
 
     // Seed Adventures (now depends on cityIds)
-    console.log('\n🎒 Seeding adventures...');
+
     const adventureIds = [];
     const adventuresData = getAdventures(cityIds, cityMap);
     for (const adventure of adventuresData) {
       const id = await addDocument('adventures', adventure);
       adventureIds.push(id);
     }
-    console.log(` Created ${adventureIds.length} adventures`);
 
     // Seed Services
-    console.log('\n🛎️ Seeding services...');
+
     const serviceIds = [];
     for (const service of services) {
-      const id = await addDocument('services', service);
+      const id = addDocument('services', service);
       serviceIds.push(id);
     }
-    console.log(` Created ${serviceIds.length} services`);
-
-    console.log('\n🎉 Database seeding complete!');
-    console.log('📊 Summary:');
-    console.log(`   - ${cityIds.length} cities`);
-    console.log(`   - ${adventureIds.length} adventures`);
-    console.log(`   - ${serviceIds.length} services`);
 
     return {
       success: true,
@@ -378,13 +367,12 @@ export const seedAllData = async () => {
  * Seed only cities
  */
 export const seedCities = async () => {
-  console.log('📍 Seeding cities...');
   const cityIds = [];
   for (const city of cities) {
     const id = await addDocument('cities', city);
     cityIds.push(id);
   }
-  console.log(` Created ${cityIds.length} cities`);
+
   return cityIds;
 };
 
@@ -392,9 +380,6 @@ export const seedCities = async () => {
  * Seed only adventures (requires cities to exist)
  */
 export const seedAdventures = async () => {
-  console.log('🎒 Seeding adventures...');
-  console.log('⚠️ Note: This requires cities to be seeded first!');
-
   // Get existing cities
   const { getAllDocuments } = await import('./firestore');
   const existingCities = await getAllDocuments('cities');
@@ -415,7 +400,7 @@ export const seedAdventures = async () => {
     const id = await addDocument('adventures', adventure);
     adventureIds.push(id);
   }
-  console.log(` Created ${adventureIds.length} adventures`);
+
   return adventureIds;
 };
 
@@ -423,13 +408,11 @@ export const seedAdventures = async () => {
  * Seed only services
  */
 export const seedServices = async () => {
-  console.log('🛎️ Seeding services...');
   const serviceIds = [];
   for (const service of services) {
-    const id = await addDocument('services', service);
+    const id = addDocument('services', service);
     serviceIds.push(id);
   }
-  console.log(` Created ${serviceIds.length} services`);
   return serviceIds;
 };
 
@@ -437,15 +420,13 @@ export const seedServices = async () => {
  * Clear all adventures from the database
  */
 export const clearAdventures = async () => {
-  console.log('🗑️ Clearing all adventures...');
   const { getAllDocuments, deleteDocument } = await import('./firestore');
   const existingAdventures = await getAllDocuments('adventures');
 
   for (const adventure of existingAdventures) {
-    await deleteDocument('adventures', adventure.id);
+    deleteDocument('adventures', adventure.id);
   }
 
-  console.log(`✅ Cleared ${existingAdventures.length} adventures`);
   return existingAdventures.length;
 };
 
@@ -453,8 +434,6 @@ export const clearAdventures = async () => {
  * Seed sample bookings and offers for testing
  */
 export const seedBookingsAndOffers = async (userId, userEmail) => {
-  console.log('📦 Seeding sample bookings and offers...');
-
   // First, create a service booking
   const booking = {
     traveler_email: userEmail,
@@ -473,7 +452,6 @@ export const seedBookingsAndOffers = async (userId, userEmail) => {
   };
 
   const bookingId = await addDocument('bookings', booking);
-  console.log(`✅ Created booking: ${bookingId}`);
 
   // Now create a pending offer for this booking
   const offer = {
@@ -492,14 +470,14 @@ export const seedBookingsAndOffers = async (userId, userEmail) => {
     },
     status: 'pending',
     inclusions: 'Airport pickup, City tour guide, Traditional lunch, Hotel recommendations',
-    message: 'I would be happy to show you the beautiful city of Damascus! I have 10 years of experience and great reviews.',
+    message:
+      'I would be happy to show you the beautiful city of Damascus! I have 10 years of experience and great reviews.',
     expiry_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days from now
     created_date: new Date().toISOString(),
     updated_date: new Date().toISOString(),
   };
 
   const offerId = await addDocument('offers', offer);
-  console.log(`✅ Created offer: ${offerId}`);
 
   return { bookingId, offerId };
 };
@@ -508,8 +486,6 @@ export const seedBookingsAndOffers = async (userId, userEmail) => {
  * Seed sample notifications for testing
  */
 export const seedNotifications = async (userId, userEmail) => {
-  console.log('🔔 Seeding sample notifications...');
-
   const sampleNotifications = [
     {
       user_id: userId,
@@ -556,6 +532,5 @@ export const seedNotifications = async (userId, userEmail) => {
     notificationIds.push(id);
   }
 
-  console.log(` Created ${notificationIds.length} sample notifications`);
   return notificationIds;
 };

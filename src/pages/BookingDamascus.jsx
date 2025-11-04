@@ -1,4 +1,3 @@
-import React from 'react';
 import BookingPageTemplate from '../components/booking/BookingPageTemplate';
 
 export default function BookingDamascus() {

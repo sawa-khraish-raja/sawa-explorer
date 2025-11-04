@@ -1,5 +1,6 @@
-import React from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import React from 'react';
+
 import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
 

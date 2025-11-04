@@ -1,9 +1,5 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getAllDocuments } from '@/utils/firestore';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 import {
   Sparkles,
   Calendar,
@@ -14,9 +10,13 @@ import {
   Loader2,
   AlertCircle,
 } from 'lucide-react';
-import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { createPageUrl } from '@/utils';
+import { getAllDocuments } from '@/utils/firestore';
 
 export default function AdventuresHomeSection() {
   const navigate = useNavigate();

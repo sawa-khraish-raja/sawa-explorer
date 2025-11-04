@@ -1,6 +1,10 @@
-import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, updateDocument } from '@/utils/firestore';
+import { Loader2 } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -8,7 +12,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -17,10 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from 'sonner';
-import { Loader2, X } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { getAllDocuments, updateDocument } from '@/utils/firestore';
 
 export default function ApproveHostDialog({ isOpen, onClose, user, onSuccess }) {
   const queryClient = useQueryClient();
@@ -44,6 +44,18 @@ export default function ApproveHostDialog({ isOpen, onClose, user, onSuccess }) 
     queryFn: () => getAllDocuments('cities'),
   });
 
+  // Filter out duplicate city names (keep first occurrence)
+  const uniqueCities = useMemo(() => {
+    const seen = new Set();
+    return cities.filter((city) => {
+      if (seen.has(city.name)) {
+        return false;
+      }
+      seen.add(city.name);
+      return true;
+    });
+  }, [cities]);
+
   // Note: Offices collection not yet migrated to Firestore
   const { data: offices = [] } = useQuery({
     queryKey: ['offices'],
@@ -55,14 +67,6 @@ export default function ApproveHostDialog({ isOpen, onClose, user, onSuccess }) 
     mutationFn: async () => {
       if (!city) throw new Error('Please select a city');
       if (hostType === 'office' && !officeId) throw new Error('Please select an office');
-
-      console.log('✅ Approving host:', {
-        userId: user.id,
-        email: user.email,
-        hostType,
-        city,
-        officeId,
-      });
 
       // Update user document with host approval
       const userData = {
@@ -78,7 +82,7 @@ export default function ApproveHostDialog({ isOpen, onClose, user, onSuccess }) 
 
       await updateDocument('users', user.id, userData);
 
-      console.log('✅ User approved as host successfully');
+      console.log(' User approved as host successfully');
       return true;
     },
     onSuccess: () => {
@@ -123,7 +127,7 @@ export default function ApproveHostDialog({ isOpen, onClose, user, onSuccess }) 
                 <SelectValue placeholder='Select city...' />
               </SelectTrigger>
               <SelectContent>
-                {cities.map((c) => (
+                {uniqueCities.map((c) => (
                   <SelectItem key={c.id} value={c.name}>
                     {c.name}
                   </SelectItem>

@@ -1,60 +1,39 @@
-import React, { useState, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import AdminLayout from '../components/admin/AdminLayout';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { format } from 'date-fns';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import {
-  HelpCircle,
   MessageSquare,
   Clock,
   Search,
   User,
   Calendar,
-  TrendingUp,
   Activity,
   Users,
-  Zap,
-  FileText,
   Loader2,
   XCircle,
   Eye,
-  CheckCircle2,
   AlertTriangle,
   MapPin,
   DollarSign,
   Star,
-  Phone,
-  Mail,
-  Briefcase,
   Package,
-  Filter,
   Download,
   RefreshCw,
   BarChart3,
-  Shield,
   Sparkles,
   MessageCircleWarning,
-  Bell,
-  ArrowUpRight,
-  ArrowDownRight,
-  Minus,
   UserCheck,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { useState, useMemo } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { getAllDocuments } from '@/utils/firestore';
+
+import AdminLayout from '../components/admin/AdminLayout';
 
 export default function CustomerSupport() {
   const queryClient = useQueryClient();
@@ -404,7 +383,7 @@ export default function CustomerSupport() {
           </div>
         )}
 
-        {/* 📊 System Health */}
+        {/* System Health */}
         <Card>
           <CardHeader>
             <CardTitle className='flex items-center gap-2'>
@@ -444,7 +423,7 @@ export default function CustomerSupport() {
           </CardContent>
         </Card>
 
-        {/* 🔍 Bookings Search & Filter */}
+        {/*  Bookings Search & Filter */}
         <Card>
           <CardHeader>
             <CardTitle className='flex items-center gap-2'>
@@ -669,7 +648,7 @@ export default function CustomerSupport() {
         </div>
       </div>
 
-      {/* 📋 Booking Details Modal */}
+      {/* Booking Details Modal */}
       {selectedBooking && (
         <Dialog open={!!selectedBooking} onOpenChange={() => setSelectedBooking(null)}>
           <DialogContent className='max-w-4xl max-h-[90vh] overflow-y-auto'>

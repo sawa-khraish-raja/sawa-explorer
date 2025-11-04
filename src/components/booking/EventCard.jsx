@@ -1,20 +1,17 @@
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { format } from 'date-fns';
+import { motion } from 'framer-motion';
 import {
   Calendar,
   MapPin,
   DollarSign,
-  Clock,
   Users,
   ExternalLink,
   Star,
-  Sparkles,
-  Tag,
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { motion } from 'framer-motion';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 const getCategoryIcon = (category) => {

@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useAppContext } from '../context/AppContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import { Card } from '@/components/ui/card';
-import { Heart, Play, Eye, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Heart, Play, Eye, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
+
 import { cn } from '@/lib/utils';
+import { getAllDocuments, queryDocuments, updateDocument } from '@/utils/firestore';
+
+import { useAppContext } from '../context/AppContext';
 import { NotificationHelpers } from '../notifications/notificationHelpers';
 
 export default function HostReelsDisplay({ hostEmail }) {
@@ -24,7 +24,7 @@ export default function HostReelsDisplay({ hostEmail }) {
         console.log(' User loaded:', user?.email);
         setCurrentUser(user);
       } catch (error) {
-        console.log('⚠️ No user logged in');
+        console.log(' No user logged in');
         setCurrentUser(null);
       } finally {
         setIsLoadingUser(false);
@@ -36,15 +36,13 @@ export default function HostReelsDisplay({ hostEmail }) {
   const { data: reels = [], isLoading: isLoadingReels } = useQuery({
     queryKey: ['publicHostReels', hostEmail],
     queryFn: async () => {
-      console.log('📥 Fetching reels for:', hostEmail);
       const allReels = await queryDocuments('host_reels', [
         {
           host_email: hostEmail,
           is_active: true,
         },
-        '-created_date'
-      );
-      console.log(' Found reels:', allReels.length);
+        '-created_date',
+      ]);
       return allReels;
     },
     enabled: !!hostEmail,
@@ -54,11 +52,9 @@ export default function HostReelsDisplay({ hostEmail }) {
 
   const likeReelMutation = useMutation({
     mutationFn: async (reelId) => {
-      console.log('❤️ Starting like process for reel:', reelId);
-
       // Check if user is logged in
       if (!currentUser) {
-        console.log('⚠️ User not logged in, redirecting...');
+        console.log(' User not logged in, redirecting...');
         toast.error('Please login to like reels', { duration: 2000 });
         setTimeout(() => {
           navigate('/login');
@@ -75,53 +71,39 @@ export default function HostReelsDisplay({ hostEmail }) {
         throw new Error('Reel not found');
       }
 
-      console.log('📊 Current reel data:', {
-        id: reel.id,
-        likes_count: reel.likes_count,
-        liked_by: reel.liked_by,
-        host_email: reel.host_email,
-      });
-
       const likedBy = Array.isArray(reel.liked_by) ? reel.liked_by : [];
       const hasLiked = likedBy.includes(currentUser.email);
 
-      console.log('🔍 Like status:', {
-        hasLiked,
-        currentLikes: likedBy.length,
-      });
-
       // Always add like (don't toggle, just like)
       if (hasLiked) {
-        console.log('⚠️ Already liked, skipping');
         return { hasLiked: true, isNewLike: false };
       }
 
       const newLikedBy = [...likedBy, currentUser.email];
       const newLikesCount = (reel.likes_count || 0) + 1;
 
-      console.log('💾 Updating to:', {
+      console.log('Updating to:', {
         likes_count: newLikesCount,
         liked_by_length: newLikedBy.length,
       });
 
-      await updateDocument('hostreels', reelId, { ...{
-        likes_count: newLikesCount,
-        liked_by: newLikedBy,
-      }, updated_date: new Date().toISOString() });
+      await updateDocument('hostreels', reelId, {
+        ...{
+          likes_count: newLikesCount,
+          liked_by: newLikedBy,
+        },
+        updated_date: new Date().toISOString(),
+      });
 
       console.log(' Like added successfully');
 
       //  Send anonymous notification to host
       if (currentUser.email !== reel.host_email) {
-        console.log('📬 Attempting to send notification to host:', reel.host_email);
         try {
           await NotificationHelpers.onReelLiked(reelId, reel.host_email);
-          console.log(' Notification sent successfully');
-        } catch (notifError) {
-          console.error(' Failed to send notification:', notifError);
-        }
+        } catch (notifError) {}
       } else {
-        console.log('⚠️ User is the host, skipping notification');
+        console.log(' User is the host, skipping notification');
       }
 
       return { hasLiked: true, isNewLike: true };

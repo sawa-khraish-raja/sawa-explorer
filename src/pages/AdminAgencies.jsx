@@ -1,25 +1,9 @@
-import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, addDocument, updateDocument } from '@/utils/firestore';
-import { useAppContext } from '../components/context/AppContext';
-import AdminLayout from '../components/admin/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
+import { format } from 'date-fns';
 import {
   Building2,
   Plus,
   Edit,
-  Trash2,
   Users,
   DollarSign,
   MapPin,
@@ -27,11 +11,27 @@ import {
   Mail,
   Search,
   Loader2,
-  Eye,
   AlertCircle,
 } from 'lucide-react';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { getAllDocuments, addDocument, updateDocument } from '@/utils/firestore';
+
+import AdminLayout from '../components/admin/AdminLayout';
+import { useAppContext } from '../components/context/AppContext';
 import { showNotification } from '../components/notifications/NotificationManager';
-import { format } from 'date-fns';
 
 export default function AdminAgencies() {
   const queryClient = useQueryClient();
@@ -187,7 +187,7 @@ export default function AdminAgencies() {
   const handleCreateAgency = () => {
     if (!newAgency.name || !newAgency.email || !newAgency.city) {
       showNotification({
-        title: '⚠️ Validation Error',
+        title: ' Validation Error',
         message: 'Please fill in all required fields',
         type: 'warning',
       });

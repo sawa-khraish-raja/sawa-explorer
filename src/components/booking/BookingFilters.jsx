@@ -1,7 +1,9 @@
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Calendar, Search, Filter, X, ArrowUpDown } from 'lucide-react';
+
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -9,8 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Calendar, Search, Filter, X, ArrowUpDown } from 'lucide-react';
+
 
 export default function BookingFilters({ filters, onFilterChange, onClearFilters, bookingCounts }) {
   return (
