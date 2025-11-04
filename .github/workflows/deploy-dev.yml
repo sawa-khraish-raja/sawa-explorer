@@ -1,4 +1,4 @@
-name: Deploy to Development
+name: Deploy to Dev
 
 on:
   push:
@@ -27,8 +27,8 @@ jobs:
 
       - name: Build project
         env:
-          NODE_ENV: development
-          VITE_ENV: development
+          NODE_ENV: dev
+          VITE_ENV: dev
         run: npm run build
 
       - name: Deploy to Firebase Hosting (Dev)
@@ -48,6 +48,6 @@ jobs:
       - name: Deployment Summary
         run: |
           echo "Deployment to DEV environment completed successfully"
-          echo "Environment: Development"
+          echo "Environment: Dev"
           echo "Branch: dev"
           echo "Firebase Project: sawa-explorer-dev"

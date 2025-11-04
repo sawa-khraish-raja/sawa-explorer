@@ -6,24 +6,24 @@ This document explains the CI/CD setup for the Sawa Explorer application using G
 
 We have two environments:
 
-- **DEV (Development)**: For testing and development
-- **PRD (Production)**: For production deployment
+- **dev**: For testing and development
+- **prd**: For production deployment
 
 ## Workflow
 
-### Development Workflow
+### Dev Workflow
 1. Push code to `dev` branch
 2. GitHub Actions automatically triggers
 3. Runs linter and builds the project
-4. Deploys to Firebase Dev environment
+4. Deploys to Firebase dev environment
 5. Test your changes in the dev environment
 
-### Production Workflow
+### Prd Workflow
 1. Merge code from `dev` to `main` branch
 2. GitHub Actions automatically triggers
 3. Runs linter, tests, and builds the project
-4. Deploys to Firebase Production environment
-5. Production site is updated
+4. Deploys to Firebase prd environment
+5. Prd site is updated
 
 ## Setup Instructions
 
@@ -47,13 +47,13 @@ For each Firebase project (dev and prd):
 
 ### Step 3: Get Firebase Service Account Keys
 
-For DEV environment:
+For dev environment:
 1. Go to Firebase Console > Project Settings > Service Accounts
 2. Click "Generate New Private Key" for `sawa-explorer-dev`
 3. Download the JSON file
 4. Copy the entire JSON content
 
-For PRD environment:
+For prd environment:
 1. Go to Firebase Console > Project Settings > Service Accounts
 2. Click "Generate New Private Key" for `sawa-explorer`
 3. Download the JSON file
@@ -74,18 +74,18 @@ Go to your GitHub repository > Settings > Secrets and variables > Actions
 
 Add the following secrets:
 
-#### For Development:
+#### For dev:
 - `FIREBASE_SERVICE_ACCOUNT_DEV`: Paste the entire service account JSON from dev project
 - `FIREBASE_TOKEN_DEV`: Paste the Firebase CI token for dev
 
-#### For Production:
-- `FIREBASE_SERVICE_ACCOUNT_PRD`: Paste the entire service account JSON from production project
-- `FIREBASE_TOKEN_PRD`: Paste the Firebase CI token for production
+#### For prd:
+- `FIREBASE_SERVICE_ACCOUNT_PRD`: Paste the entire service account JSON from prd project
+- `FIREBASE_TOKEN_PRD`: Paste the Firebase CI token for prd
 
 ### Step 6: Set Up GitHub Environments (Optional but Recommended)
 
 1. Go to Settings > Environments
-2. Create environment named `production`
+2. Create environment named `prd`
 3. Add protection rules:
    - Required reviewers (optional)
    - Wait timer (optional)
@@ -95,18 +95,18 @@ Add the following secrets:
 
 Update the following files with your actual values:
 
-#### .env.development
+#### .env.dev
 ```env
 FIREBASE_PROJECT_ID=sawa-explorer-dev
 FIREBASE_DATABASE_URL=https://sawa-explorer-dev.firebaseio.com
-VITE_API_URL=https://your-dev-api-url.com
+VITE_API_URL=https://dev.sawa-explorer.web.app
 ```
 
-#### .env.production
+#### .env.prd
 ```env
 FIREBASE_PROJECT_ID=sawa-explorer
 FIREBASE_DATABASE_URL=https://sawa-explorer.firebaseio.com
-VITE_API_URL=https://your-production-api-url.com
+VITE_API_URL=https://sawa-explorer.web.app
 ```
 
 ## Deployment Commands
@@ -193,8 +193,8 @@ firebase deploy --project prd
 
 After deployment, your apps will be available at:
 
-- Development: `https://sawa-explorer-dev.web.app`
-- Production: `https://sawa-explorer.web.app`
+- dev: `https://sawa-explorer-dev.web.app`
+- prd: `https://sawa-explorer.web.app`
 
 ## Additional Resources
 
