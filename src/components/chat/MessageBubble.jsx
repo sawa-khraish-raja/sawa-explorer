@@ -1,8 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import ReactMarkdown from 'react-markdown';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 import {
   Copy,
   Zap,
@@ -12,17 +8,20 @@ import {
   ChevronRight,
   Clock,
   X,
-  XCircle,
-  Check,
   DollarSign,
   AlertTriangle,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
-import { base44 } from '@/api/base44Client';
-import { format } from 'date-fns';
+import { useState, useEffect, useMemo } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { createPageUrl } from '@/utils';
+import { updateDocument } from '@/utils/firestore';
 
 const FunctionDisplay = ({ toolCall }) => {
   const [expanded, setExpanded] = useState(false);
@@ -233,7 +232,7 @@ export default function MessageBubble({
     setTranslationError(false);
 
     try {
-      const response = await base44.functions.invoke('messageTranslator', {
+      const response = await messageTranslator({
         text: message.original_text,
         toLang: normalizedDisplayLang,
         context: 'chat',
@@ -249,11 +248,14 @@ export default function MessageBubble({
             [normalizedDisplayLang]: response.data.translated,
           };
 
-          await base44.entities.Message.update(message.id, {
-            translations: updatedTranslations,
+          await updateDocument('messages', message.id, {
+            ...{
+              translations: updatedTranslations,
+            },
+            updated_date: new Date().toISOString(),
           });
         } catch (e) {
-          console.warn('⚠️ Failed to cache translation for message ID:', message.id, e);
+          console.warn(' Failed to cache translation for message ID:', message.id, e);
         }
       } else {
         setTranslationError(true);
@@ -290,7 +292,7 @@ export default function MessageBubble({
   const renderOfferCard = (offerData) => {
     if (!offerData) return null;
 
-    console.log('🔍 [MessageBubble] Rendering offer card:', {
+    console.log(' [MessageBubble] Rendering offer card:', {
       offerId: offerData.id,
       isBookingCancelled,
       offerType: offerData.offer_type,
@@ -389,7 +391,7 @@ export default function MessageBubble({
     const shouldShowCheckout =
       isAccepted && isServiceOffer && !isHostInConversation && !isBookingCancelled;
 
-    console.log('🔍 [MessageBubble] Checkout visibility:', {
+    console.log(' [MessageBubble] Checkout visibility:', {
       shouldShowCheckout,
       isAccepted,
       isServiceOffer,
@@ -624,55 +626,57 @@ export default function MessageBubble({
               >
                 <ReactMarkdown
                   components={{
-                  code: ({ inline, className, children, ...props }) => {
-                    const match = /language-(\w+)/.exec(className || '');
-                    return !inline && match ? (
-                      <div className='relative group/code my-2'>
-                        <pre className='bg-gray-900 text-gray-100 rounded-lg p-3 overflow-x-auto'>
-                          <code className={className} {...props}>
-                            {children}
-                          </code>
-                        </pre>
-                        <Button
-                          size='icon'
-                          variant='ghost'
-                          className='absolute top-2 right-2 h-7 w-7 opacity-0 group-hover/code:opacity-100 bg-gray-800 hover:bg-gray-700 transition-opacity'
-                          onClick={() => {
-                            navigator.clipboard.writeText(String(children).replace(/\n$/, ''));
-                            toast.success('Code copied!', { duration: 2000 });
-                          }}
-                        >
-                          <Copy className='h-3.5 w-3.5 text-gray-300' />
-                        </Button>
-                      </div>
-                    ) : (
-                      <code className='px-1.5 py-0.5 rounded-md bg-purple-100 text-purple-700 text-xs font-mono'>
+                    code: ({ inline, className, children, ...props }) => {
+                      const match = /language-(\w+)/.exec(className || '');
+                      return !inline && match ? (
+                        <div className='relative group/code my-2'>
+                          <pre className='bg-gray-900 text-gray-100 rounded-lg p-3 overflow-x-auto'>
+                            <code className={className} {...props}>
+                              {children}
+                            </code>
+                          </pre>
+                          <Button
+                            size='icon'
+                            variant='ghost'
+                            className='absolute top-2 right-2 h-7 w-7 opacity-0 group-hover/code:opacity-100 bg-gray-800 hover:bg-gray-700 transition-opacity'
+                            onClick={() => {
+                              navigator.clipboard.writeText(String(children).replace(/\n$/, ''));
+                              toast.success('Code copied!', { duration: 2000 });
+                            }}
+                          >
+                            <Copy className='h-3.5 w-3.5 text-gray-300' />
+                          </Button>
+                        </div>
+                      ) : (
+                        <code className='px-1.5 py-0.5 rounded-md bg-purple-100 text-purple-700 text-xs font-mono'>
+                          {children}
+                        </code>
+                      );
+                    },
+                    a: ({ children, ...props }) => (
+                      <a {...props} target='_blank' rel='noopener noreferrer' className='underline'>
                         {children}
-                      </code>
-                    );
-                  },
-                  a: ({ children, ...props }) => (
-                    <a {...props} target='_blank' rel='noopener noreferrer' className='underline'>
-                      {children}
-                    </a>
-                  ),
-                  p: ({ children }) => <p className='my-1 leading-relaxed'>{children}</p>,
-                  ul: ({ children }) => (
-                    <ul className='my-2 ml-4 list-disc space-y-1'>{children}</ul>
-                  ),
-                  ol: ({ children }) => (
-                    <ol className='my-2 ml-4 list-decimal space-y-1'>{children}</ol>
-                  ),
-                  li: ({ children }) => <li className='text-sm'>{children}</li>,
-                  h1: ({ children }) => <h1 className='text-lg font-bold my-2'>{children}</h1>,
-                  h2: ({ children }) => <h2 className='text-base font-bold my-2'>{children}</h2>,
-                  h3: ({ children }) => <h3 className='text-sm font-semibold my-2'>{children}</h3>,
-                  blockquote: ({ children }) => (
-                    <blockquote className='border-l-3 border-purple-400 pl-3 my-2 text-gray-700 italic'>
-                      {children}
-                    </blockquote>
-                  ),
-                }}
+                      </a>
+                    ),
+                    p: ({ children }) => <p className='my-1 leading-relaxed'>{children}</p>,
+                    ul: ({ children }) => (
+                      <ul className='my-2 ml-4 list-disc space-y-1'>{children}</ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol className='my-2 ml-4 list-decimal space-y-1'>{children}</ol>
+                    ),
+                    li: ({ children }) => <li className='text-sm'>{children}</li>,
+                    h1: ({ children }) => <h1 className='text-lg font-bold my-2'>{children}</h1>,
+                    h2: ({ children }) => <h2 className='text-base font-bold my-2'>{children}</h2>,
+                    h3: ({ children }) => (
+                      <h3 className='text-sm font-semibold my-2'>{children}</h3>
+                    ),
+                    blockquote: ({ children }) => (
+                      <blockquote className='border-l-3 border-purple-400 pl-3 my-2 text-gray-700 italic'>
+                        {children}
+                      </blockquote>
+                    ),
+                  }}
                 >
                   {displayText}
                 </ReactMarkdown>

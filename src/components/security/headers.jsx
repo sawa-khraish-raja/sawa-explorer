@@ -27,7 +27,7 @@ export async function createDeviceFingerprint() {
   const components = [
     navigator.userAgent,
     navigator.language,
-    screen.width + 'x' + screen.height,
+    `${screen.width  }x${  screen.height}`,
     new Date().getTimezoneOffset(),
     navigator.hardwareConcurrency || 0,
     navigator.deviceMemory || 0,

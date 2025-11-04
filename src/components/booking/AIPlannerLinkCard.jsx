@@ -1,18 +1,17 @@
-import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Sparkles, Bot } from 'lucide-react';
+import { useState } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Sparkles, Bot } from 'lucide-react';
+
+
 import AITripPlannerModal from './AITripPlannerModal';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
 
 export default function AIPlannerLinkCard({ city }) {
+  const { user } = useAppContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-    staleTime: Infinity,
     retry: false,
   });
 

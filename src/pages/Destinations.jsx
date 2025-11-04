@@ -1,13 +1,15 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments } from '@/utils/firestore';
-import { createPageUrl } from '@/utils';
-import { cn } from '@/lib/utils';
 import { MapPin, ArrowRight, Loader2, Globe, Star, Compass } from 'lucide-react';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { createPageUrl } from '@/utils';
+import { queryDocuments } from '@/utils/firestore';
+
 import PageHeroVideo from '../components/common/PageHeroVideo';
 
 export default function Destinations() {

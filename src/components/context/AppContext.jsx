@@ -1,7 +1,10 @@
-import React, { createContext, useContext, useMemo, useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { signOut, updateProfile } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/config/firebase';
+import { createContext, useContext, useMemo, useEffect, useState } from 'react';
+
+import { db, auth } from '@/config/firebase';
+import { useAuth } from '@/contexts/AuthContext';
+import { updateDocument } from '@/utils/firestore';
 
 const AppContext = createContext(null);
 
@@ -14,7 +17,6 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!firebaseUser) {
-        console.log('🔴 No Firebase user found');
         setUser(null);
         setUserLoading(false);
         return;
@@ -38,7 +40,7 @@ export const AppProvider = ({ children }) => {
 
           setUser(userData);
         } else {
-          console.log('⚠️ No Firestore document found - using basic data');
+          console.log(' No Firestore document found - using basic data');
           // Set basic user data if no Firestore doc exists
           const basicUserData = {
             id: firebaseUser.uid,
@@ -51,7 +53,7 @@ export const AppProvider = ({ children }) => {
           setUser(basicUserData);
         }
       } catch (error) {
-        console.error('❌ Failed to fetch user profile:', error);
+        console.error('Failed to fetch user profile:', error);
         // Set basic user data on error
         const basicUserData = {
           id: firebaseUser.uid,
@@ -73,6 +75,50 @@ export const AppProvider = ({ children }) => {
     }
   }, [firebaseUser, authLoading]);
 
+  // Logout function
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Error logging out:', error);
+      throw error;
+    }
+  };
+
+  // Update current user function
+  const updateMe = async (updateData) => {
+    if (!user) throw new Error('No user logged in');
+
+    try {
+      // Update Firestore
+      await updateDocument('users', user.id, {
+        ...updateData,
+        updated_date: new Date().toISOString(),
+      });
+
+      // Update Firebase Auth profile if display name or photo changed
+      if (updateData.full_name || updateData.profile_photo) {
+        await updateProfile(auth.currentUser, {
+          displayName: updateData.full_name || user.full_name,
+          photoURL: updateData.profile_photo || user.profile_photo,
+        });
+      }
+
+      // Update local state
+      setUser({
+        ...user,
+        ...updateData,
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw error;
+    }
+  };
+
   const value = useMemo(
     () => ({
       user,
@@ -80,6 +126,8 @@ export const AppProvider = ({ children }) => {
       isHost: !!user?.host_approved,
       isAdmin: user?.role_type === 'admin' || user?.role === 'admin',
       isOffice: user?.role_type === 'office',
+      logout,
+      updateMe,
     }),
     [user, userLoading, authLoading]
   );

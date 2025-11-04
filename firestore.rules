@@ -48,6 +48,16 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ========== EVENTS COLLECTION ==========
+
+    match /events/{eventId} {
+      // Anyone can read events (public data)
+      allow read: if true;
+
+      // Only admins can write events
+      allow write: if isAdmin();
+    }
+
     // ========== OFFICES COLLECTION ==========
 
     match /offices/{officeId} {

@@ -1,5 +1,6 @@
-import React from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import React from 'react';
+
 import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
 
@@ -19,14 +20,15 @@ class ErrorBoundary extends React.Component {
     // Log to backend
     try {
       if (typeof window !== 'undefined' && window.base44) {
-        window.base44.entities.ErrorLog.create({
-          section: 'ErrorBoundary',
-          message: error.message,
-          details: JSON.stringify({
-            stack: error.stack,
-            componentStack: errorInfo.componentStack,
-          }),
-        }).catch(() => {});
+        // TODO: Implement error logging
+        // createErrorLog({
+        //   section: 'ErrorBoundary',
+        //   message: error.message,
+        //   details: JSON.stringify({
+        //     stack: error.stack,
+        //     componentStack: errorInfo.componentStack,
+        //   }),
+        // }).catch(() => {});
       }
     } catch (e) {}
   }

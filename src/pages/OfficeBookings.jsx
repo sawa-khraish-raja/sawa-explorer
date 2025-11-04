@@ -1,26 +1,23 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, Loader2, ArrowLeft, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
+import { Calendar, Loader2, ArrowLeft, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+import { useAppContext } from '@/components/context/AppContext';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { createPageUrl } from '@/utils';
+import { getAllDocuments, queryDocuments } from '@/utils/firestore';
 
 export default function OfficeBookings() {
   const navigate = useNavigate();
-
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
+  const { user } = useAppContext();
 
   const { data: office } = useQuery({
     queryKey: ['office', user?.email],
     queryFn: async () => {
-      const allOffices = await base44.entities.Office.list();
+      const allOffices = await getAllDocuments('agencies');
       return allOffices.find(
         (o) => o.email?.toLowerCase().trim() === user.email.toLowerCase().trim()
       );
@@ -31,7 +28,9 @@ export default function OfficeBookings() {
   const { data: hosts = [] } = useQuery({
     queryKey: ['officeHosts', office?.name],
     queryFn: async () => {
-      const allRequests = await base44.entities.HostRequest.list('-created_date');
+      const allRequests = await queryDocuments('host_requests', [], {
+        orderBy: { field: 'created_date', direction: 'desc' },
+      });
       const approvedRequests = allRequests.filter(
         (r) => r.office_name === office.name && r.status === 'approved'
       );
@@ -49,7 +48,9 @@ export default function OfficeBookings() {
     queryFn: async () => {
       if (!office?.name || !hosts.length) return [];
       const officeHostEmails = hosts.map((h) => h.email);
-      const allBookings = await base44.entities.Booking.list('-created_date');
+      const allBookings = await queryDocuments('bookings', [], {
+        orderBy: { field: 'created_date', direction: 'desc' },
+      });
       return allBookings.filter(
         (booking) =>
           officeHostEmails.includes(booking.host_email) ||

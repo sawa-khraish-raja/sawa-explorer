@@ -1,10 +1,13 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, Users, MapPin, Package, FileText, Clock } from 'lucide-react';
 import { format } from 'date-fns';
-import BookingServicesDisplay from './BookingServicesDisplay';
 import { motion } from 'framer-motion';
+import { Calendar, Users, MapPin, Package, FileText, Clock } from 'lucide-react';
+
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+
+import BookingServicesDisplay from './BookingServicesDisplay';
+
 
 export default function BookingSummaryCard({
   city,
@@ -148,7 +151,7 @@ export default function BookingSummaryCard({
                 <BookingServicesDisplay
                   serviceIds={selectedServices}
                   language={language}
-                  showDuration={true}
+                  showDuration
                   serviceDurations={serviceDurations}
                 />
               </div>

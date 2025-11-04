@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { DollarSign, Loader2, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -8,22 +11,18 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { DollarSign, Loader2, AlertCircle } from 'lucide-react';
+import { addDocument, updateDocument } from '@/utils/firestore';
+
 import { showNotification } from '../notifications/NotificationManager';
 
 export default function HostCommissionDialog({ host, isOpen, onClose }) {
+  const { user } = useAppContext();
   const queryClient = useQueryClient();
   const [sawaPercent, setSawaPercent] = useState(host?.commission_overrides?.sawa || '');
   const [officePercent, setOfficePercent] = useState(host?.commission_overrides?.office || '');
 
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
 
   const updateCommissionMutation = useMutation({
     mutationFn: async () => {
@@ -31,12 +30,13 @@ export default function HostCommissionDialog({ host, isOpen, onClose }) {
       if (sawaPercent) overrides.sawa = parseFloat(sawaPercent);
       if (officePercent) overrides.office = parseFloat(officePercent);
 
-      await base44.entities.User.update(host.id, {
+      await updateDocument('users', host.id, {
         commission_overrides: Object.keys(overrides).length > 0 ? overrides : null,
+        updated_date: new Date().toISOString()
       });
 
       // Audit log
-      await base44.entities.AuditLog.create({
+      await addDocument('auditlogs', {
         admin_email: currentUser.email,
         action: 'permissions_updated',
         affected_user_email: host.email,
@@ -45,6 +45,7 @@ export default function HostCommissionDialog({ host, isOpen, onClose }) {
           overrides,
           previousOverrides: host.commission_overrides,
         }),
+        created_date: new Date().toISOString()
       });
     },
     onSuccess: () => {

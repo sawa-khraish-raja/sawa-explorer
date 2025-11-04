@@ -1,6 +1,7 @@
-import { auth, db } from '@/config/firebase';
 import { onAuthStateChanged, signOut, updateProfile, getIdTokenResult } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+
+import { auth, db } from '@/config/firebase';
 
 const AUTH_EVENT = 'sawa:auth:open';
 const RETURN_URL_KEY = 'sawa:return_to';

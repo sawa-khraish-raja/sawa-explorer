@@ -1,12 +1,14 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { useNavigate } from 'react-router-dom';
-import { Calendar, Users, DollarSign, MapPin, Loader2 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { Calendar, Users, DollarSign, MapPin, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { getAllDocuments } from '@/utils/firestore';
+
+
 
 export default function AdventuresSection() {
   const navigate = useNavigate();
@@ -14,8 +16,11 @@ export default function AdventuresSection() {
   const { data: adventures = [], isLoading } = useQuery({
     queryKey: ['adventures'],
     queryFn: async () => {
-      const allAdventures = await base44.entities.Adventure.list('-date');
-      return allAdventures.filter(
+      const allAdventures = await getAllDocuments('adventures');
+      const sortedAdventures = allAdventures.sort((a, b) =>
+        new Date(b.date) - new Date(a.date)
+      );
+      return sortedAdventures.filter(
         (adv) => adv.status === 'upcoming' && new Date(adv.date) > new Date()
       );
     },

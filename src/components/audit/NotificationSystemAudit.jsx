@@ -1,10 +1,10 @@
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { CheckCircle, XCircle, Zap } from 'lucide-react';
+
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, CheckCircle, XCircle, Zap } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 /**
- * 🔍 NOTIFICATION SYSTEM AUDIT
+ *  NOTIFICATION SYSTEM AUDIT
  * ============================
  *
  * تقييم شامل لنظام الإشعارات في SAWA
@@ -64,12 +64,12 @@ await base44.asServiceRole.entities.Notification.create({
         </CardContent>
       </Card>
 
-      {/* 🔍 ROOT CAUSE ANALYSIS */}
+      {/*  ROOT CAUSE ANALYSIS */}
       <Card className='border-2 border-yellow-200 bg-yellow-50'>
         <CardHeader>
           <CardTitle className='flex items-center gap-2 text-yellow-900'>
             <Zap className='w-6 h-6' />
-            🔍 تحليل السبب الجذري
+            تحليل السبب الجذري
           </CardTitle>
         </CardHeader>
         <CardContent className='space-y-4 text-sm'>
@@ -131,14 +131,14 @@ async function createNotification(base44, {
       message: \`\${d.price} for \${d.city} • \${d.dates} • Tap to view\`
     }),
     'message_received': (d) => ({
-      title: \`💬 New Message\`,
+      title: \`New Message\`,
       message: \`\${d.sender_name}: \${d.preview}\`
     })
   };
 
   const template = templates[type](data);
   
-  return await base44.asServiceRole.entities.Notification.create({
+  return base44.asServiceRole.entities.Notification.create({
     recipient_email,
     recipient_type,
     type,
@@ -169,10 +169,10 @@ async function createNotification(base44, {
         </CardContent>
       </Card>
 
-      {/* 📊 IMPLEMENTATION CHECKLIST */}
+      {/* IMPLEMENTATION CHECKLIST */}
       <Card className='border-2 border-blue-200 bg-blue-50'>
         <CardHeader>
-          <CardTitle className='text-blue-900'>📋 Implementation Checklist</CardTitle>
+          <CardTitle className='text-blue-900'>Implementation Checklist</CardTitle>
         </CardHeader>
         <CardContent>
           <div className='space-y-2 text-sm'>

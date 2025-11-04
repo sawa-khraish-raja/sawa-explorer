@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { useQuery } from '@tanstack/react-query';
 import {
   Users,
   Building2,
@@ -17,20 +15,22 @@ import {
   TrendingUp,
   MessageSquare,
   FileText,
-  AlertCircle,
   Activity,
   Briefcase,
-  Settings,
   Image,
   XCircle,
   HelpCircle,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { useAdminPermissions, ADMIN_PAGES } from './PermissionGuard';
+import { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+
 import { Badge } from '@/components/ui/badge';
-import { useQuery } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { createPageUrl } from '@/utils';
 import { queryDocuments } from '@/utils/firestore';
+
+import { useAdminPermissions } from './PermissionGuard';
 
 export default function AdminLayout({ children, currentPage = '' }) {
   const location = useLocation();
@@ -45,7 +45,7 @@ export default function AdminLayout({ children, currentPage = '' }) {
       try {
         // Get pending adventures from Firestore
         const pendingAdventures = await queryDocuments('adventures', [
-          ['approval_status', '==', 'pending']
+          ['approval_status', '==', 'pending'],
         ]);
 
         // TODO: Add host requests, partner requests, and cancellations when those collections are migrated
@@ -75,7 +75,7 @@ export default function AdminLayout({ children, currentPage = '' }) {
         hasFullAccess || (user.admin_allowed_pages && user.admin_allowed_pages.length > 0);
 
       if (!hasAnyAdminAccess) {
-        console.log('🚫 No admin access detected, redirecting to Home...');
+        console.log('No admin access detected, redirecting to Home...');
         navigate(createPageUrl('Home'), { replace: true });
       }
     }

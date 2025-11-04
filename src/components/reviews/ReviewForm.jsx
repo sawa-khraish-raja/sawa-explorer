@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Star, Upload, X, Loader2, Send } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { addDocument, queryDocuments, updateDocument, getAllDocuments } from '@/utils/firestore';
-import { useAppContext } from '../context/AppContext';
+import { useState } from 'react';
 import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
+import { addDocument, queryDocuments, updateDocument } from '@/utils/firestore';
+
+import { useAppContext } from '../context/AppContext';
+
 
 const StarRating = ({ value, onChange, label, required = false }) => {
   const [hover, setHover] = useState(0);

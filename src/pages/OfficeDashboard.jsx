@@ -1,12 +1,4 @@
-import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { useNavigate, Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Loader2,
   Users,
@@ -20,9 +12,19 @@ import {
   Eye, // Added Eye icon
   Mail, // Added Mail icon
 } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+
+import { useAppContext } from '@/components/context/AppContext';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 // Added Dialog components
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { createPageUrl } from '@/utils';
+import { queryDocuments, getDocument } from '@/utils/firestore';
 
 export default function OfficeDashboard() {
   const navigate = useNavigate();
@@ -31,26 +33,21 @@ export default function OfficeDashboard() {
   const [selectedHostMessages, setSelectedHostMessages] = useState(null);
 
   //  1. Load current user
-  const { data: user, isLoading: userLoading } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: async () => {
-      const currentUser = await base44.auth.me();
+  const { user, userLoading } = useAppContext();
 
-      if (!currentUser || currentUser.role_type !== 'office') {
-        navigate(createPageUrl('Home'));
-        return null;
-      }
-
-      return currentUser;
-    },
-  });
+  // Redirect if not office user
+  React.useEffect(() => {
+    if (!userLoading && (!user || user.role_type !== 'office')) {
+      navigate(createPageUrl('Home'));
+    }
+  }, [user, userLoading, navigate]);
 
   //  2. Load office data
   const { data: office } = useQuery({
     queryKey: ['userOffice', user?.office_id],
     queryFn: async () => {
       if (!user?.office_id) return null;
-      return await base44.entities.Office.get(user.office_id);
+      return getDocument('agencies', user.office_id);
     },
     enabled: !!user?.office_id,
   });
@@ -62,9 +59,11 @@ export default function OfficeDashboard() {
     queryFn: async () => {
       if (!office?.id) return [];
 
-      const allUsers = await base44.entities.User.list();
       //  Only hosts that are CURRENTLY assigned to this office
-      return allUsers.filter((u) => u.office_id === office.id && u.host_approved);
+      return queryDocuments('users', [
+        ['office_id', '==', office.id],
+        ['host_approved', '==', true],
+      ]);
     },
     enabled: !!office?.id,
     refetchInterval: 10000, // Refresh every 10 seconds
@@ -77,11 +76,11 @@ export default function OfficeDashboard() {
     queryFn: async () => {
       if (!office?.id) return [];
 
-      const bookingsFromDb = await base44.entities.Booking.list('-created_date'); // Renamed to avoid collision with return var
+      const bookingsFromDb = await queryDocuments('bookings', [], {
+        orderBy: { field: 'created_at', direction: 'desc' },
+      });
       //  All bookings that were ever handled by this office (even if host left)
       return bookingsFromDb.filter((b) => {
-        // The problematic line `const hostUser = allBookings.find(booking => booking.host_email === b.host_email);`
-        // from the outline is removed as it's a bug and its result is unused.
         // Filtering based on office_id on booking or current host email.
         return (
           b.office_id === office.id ||
@@ -98,7 +97,9 @@ export default function OfficeDashboard() {
     queryFn: async () => {
       if (currentHosts.length === 0) return [];
 
-      const allConvos = await base44.entities.Conversation.list('-last_message_timestamp');
+      const allConvos = await queryDocuments('conversations', [], {
+        orderBy: { field: 'last_message_timestamp', direction: 'desc' },
+      });
       const currentHostEmails = currentHosts.map((h) => h.email);
 
       //  Only conversations with CURRENT hosts
@@ -117,7 +118,10 @@ export default function OfficeDashboard() {
     queryFn: async () => {
       if (!selectedHostMessages?.email) return [];
 
-      const allMessages = await base44.entities.Message.list('-created_date', 200);
+      const allMessages = await queryDocuments('messages', [], {
+        orderBy: { field: 'created_date', direction: 'desc' },
+        limit: 200,
+      });
       const hostConvoIds = hostConversations
         .filter((c) => c.host_emails?.includes(selectedHostMessages.email))
         .map((c) => c.id);

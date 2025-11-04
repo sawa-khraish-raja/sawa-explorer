@@ -4,24 +4,29 @@
  * Optimized, clean, professional version
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { Loader2, MapPin, Info } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { Loader2, MapPin, Info, Users } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
+import { createPageUrl } from '@/utils';
+import { getAllDocuments, queryDocuments, addDocument } from '@/utils/firestore';
+
+import PageHero from '../common/PageHero';
+import { useAppContext } from '../context/AppContext';
 import { useTranslation } from '../i18n/LanguageContext';
 import { showSuccess, showError } from '../utils/notifications';
-import PageHero from '../common/PageHero';
-import CityGallery from './CityGallery';
-import EventList from './EventList';
-import BookingWizard from './BookingWizard';
-import HostsCarousel from './HostsCarousel';
-import CityHighlights from './CityHighlights';
+
 import AIPlannerLinkCard from './AIPlannerLinkCard';
+import BookingWizard from './BookingWizard';
+import CityGallery from './CityGallery';
+import CityHighlights from './CityHighlights';
+import EventList from './EventList';
+import HostsCarousel from './HostsCarousel';
 
 export default function ImprovedBookingCity({ cityName }) {
+  const { user } = useAppContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t, language } = useTranslation();
@@ -58,28 +63,16 @@ export default function ImprovedBookingCity({ cityName }) {
     }
   }, [cityName, searchParams]);
 
-  //  Current user
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: async () => {
-      try {
-        return await base44.auth.me();
-      } catch {
-        return null;
-      }
-    },
-    staleTime: 30 * 60 * 1000,
-  });
-
   //  City data with proper caching
   const { data: city, isLoading: cityLoading } = useQuery({
     queryKey: ['city', cityName],
     queryFn: async () => {
       if (!cityName) return null;
-      const res = await base44.entities.City.filter({
-        name: cityName,
-        is_active: true,
-      });
+      const res = await queryDocuments(
+        'citys',
+        ['name', '==', cityName],
+        ['is_active', '==', true]
+      );
       return res?.[0] || null;
     },
     enabled: !!cityName,
@@ -94,7 +87,7 @@ export default function ImprovedBookingCity({ cityName }) {
 
       try {
         // Direct query - much faster!
-        const allUsers = await base44.entities.User.list();
+        const allUsers = await getAllDocuments('users');
 
         const cityHosts = allUsers.filter(
           (user) => user.host_approved && user.city === cityName && user.visible_in_city !== false
@@ -116,7 +109,7 @@ export default function ImprovedBookingCity({ cityName }) {
     queryKey: ['cityEvents', cityName],
     queryFn: async () => {
       if (!cityName) return [];
-      const allEvents = await base44.entities.Event.filter({ city: cityName });
+      const allEvents = await queryDocuments('events', [['city', '==', cityName]]);
 
       const now = new Date();
       now.setHours(0, 0, 0, 0);
@@ -132,18 +125,21 @@ export default function ImprovedBookingCity({ cityName }) {
   //  Booking submission
   const createBookingMutation = useMutation({
     mutationFn: async (bookingData) => {
-      return await base44.entities.Booking.create({
-        traveler_email: user.email,
-        city: bookingData.city,
-        start_date: bookingData.start_date,
-        end_date: bookingData.end_date,
-        number_of_adults: bookingData.number_of_adults,
-        number_of_children: bookingData.number_of_children,
-        selected_services: bookingData.selected_services,
-        service_durations: bookingData.service_durations,
-        notes: bookingData.notes,
-        state: 'open',
-        status: 'pending',
+      return addDocument('bookings', {
+        ...{
+          traveler_email: user.email,
+          city: bookingData.city,
+          start_date: bookingData.start_date,
+          end_date: bookingData.end_date,
+          number_of_adults: bookingData.number_of_adults,
+          number_of_children: bookingData.number_of_children,
+          selected_services: bookingData.selected_services,
+          service_durations: bookingData.service_durations,
+          notes: bookingData.notes,
+          state: 'open',
+          status: 'pending',
+        },
+        created_date: new Date().toISOString(),
       });
     },
     onSuccess: async (booking) => {
@@ -151,11 +147,11 @@ export default function ImprovedBookingCity({ cityName }) {
 
       // Notify hosts
       try {
-        await base44.functions.invoke('notifyHostsOfNewBooking', {
+        await notifyHostsOfNewBooking({
           bookingId: booking.id,
         });
       } catch (error) {
-        console.error('⚠️ Failed to notify hosts:', error);
+        console.error(' Failed to notify hosts:', error);
       }
 
       showSuccess(
@@ -178,7 +174,7 @@ export default function ImprovedBookingCity({ cityName }) {
         language === 'ar' ? 'تسجيل الدخول مطلوب' : 'Login Required',
         language === 'ar' ? 'يرجى تسجيل الدخول للمتابعة' : 'Please log in to continue'
       );
-      base44.auth.redirectToLogin();
+      navigate('/login');
       return;
     }
 

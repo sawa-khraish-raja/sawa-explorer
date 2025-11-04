@@ -1,16 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
 import {
   Sparkles,
   MapPin,
   Compass,
   Calendar,
-  X,
   Users,
-  Star,
   ChevronRight,
   Search,
   Tag,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { queryDocuments } from '@/utils/firestore';
+
+import { useTranslation } from '../components/i18n/LanguageContext';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { Card, CardContent } from '../components/ui/card';
+import { Input } from '../components/ui/input';
 import {
   Select,
   SelectTrigger,
@@ -18,15 +27,6 @@ import {
   SelectContent,
   SelectItem,
 } from '../components/ui/select';
-import { Button } from '../components/ui/button';
-import { Card, CardContent } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import { Input } from '../components/ui/input';
-import { format } from 'date-fns';
-import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { queryDocuments } from '@/utils/firestore';
-import { useTranslation } from '../components/i18n/LanguageContext';
 
 export default function Adventures() {
   const navigate = useNavigate();
@@ -44,7 +44,7 @@ export default function Adventures() {
   const { data: adventures = [], isLoading: adventuresLoading } = useQuery({
     queryKey: ['adventures'],
     queryFn: async () => {
-      console.log('🔍 Fetching adventures from Firestore...');
+      console.log(' Fetching adventures from Firestore...');
       // Get all active adventures from Firestore
       // Note: Removed orderBy to avoid needing composite index for development
       // Can add back later once index is created
@@ -57,15 +57,15 @@ export default function Adventures() {
         return dateB - dateA; // desc order
       });
 
-      console.log('🔍 Found adventures:', sorted.length);
+      console.log(' Found adventures:', sorted.length);
       // Log image data for debugging
       sorted.forEach((adv, idx) => {
-        console.log(`🖼️ Adventure ${idx + 1} (${adv.title}):`, {
+        console.log(`Adventure ${idx + 1} (${adv.title}):`, {
           id: adv.id,
           images: adv.images,
           image_url: adv.image_url,
           has_images_array: !!adv.images,
-          has_image_url: !!adv.image_url
+          has_image_url: !!adv.image_url,
         });
       });
       return sorted;
@@ -74,7 +74,6 @@ export default function Adventures() {
     cacheTime: 0, // Force fresh data
   });
 
-  // Note: AdventurePost is a separate feature (forum/social) - keeping Base44 for now
   const { data: adventurePosts = [], isLoading: postsLoading } = useQuery({
     queryKey: ['adventurePosts'],
     queryFn: async () => {
@@ -202,7 +201,7 @@ export default function Adventures() {
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                 <div key={i} className='animate-pulse'>
-                  <div className='bg-gray-200 rounded-2xl h-80'></div>
+                  <div className='bg-gray-200 rounded-2xl h-80' />
                 </div>
               ))}
             </div>
@@ -347,7 +346,9 @@ export default function Adventures() {
                         <div className='flex items-center gap-2'>
                           <Calendar className='w-4 h-4 text-[#9933CC]' />
                           <span className='text-sm text-gray-600'>
-                            {adventure.date ? format(new Date(adventure.date), 'MMM d, yyyy') : 'Date TBA'}
+                            {adventure.date
+                              ? format(new Date(adventure.date), 'MMM d, yyyy')
+                              : 'Date TBA'}
                           </span>
                         </div>
                         <div className='text-right'>

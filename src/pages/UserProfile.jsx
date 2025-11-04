@@ -1,35 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import {
   Loader2,
   Camera,
   Save,
   User,
-  Mail,
-  Phone,
-  Globe,
-  MapPin,
-  Calendar,
-  ArrowLeft,
   Briefcase,
   Shield,
   Bell,
-  Lock,
   Trash2,
   AlertTriangle,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { toast } from 'sonner';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { useAppContext } from '../components/context/AppContext';
+import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { createPageUrl } from '@/utils';
+import { queryDocuments, updateDocument } from '@/utils/firestore';
+import { uploadImage } from '@/utils/storage';
+
+import { useAppContext } from '../components/context/AppContext';
 import NotificationSettings from '../components/notifications/NotificationSettings';
 import DeleteAccountDialog from '../components/user/DeleteAccountDialog';
 
@@ -83,13 +79,18 @@ export default function UserProfile() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async ({ updatedAuthData, hostProfileUpdateData }) => {
-      await base44.auth.updateMe(updatedAuthData);
+      // Update the user document in Firestore
+      await updateDocument('users', user.uid, {
+        ...updatedAuthData,
+        updated_date: new Date().toISOString(),
+      });
 
+      // Update host profile if user is a host
       if (user?.host_approved && hostProfileUpdateData) {
-        const hostProfiles = await base44.entities.HostProfile.filter({ user_email: user.email });
+        const hostProfiles = await queryDocuments('host_profiles', [['user_email', '==', user.email]]);
         if (hostProfiles && hostProfiles.length > 0) {
           const hostProfileId = hostProfiles[0].id;
-          await base44.entities.HostProfile.update(hostProfileId, {
+          await updateDocument('host_profiles', hostProfileId, {
             ...hostProfileUpdateData,
             last_synced: new Date().toISOString(),
           });
@@ -137,10 +138,8 @@ export default function UserProfile() {
     try {
       let photoUrl = profileImage;
       if (newProfileImageFile) {
-        const { file_url } = await base44.integrations.Core.UploadFile({
-          file: newProfileImageFile,
-        });
-        photoUrl = file_url;
+        // Upload to Firebase Storage
+        photoUrl = await uploadImage(newProfileImageFile, 'profile-photos');
       }
 
       const updatedAuthData = {

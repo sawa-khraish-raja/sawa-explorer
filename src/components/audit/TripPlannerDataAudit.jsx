@@ -1,7 +1,7 @@
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { CheckCircle, XCircle, Zap, TrendingUp } from 'lucide-react';
+
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, CheckCircle, XCircle, Zap, TrendingUp } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 /**
  * 🤖 AI TRIP PLANNER - DATA QUALITY AUDIT
@@ -355,12 +355,12 @@ export default function TripPlannerDataAudit() {
         </CardContent>
       </Card>
 
-      {/* 📊 IMPLEMENTATION PLAN */}
+      {/* IMPLEMENTATION PLAN */}
       <Card className='border-2 border-purple-200 bg-purple-50'>
         <CardHeader>
           <CardTitle className='flex items-center gap-2 text-purple-900'>
             <TrendingUp className='w-6 h-6' />
-            📊 خطة التنفيذ
+            خطة التنفيذ
           </CardTitle>
         </CardHeader>
         <CardContent className='space-y-4 text-sm'>

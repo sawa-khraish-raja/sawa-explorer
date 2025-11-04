@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { TrendingUp, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { TrendingUp, Loader2 } from 'lucide-react';
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { createPageUrl } from '@/utils';
+import { getAllDocuments } from '@/utils/firestore';
 
 const ALL_DESTINATIONS = [
   {
@@ -34,7 +35,7 @@ export default function TrendingDestinations() {
 
   const { data: bookings, isLoading } = useQuery({
     queryKey: ['bookingsForTrending'],
-    queryFn: () => base44.entities.Booking.list(),
+    queryFn: () => getAllDocuments('bookings'),
   });
 
   const trendingDestinations = useMemo(() => {

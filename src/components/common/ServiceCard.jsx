@@ -1,6 +1,6 @@
-import React from 'react';
-import { Card } from '@/components/ui/card';
 import { Check, Plane, Users, Calendar, Map, Package, Home, ShieldAlert } from 'lucide-react';
+
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 const ICON_MAP = {

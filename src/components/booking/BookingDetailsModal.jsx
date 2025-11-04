@@ -1,11 +1,5 @@
-import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { format } from 'date-fns';
 import {
   Calendar,
   MapPin,
@@ -30,15 +24,24 @@ import {
   Info,
   Briefcase,
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { BookingID, UserID } from '../common/BookingID';
-import { getUserDisplayName } from '../utils/userHelpers';
-import { normalizeText } from '../utils/textHelpers';
-import BookingServicesDisplay from './BookingServicesDisplay';
-import { toast } from 'sonner';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 import { createPageUrl } from '@/utils';
+import { queryDocuments, getDocument } from '@/utils/firestore';
+
+import { BookingID, UserID } from '../common/BookingID';
+import { normalizeText } from '../utils/textHelpers';
+import { getUserDisplayName } from '../utils/userHelpers';
+
+import BookingServicesDisplay from './BookingServicesDisplay';
 
 export default function BookingDetailsModal({
   booking,
@@ -59,7 +62,7 @@ export default function BookingDetailsModal({
     queryKey: ['bookingOffers', booking?.id],
     queryFn: async () => {
       if (!booking?.id || isAdventureBooking) return []; // No offers for adventures
-      return await base44.entities.Offer.filter({ booking_id: booking.id });
+      return queryDocuments('offers', [['booking_id', '==', booking.id]]);
     },
     enabled: queryEnabled && !isAdventureBooking,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -70,7 +73,7 @@ export default function BookingDetailsModal({
     queryKey: ['bookingConversations', booking?.id],
     queryFn: async () => {
       if (!booking?.id) return [];
-      return await base44.entities.Conversation.filter({ booking_id: booking.id });
+      return queryDocuments('conversations', [['booking_id', '==', booking.id]]);
     },
     enabled: queryEnabled,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -80,7 +83,7 @@ export default function BookingDetailsModal({
     queryKey: ['travelerUser', booking?.traveler_email],
     queryFn: async () => {
       if (!booking?.traveler_email) return null;
-      const users = await base44.entities.User.filter({ email: booking.traveler_email });
+      const users = await queryDocuments('users', [['email', '==', booking.traveler_email]]);
       return users[0] || null;
     },
     enabled: queryEnabled && !!booking?.traveler_email,
@@ -91,7 +94,7 @@ export default function BookingDetailsModal({
     queryKey: ['hostUser', booking?.host_email],
     queryFn: async () => {
       if (!booking?.host_email) return null;
-      const users = await base44.entities.User.filter({ email: booking.host_email });
+      const users = await queryDocuments('users', [['email', '==', booking.host_email]]);
       return users[0] || null;
     },
     enabled: queryEnabled && !!booking?.host_email,
@@ -106,7 +109,7 @@ export default function BookingDetailsModal({
       if (hostEmails.length === 0) return [];
       const uniqueEmails = Array.from(new Set(hostEmails));
       const hostUserPromises = uniqueEmails.map((email) =>
-        base44.entities.User.filter({ email: email })
+        queryDocuments('users', [['email', '==', email]])
           .then((res) => res[0])
           .catch(() => null)
       );
@@ -121,7 +124,7 @@ export default function BookingDetailsModal({
     queryKey: ['adventure', booking?.adventure_id],
     queryFn: async () => {
       if (!booking?.adventure_id) return null;
-      return await base44.entities.Adventure.get(booking.adventure_id);
+      return getDocument('adventures', booking.adventure_id);
     },
     enabled: queryEnabled && !!booking?.adventure_id,
     staleTime: 10 * 60 * 1000, // 10 minutes
@@ -131,7 +134,9 @@ export default function BookingDetailsModal({
     queryKey: ['cancellationRequest', booking?.id],
     queryFn: async () => {
       if (!booking?.id) return null;
-      const requests = await base44.entities.CancellationRequest.filter({ booking_id: booking.id });
+      const requests = await queryDocuments('cancellation_requests', [
+        ['booking_id', '==', booking.id],
+      ]);
       return requests[0] || null;
     },
     enabled: queryEnabled && ['cancelled', 'pending'].includes(booking?.status),
@@ -332,7 +337,7 @@ export default function BookingDetailsModal({
           </div>
         </DialogHeader>
 
-        {/* 📊 Content Tabs */}
+        {/* Content Tabs */}
         <div className='overflow-y-auto max-h-[calc(90vh-160px)] sm:max-h-[calc(90vh-120px)]'>
           <Tabs value={activeTab} onValueChange={setActiveTab} className='p-3 sm:p-6'>
             <TabsList
@@ -1230,7 +1235,7 @@ export default function BookingDetailsModal({
             {/* TAB 4: Timeline */}
             <TabsContent value='timeline' className='space-y-3 sm:space-y-4'>
               <div className='relative'>
-                <div className='absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200'></div>
+                <div className='absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200' />
 
                 <div className='space-y-3 sm:space-y-4'>
                   {/* Created */}

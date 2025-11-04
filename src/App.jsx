@@ -1,7 +1,7 @@
 import './App.css';
-import Pages from '@/pages/index.jsx';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
+import Pages from '@/pages/index.jsx';
 
 function App() {
   return (

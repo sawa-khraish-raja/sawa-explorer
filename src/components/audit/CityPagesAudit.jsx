@@ -30,7 +30,7 @@ export const CITY_PAGES_AUDIT = {
         impact: 'Medium - Unnecessary API calls',
         current: 'refetchOnMount: true everywhere',
         solution: 'Smart staleTime and cacheTime',
-        priority: '🟡 HIGH',
+        priority: 'HIGH',
       },
     ],
 
@@ -52,7 +52,7 @@ export const CITY_PAGES_AUDIT = {
         impact: 'Medium - Confusing navigation',
         current: 'Mixed layouts, inconsistent spacing',
         solution: 'Unified page template with clear sections',
-        priority: '🟡 HIGH',
+        priority: 'HIGH',
       },
       {
         issue: 'Long Booking Form',
@@ -68,7 +68,7 @@ export const CITY_PAGES_AUDIT = {
         impact: 'Medium - Hard to scan',
         current: 'Grid without hierarchy',
         solution: 'Featured hosts + carousel design',
-        priority: '🟡 HIGH',
+        priority: 'HIGH',
       },
     ],
 
@@ -98,7 +98,7 @@ export const CITY_PAGES_AUDIT = {
         impact: 'Medium - Lost user context',
         current: 'Search params not passed properly',
         solution: 'Preserve search params across navigation',
-        priority: '🟡 HIGH',
+        priority: 'HIGH',
       },
       {
         issue: 'Limited Error Handling',
@@ -136,7 +136,7 @@ export const CITY_PAGES_AUDIT = {
         impact: 'Medium - Accessibility & SEO',
         current: 'Many images without alt',
         solution: 'Descriptive alt text for all images',
-        priority: '🟡 HIGH',
+        priority: 'HIGH',
       },
       {
         issue: 'Poor Heading Structure',
@@ -144,7 +144,7 @@ export const CITY_PAGES_AUDIT = {
         impact: 'Medium - SEO & accessibility',
         current: 'Inconsistent h1-h6 hierarchy',
         solution: 'Proper semantic HTML structure',
-        priority: '🟡 HIGH',
+        priority: 'HIGH',
       },
     ],
 
@@ -236,13 +236,13 @@ export const CITY_PAGES_AUDIT = {
 
   //  SCORE SUMMARY
   scores: {
-    performance: '45/100 ⚠️',
-    ux_design: '60/100 ⚠️',
-    functionality: '65/100 ⚠️',
-    seo: '50/100 ⚠️',
-    accessibility: '55/100 ⚠️',
-    mobile: '55/100 ⚠️',
-    code_quality: '60/100 ⚠️',
+    performance: '45/100 ',
+    ux_design: '60/100 ',
+    functionality: '65/100 ',
+    seo: '50/100 ',
+    accessibility: '55/100 ',
+    mobile: '55/100 ',
+    code_quality: '60/100 ',
 
     overall: '56/100 - NEEDS URGENT IMPROVEMENT 🔴',
   },

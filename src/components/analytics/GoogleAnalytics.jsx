@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom';
 const GA_MEASUREMENT_ID = 'G-1NHD938BBY';
 
 /**
- * 📊 Google Analytics 4 Integration
+ * Google Analytics 4 Integration
  * Tracks page views, conversions, and user behavior
  */
 
@@ -50,7 +50,7 @@ export function trackEvent(eventName, params = {}) {
   if (typeof window === 'undefined' || !window.gtag) return;
 
   window.gtag('event', eventName, params);
-  console.log('📊 GA4 Event:', eventName, params);
+  console.log('GA4 Event:', eventName, params);
 }
 
 //  Track conversion
@@ -63,7 +63,7 @@ export function trackConversion(eventName, value, currency = 'USD', params = {})
     ...params,
   });
 
-  console.log('💰 GA4 Conversion:', eventName, value, currency);
+  console.log('GA4 Conversion:', eventName, value, currency);
 }
 
 //  Set user properties
@@ -71,7 +71,7 @@ export function setUserProperties(properties) {
   if (typeof window === 'undefined' || !window.gtag) return;
 
   window.gtag('set', 'user_properties', properties);
-  console.log('👤 GA4 User Properties:', properties);
+  console.log('GA4 User Properties:', properties);
 }
 
 //  Track booking start
@@ -193,8 +193,6 @@ export function getUTMParameters() {
 //  Track conversion to backend
 async function trackConversionBackend(data) {
   try {
-    const { base44 } = await import('@/api/base44Client');
-
     const sessionId = getSessionId();
     const utm = getUTMParameters();
 

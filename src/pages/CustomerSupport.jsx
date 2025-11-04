@@ -1,59 +1,39 @@
-import React, { useState, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import AdminLayout from '../components/admin/AdminLayout';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { format } from 'date-fns';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import {
-  HelpCircle,
   MessageSquare,
   Clock,
   Search,
   User,
   Calendar,
-  TrendingUp,
   Activity,
   Users,
-  Zap,
-  FileText,
   Loader2,
   XCircle,
   Eye,
-  CheckCircle2,
   AlertTriangle,
   MapPin,
   DollarSign,
   Star,
-  Phone,
-  Mail,
-  Briefcase,
   Package,
-  Filter,
   Download,
   RefreshCw,
   BarChart3,
-  Shield,
   Sparkles,
   MessageCircleWarning,
-  Bell,
-  ArrowUpRight,
-  ArrowDownRight,
-  Minus,
   UserCheck,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { useState, useMemo } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { getAllDocuments } from '@/utils/firestore';
+
+import AdminLayout from '../components/admin/AdminLayout';
 
 export default function CustomerSupport() {
   const queryClient = useQueryClient();
@@ -65,37 +45,37 @@ export default function CustomerSupport() {
   //  Fetch All Data
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list('-created_date'),
+    queryFn: () => getAllDocuments('users'),
   });
 
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
     queryKey: ['allBookings'],
-    queryFn: () => base44.entities.Booking.list('-created_date'),
+    queryFn: () => getAllDocuments('bookings'),
   });
 
   const { data: offers = [] } = useQuery({
     queryKey: ['allOffers'],
-    queryFn: () => base44.entities.Offer.list('-created_date'),
+    queryFn: () => getAllDocuments('offers'),
   });
 
   const { data: conversations = [] } = useQuery({
     queryKey: ['allConversations'],
-    queryFn: () => base44.entities.Conversation.list('-last_message_timestamp'),
+    queryFn: () => getAllDocuments('conversations', '-last_message_timestamp'),
   });
 
   const { data: cancellations = [] } = useQuery({
     queryKey: ['cancellationRequests'],
-    queryFn: () => base44.entities.CancellationRequest.list('-created_date'),
+    queryFn: () => getAllDocuments('cancellationrequests'),
   });
 
   const { data: adventures = [] } = useQuery({
     queryKey: ['allAdventures'],
-    queryFn: () => base44.entities.Adventure.list('-created_date'),
+    queryFn: () => getAllDocuments('adventures'),
   });
 
   const { data: reviews = [] } = useQuery({
     queryKey: ['allReviews'],
-    queryFn: () => base44.entities.Review.list('-created_date'),
+    queryFn: () => getAllDocuments('reviews'),
   });
 
   //  Comprehensive Metrics
@@ -403,7 +383,7 @@ export default function CustomerSupport() {
           </div>
         )}
 
-        {/* 📊 System Health */}
+        {/* System Health */}
         <Card>
           <CardHeader>
             <CardTitle className='flex items-center gap-2'>
@@ -443,7 +423,7 @@ export default function CustomerSupport() {
           </CardContent>
         </Card>
 
-        {/* 🔍 Bookings Search & Filter */}
+        {/*  Bookings Search & Filter */}
         <Card>
           <CardHeader>
             <CardTitle className='flex items-center gap-2'>
@@ -668,7 +648,7 @@ export default function CustomerSupport() {
         </div>
       </div>
 
-      {/* 📋 Booking Details Modal */}
+      {/* Booking Details Modal */}
       {selectedBooking && (
         <Dialog open={!!selectedBooking} onOpenChange={() => setSelectedBooking(null)}>
           <DialogContent className='max-w-4xl max-h-[90vh] overflow-y-auto'>

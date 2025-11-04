@@ -1,30 +1,25 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Sparkles,
   Globe,
   Zap,
   Loader2,
   TrendingUp,
-  Target,
   DollarSign,
   Users,
-  Calendar,
   Eye,
-  BarChart3,
   MapPin,
   Languages,
-  RefreshCw,
-  Plus,
-  CheckCircle2,
 } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+
 import MarketingLayout from '@/components/marketing/MarketingLayout';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { getAllDocuments } from '@/utils/firestore';
 
 const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -45,22 +40,22 @@ export default function SmartCampaigns() {
   // Fetch campaigns
   const { data: campaigns = [], isLoading } = useQuery({
     queryKey: ['smartCampaigns'],
-    queryFn: () => base44.entities.SmartCampaign.list('-created_date', 50),
+    queryFn: () => getAllDocuments('smart_campaigns', '-created_date', 50),
   });
 
   // Fetch campaign content
   const { data: allContent = [] } = useQuery({
     queryKey: ['campaignContent'],
-    queryFn: () => base44.entities.CampaignContent.list(),
+    queryFn: () => getAllDocuments('campaigncontents'),
   });
 
   // Generate city campaigns
   const handleGenerateCityCampaigns = async () => {
     setGenerating(true);
     try {
-      toast.info('🏙️ Generating city campaigns...');
+      toast.info('Generating city campaigns...');
 
-      const response = await base44.functions.invoke('AI_City_Campaign_Generator', {
+      const response = await invokeFunction('AI_City_Campaign_Generator', {
         cities: ['Damascus', 'Cairo'],
         countries: ['Germany', 'France'],
         personas: ['Cultural Explorers', 'Adventure Seekers'],
@@ -87,7 +82,7 @@ export default function SmartCampaigns() {
     try {
       toast.info(`🌐 Generating content in ${SUPPORTED_LANGUAGES.length} languages...`);
 
-      const response = await base44.functions.invoke('AI_Multilingual_Generator', {
+      const response = await invokeFunction('AI_Multilingual_Generator', {
         campaign_id: campaignId,
         target_city: city,
       });

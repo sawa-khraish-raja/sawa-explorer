@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { MessageSquare } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { createPageUrl } from '@/utils';
 import { subscribeToConversations } from '@/utils/firestore';
+
 import { useAppContext } from '../context/AppContext';
 
 export default function MessagesBadge({ className }) {

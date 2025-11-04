@@ -1,5 +1,6 @@
 import React from 'react';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 
 export const handleError = async (error, context = {}) => {
   const errorData = {
@@ -12,11 +13,11 @@ export const handleError = async (error, context = {}) => {
   };
 
   try {
-    await base44.entities.ErrorLog.create({
+    await addDocument('errorlogs', { ...{
       section: context.section || 'Unknown',
       message: errorData.message,
       user_email: context.userEmail || 'anonymous',
-      details: JSON.stringify(errorData),
+      details: JSON.stringify(errorData, created_date: new Date().toISOString() }),
     });
   } catch (logError) {
     // Silent fail for error logging
@@ -71,10 +72,10 @@ export const withErrorBoundary = (Component) => {
 
 export const logError = async (section, message, details = {}) => {
   try {
-    await base44.entities.ErrorLog.create({
+    await addDocument('errorlogs', { ...{
       section,
       message,
-      details: JSON.stringify(details),
+      details: JSON.stringify(details, created_date: new Date().toISOString() }),
     });
   } catch (e) {
     // Silent fail
@@ -100,7 +101,7 @@ export const isNetworkError = (error) => {
 export const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
   for (let i = 0; i < maxRetries; i++) {
     try {
-      return await operation();
+      return operation();
     } catch (error) {
       if (i === maxRetries - 1) throw error;
       await new Promise((resolve) => setTimeout(resolve, delay * (i + 1)));

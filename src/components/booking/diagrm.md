@@ -19,7 +19,7 @@ sawa-explorer/
 │ │ └─ styles/ (global CSS, Tailwind layer overrides)
 │ │
 │ ├─ entities/
-│ │ ├─ client.ts (Base44 client init)
+│ │ ├─ client.ts
 │ │ ├─ functions.ts (safe wrappers for cloud functions)
 │ │ ├─ models/ (shared types/interfaces)
 │ │ └─ index.ts (public barrel exports)

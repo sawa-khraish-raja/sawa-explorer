@@ -1,12 +1,5 @@
-import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, updateDocument } from '@/utils/firestore';
-import { useAppContext } from '../components/context/AppContext';
-import AdminLayout from '../components/admin/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 import {
   Search,
   UserCheck,
@@ -21,12 +14,21 @@ import {
   MapPin,
   Users, // Added Users
 } from 'lucide-react';
-import { showNotification } from '../components/notifications/NotificationManager';
-import EditHostDialog from '../components/admin/EditHostDialog';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { getAllDocuments, updateDocument } from '@/utils/firestore';
+
+import AdminLayout from '../components/admin/AdminLayout';
 import AssignAgencyDialog from '../components/admin/AssignAgencyDialog';
+import EditHostDialog from '../components/admin/EditHostDialog';
 import HostCommissionDialog from '../components/admin/HostCommissionDialog';
 import ManageCityAccessDialog from '../components/admin/ManageCityAccessDialog'; // New import
-import { format } from 'date-fns';
+import { useAppContext } from '../components/context/AppContext';
+import { showNotification } from '../components/notifications/NotificationManager';
 
 export default function AdminHosts() {
   const queryClient = useQueryClient();
@@ -54,7 +56,7 @@ export default function AdminHosts() {
     queryKey: ['allAgencies'],
     queryFn: async () => {
       // Return empty array until agencies are migrated
-      console.log('⚠️ Agencies query skipped - not yet migrated to Firestore');
+      console.log(' Agencies query skipped - not yet migrated to Firestore');
       return [];
     },
   });
@@ -95,7 +97,7 @@ export default function AdminHosts() {
   // دالة مساعدة لإصلاح المضيفين القدامى
   const fixLegacyHost = useMutation({
     mutationFn: async (host) => {
-      console.log(`🔧 Fixing legacy host: ${host.email}`);
+      console.log(`Fixing legacy host: ${host.email}`);
 
       // إذا عنده city بس ما عنده assigned_cities
       if (host.city && (!host.assigned_cities || host.assigned_cities.length === 0)) {
@@ -381,7 +383,7 @@ export default function AdminHosts() {
                                   : 'bg-green-100 text-green-800'
                               }
                             >
-                              {host.host_type === 'agency' ? '🏢 Agency' : '👤 Freelancer'}
+                              {host.host_type === 'agency' ? '🏢 Agency' : 'Freelancer'}
                             </Badge>
                             {commission.isCustom && (
                               <Badge className='bg-amber-100 text-amber-800'>Custom Rates</Badge>

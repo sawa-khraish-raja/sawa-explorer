@@ -60,7 +60,7 @@ export async function safeFetch(url, options = {}) {
       const retryAfter = parseInt(error.response.headers['retry-after']) || 60;
       setRateLimitCooldown(endpoint, retryAfter);
 
-      console.warn(`🚫 [safeFetch] Rate limited: ${endpoint} - cooldown for ${retryAfter}s`);
+      console.warn(` [safeFetch] Rate limited: ${endpoint} - cooldown for ${retryAfter}s`);
 
       throw new Error(`Too many requests. Please wait ${retryAfter} seconds.`);
     }

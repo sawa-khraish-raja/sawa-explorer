@@ -1,7 +1,3 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Palette,
   Type,
@@ -13,9 +9,12 @@ import {
   Ruler,
   Eye,
   Smartphone,
-  Monitor,
   Zap,
 } from 'lucide-react';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 export default function DesignAudit() {
@@ -301,52 +300,44 @@ export default function DesignAudit() {
 
   const getSeverityBadge = (severity) => {
     const config = {
-      high: 'bg-red-100 text-red-700 border-red-300',
-      medium: 'bg-yellow-100 text-yellow-700 border-yellow-300',
-      low: 'bg-blue-100 text-blue-700 border-blue-300',
+      high: { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-300' },
+      medium: { bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-300' },
+      low: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300' },
     };
-    return config[severity] || config.low;
+    const classes = config[severity] || config.low;
+    return `${classes.bg} ${classes.text} ${classes.border}`;
   };
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-8 px-4'>
-      <div className='max-w-7xl mx-auto space-y-6'>
-        {/* Header */}
-        <div className='text-center mb-8'>
-          <div className='inline-flex items-center gap-2 bg-purple-100 px-4 py-2 rounded-full mb-4'>
-            <Palette className='w-5 h-5 text-purple-600' />
-            <span className='text-sm font-semibold text-purple-700'>Design System Audit</span>
-          </div>
-          <h1 className='text-4xl font-bold text-gray-900 mb-2'>تقييم التصميم والتناسق</h1>
-          <p className='text-gray-600'>تحليل شامل لأحجام المحتويات والتناسق عبر الموقع</p>
-        </div>
-
-        {/* Overall Score */}
-        <Card className='border-2 bg-gradient-to-br from-white to-purple-50'>
+    <div className='min-h-screen bg-gradient-to-br from-purple-50 to-white py-8 px-4'>
+      <div className='max-w-7xl mx-auto space-y-8'>
+        {/* Overview Score Card */}
+        <Card className='shadow-2xl border-2 border-purple-100'>
+          <CardHeader className='bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-t-xl'>
+            <CardTitle className='text-3xl font-bold text-center'>تقييم نظام التصميم</CardTitle>
+          </CardHeader>
           <CardContent className='p-8'>
-            <div className='flex flex-col md:flex-row items-center justify-between gap-6'>
-              <div className='flex items-center gap-6'>
-                <div
-                  className={cn(
-                    'w-32 h-32 rounded-2xl flex flex-col items-center justify-center border-4',
-                    getScoreColor(overallScore)
-                  )}
-                >
-                  <div className='text-5xl font-bold'>{overallScore}</div>
-                  <div className='text-xs font-medium mt-1'>من 100</div>
-                </div>
-                <div>
-                  <h2 className='text-2xl font-bold text-gray-900 mb-2'>
-                    {overallScore >= 85 && '🎉 تصميم ممتاز!'}
-                    {overallScore >= 70 && overallScore < 85 && '👍 تصميم جيد'}
-                    {overallScore < 70 && '⚠️ يحتاج تحسينات'}
-                  </h2>
-                  <p className='text-gray-600 text-sm'>
-                    {overallScore >= 85 && 'التناسق عالي وجودة التصميم ممتازة'}
-                    {overallScore >= 70 && overallScore < 85 && 'تصميم جيد لكن في مجال للتحسين'}
-                    {overallScore < 70 && 'التصميم يحتاج تحسينات جوهرية'}
-                  </p>
-                </div>
+            <div className='flex flex-col md:flex-row items-center justify-between gap-8 mb-8'>
+              <div
+                className={cn(
+                  'w-40 h-40 rounded-full flex flex-col items-center justify-center border-4',
+                  getScoreColor(overallScore)
+                )}
+              >
+                <div className='text-5xl font-bold'>{overallScore}</div>
+                <div className='text-xs font-medium mt-1'>من 100</div>
+              </div>
+              <div>
+                <h2 className='text-2xl font-bold text-gray-900 mb-2'>
+                  {overallScore >= 85 && '🎉 تصميم ممتاز!'}
+                  {overallScore >= 70 && overallScore < 85 && '👍 تصميم جيد'}
+                  {overallScore < 70 && ' يحتاج تحسينات'}
+                </h2>
+                <p className='text-gray-600 text-sm'>
+                  {overallScore >= 85 && 'التناسق عالي وجودة التصميم ممتازة'}
+                  {overallScore >= 70 && overallScore < 85 && 'تصميم جيد لكن في مجال للتحسين'}
+                  {overallScore < 70 && 'التصميم يحتاج تحسينات جوهرية'}
+                </p>
               </div>
 
               <div className='grid grid-cols-2 gap-4'>

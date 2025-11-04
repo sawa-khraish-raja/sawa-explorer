@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Loader2, ArrowLeft, Search, UserPlus } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { useAppContext } from '@/components/context/AppContext';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   Table,
@@ -12,26 +16,19 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowLeft, Search, Plus, UserPlus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { toast } from 'sonner';
+import { getAllDocuments, queryDocuments } from '@/utils/firestore';
 
 export default function OfficeHosts() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
+  const { user } = useAppContext();
 
   const { data: office } = useQuery({
     queryKey: ['userOffice', user?.email],
     queryFn: async () => {
-      const allOffices = await base44.entities.Office.list();
+      const allOffices = await getAllDocuments('agencies');
       return allOffices.find(
         (o) => o.email?.toLowerCase().trim() === user.email.toLowerCase().trim()
       );
@@ -43,11 +40,10 @@ export default function OfficeHosts() {
     queryKey: ['officeHosts', office?.id],
     queryFn: async () => {
       if (!office?.id) return [];
-      const hosts = await base44.entities.User.filter({
-        office_id: office.id,
-        host_approved: true,
-      });
-      return hosts;
+      return queryDocuments('users', [
+        ['office_id', '==', office.id],
+        ['host_approved', '==', true],
+      ]);
     },
     enabled: !!office?.id,
   });

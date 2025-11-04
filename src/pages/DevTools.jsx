@@ -1,11 +1,24 @@
+import { Database, CheckCircle, XCircle } from 'lucide-react';
 import React, { useState } from 'react';
+
+import { useAppContext } from '@/components/context/AppContext';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Database, CheckCircle, XCircle } from 'lucide-react';
-import { seedCities, seedAdventures, seedServices, seedNotifications, seedBookingsAndOffers } from '@/utils/seedDatabase';
-import { getAllDocuments, queryDocuments, updateDocument, setDocument, getDocument } from '@/utils/firestore';
-import { useAppContext } from '@/components/context/AppContext';
+import {
+  getAllDocuments,
+  queryDocuments,
+  updateDocument,
+  setDocument,
+  getDocument,
+} from '@/utils/firestore';
+import {
+  seedCities,
+  seedAdventures,
+  seedServices,
+  seedNotifications,
+  seedBookingsAndOffers,
+} from '@/utils/seedDatabase';
 
 export default function DevTools() {
   const { user } = useAppContext();
@@ -13,34 +26,20 @@ export default function DevTools() {
   const [status, setStatus] = useState(null);
   const [stats, setStats] = useState(null);
 
-  const handleSeedAll = async () => {
-    setLoading(true);
-    setStatus(null);
-    try {
-      const result = await seedAllData();
-      setStatus({ type: 'success', message: 'Database seeded successfully!' });
-      loadStats();
-    } catch (error) {
-      setStatus({ type: 'error', message: error.message });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSeedCities = async () => {
     setLoading(true);
     setStatus(null);
     try {
-      console.log('🔍 Seeding cities - User:', user);
-      console.log('🔍 User email:', user?.email);
-      console.log('🔍 User ID:', user?.id);
+      console.log(' Seeding cities - User:', user);
+      console.log(' User email:', user?.email);
+      console.log(' User ID:', user?.id);
       await seedCities();
       setStatus({ type: 'success', message: 'Cities seeded successfully!' });
       loadStats();
     } catch (error) {
-      console.error('❌ Seed cities error:', error);
-      console.error('❌ Error code:', error.code);
-      console.error('❌ Error message:', error.message);
+      console.error('Seed cities error:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
       setStatus({ type: 'error', message: error.message });
     } finally {
       setLoading(false);
@@ -84,13 +83,16 @@ export default function DevTools() {
         setLoading(false);
         return;
       }
-      console.log('🔔 Seeding notifications for user:', { id: user.id, email: user.email });
+
       const notificationIds = await seedNotifications(user.id, user.email);
-      console.log('🔔 Seeded notification IDs:', notificationIds);
-      setStatus({ type: 'success', message: `Sample notifications seeded successfully! (${notificationIds?.length || 0} created)` });
+
+      setStatus({
+        type: 'success',
+        message: `Sample notifications seeded successfully! (${notificationIds?.length || 0} created)`,
+      });
       loadStats();
     } catch (error) {
-      console.error('❌ Seed notifications error:', error);
+      console.error('Seed notifications error:', error);
       setStatus({ type: 'error', message: error.message });
     } finally {
       setLoading(false);
@@ -103,14 +105,16 @@ export default function DevTools() {
     try {
       // First, clear existing adventures
       const deletedCount = await clearAdventures();
-      console.log(`🗑️ Deleted ${deletedCount} old adventures`);
 
       // Then seed new ones
       await seedAdventures();
-      setStatus({ type: 'success', message: `Cleared ${deletedCount} old adventures and seeded 5 new ones!` });
+      setStatus({
+        type: 'success',
+        message: `Cleared ${deletedCount} old adventures and seeded 5 new ones!`,
+      });
       loadStats();
     } catch (error) {
-      console.error('❌ Clear & reseed error:', error);
+      console.error('Clear & reseed error:', error);
       setStatus({ type: 'error', message: error.message });
     } finally {
       setLoading(false);
@@ -126,13 +130,15 @@ export default function DevTools() {
         setLoading(false);
         return;
       }
-      console.log('📦 Seeding booking and offer for user:', { id: user.id, email: user.email });
       const result = await seedBookingsAndOffers(user.id, user.email);
-      console.log('📦 Seeded booking and offer:', result);
-      setStatus({ type: 'success', message: 'Sample booking with pending offer created! Check MyOffers page.' });
+      console.log('Seeded booking and offer:', result);
+      setStatus({
+        type: 'success',
+        message: 'Sample booking with pending offer created! Check MyOffers page.',
+      });
       loadStats();
     } catch (error) {
-      console.error('❌ Seed bookings/offers error:', error);
+      console.error('Seed bookings/offers error:', error);
       setStatus({ type: 'error', message: error.message });
     } finally {
       setLoading(false);
@@ -149,44 +155,26 @@ export default function DevTools() {
         return;
       }
 
-      console.log('🔍 =================================');
-      console.log('🔍 DEBUG: Current User Info');
-      console.log('🔍 User ID:', user.id);
-      console.log('🔍 User Email:', user.email);
-      console.log('🔍 Full User Object:', user);
-      console.log('🔍 =================================');
-
       // Check all bookings in database
       const allBookings = await getAllDocuments('bookings');
-      console.log('🔍 Total bookings in database:', allBookings.length);
-      console.log('🔍 All bookings:', allBookings);
 
       // Filter bookings by user email
-      const myBookings = await queryDocuments('bookings', [
-        ['traveler_email', '==', user.email],
-      ]);
-      console.log('🔍 My bookings (by email):', myBookings.length);
-      console.log('🔍 My bookings data:', myBookings);
+      const myBookings = await queryDocuments('bookings', [['traveler_email', '==', user.email]]);
 
       // Check if there's a mismatch in email casing or whitespace
-      const manualFilter = allBookings.filter(b =>
-        b.traveler_email?.toLowerCase().trim() === user.email?.toLowerCase().trim()
+      const manualFilter = allBookings.filter(
+        (b) => b.traveler_email?.toLowerCase().trim() === user.email?.toLowerCase().trim()
       );
-      console.log('🔍 Manual filter (case-insensitive):', manualFilter.length);
 
       // Check offers
       const allOffers = await getAllDocuments('offers');
-      console.log('🔍 Total offers in database:', allOffers.length);
-      console.log('🔍 All offers:', allOffers);
-
-      console.log('🔍 =================================');
 
       setStatus({
         type: 'success',
-        message: `Found ${myBookings.length} booking(s) for ${user.email}. Check console for details.`
+        message: `Found ${myBookings.length} booking(s) for ${user.email}. Check console for details.`,
       });
     } catch (error) {
-      console.error('❌ Debug error:', error);
+      console.error('Debug error:', error);
       setStatus({ type: 'error', message: error.message });
     } finally {
       setLoading(false);
@@ -216,7 +204,7 @@ export default function DevTools() {
           city: 'Damascus', // Default city for testing
           bio: 'Local guide and host',
         });
-        console.log('✅ Updated existing user to host');
+        console.log(' Updated existing user to host');
       } else {
         // Create new user document
         await setDocument('users', user.id, {
@@ -228,15 +216,16 @@ export default function DevTools() {
           city: 'Damascus',
           bio: 'Local guide and host',
         });
-        console.log('✅ Created new user document as host');
+        console.log(' Created new user document as host');
       }
 
       setStatus({
         type: 'success',
-        message: 'You are now a host! Refresh the page and visit /HostDashboard to see booking requests.'
+        message:
+          'You are now a host! Refresh the page and visit /HostDashboard to see booking requests.',
       });
     } catch (error) {
-      console.error('❌ Make host error:', error);
+      console.error('Make host error:', error);
       setStatus({ type: 'error', message: error.message });
     } finally {
       setLoading(false);
@@ -253,7 +242,7 @@ export default function DevTools() {
         return;
       }
 
-      console.log('👨‍💼 Making user an admin:', user.id);
+      console.log('Making user an admin:', user.id);
 
       // Check if user document exists
       const existingUser = await getDocument('users', user.id);
@@ -264,7 +253,7 @@ export default function DevTools() {
           role_type: 'admin',
           admin_access_type: 'full',
         });
-        console.log('✅ Updated existing user to admin');
+        console.log(' Updated existing user to admin');
       } else {
         // Create new user document
         await setDocument('users', user.id, {
@@ -274,18 +263,19 @@ export default function DevTools() {
           role_type: 'admin',
           admin_access_type: 'full',
         });
-        console.log('✅ Created new user document as admin');
+        console.log(' Created new user document as admin');
       }
 
       setStatus({
         type: 'success',
-        message: 'You are now an admin! Refresh the page and visit /AdminDashboard to access admin panel.'
+        message:
+          'You are now an admin! Refresh the page and visit /AdminDashboard to access admin panel.',
       });
 
       // Refresh stats after making admin
       await loadStats();
     } catch (error) {
-      console.error('❌ Make admin error:', error);
+      console.error('Make admin error:', error);
       setStatus({ type: 'error', message: error.message });
     } finally {
       setLoading(false);
@@ -354,9 +344,7 @@ export default function DevTools() {
                 Logged in as: <strong>{user.email}</strong> (ID: {user.id})
               </div>
             ) : (
-              <div className='text-sm text-red-700'>
-                Not logged in - Please login to seed data!
-              </div>
+              <div className='text-sm text-red-700'>Not logged in - Please login to seed data!</div>
             )}
           </div>
         </div>
@@ -482,12 +470,14 @@ export default function DevTools() {
               <CardDescription>3 sample notifications</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={handleSeedNotifications} disabled={loading || !user} className='w-full'>
+              <Button
+                onClick={handleSeedNotifications}
+                disabled={loading || !user}
+                className='w-full'
+              >
                 Seed Notifications
               </Button>
-              {!user && (
-                <p className='text-xs text-orange-600 mt-2'>Login required</p>
-              )}
+              {!user && <p className='text-xs text-orange-600 mt-2'>Login required</p>}
             </CardContent>
           </Card>
 
@@ -497,12 +487,14 @@ export default function DevTools() {
               <CardDescription>1 booking with pending offer</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={handleSeedBookingsAndOffers} disabled={loading || !user} className='w-full'>
+              <Button
+                onClick={handleSeedBookingsAndOffers}
+                disabled={loading || !user}
+                className='w-full'
+              >
                 Seed Booking & Offer
               </Button>
-              {!user && (
-                <p className='text-xs text-orange-600 mt-2'>Login required</p>
-              )}
+              {!user && <p className='text-xs text-orange-600 mt-2'>Login required</p>}
             </CardContent>
           </Card>
 
@@ -515,9 +507,7 @@ export default function DevTools() {
               <Button onClick={handleMakeMeHost} disabled={loading || !user} className='w-full'>
                 Make Me a Host
               </Button>
-              {!user && (
-                <p className='text-xs text-orange-600 mt-2'>Login required</p>
-              )}
+              {!user && <p className='text-xs text-orange-600 mt-2'>Login required</p>}
             </CardContent>
           </Card>
 
@@ -530,9 +520,7 @@ export default function DevTools() {
               <Button onClick={handleMakeMeAdmin} disabled={loading || !user} className='w-full'>
                 Make Me Admin
               </Button>
-              {!user && (
-                <p className='text-xs text-orange-600 mt-2'>Login required</p>
-              )}
+              {!user && <p className='text-xs text-orange-600 mt-2'>Login required</p>}
             </CardContent>
           </Card>
         </div>

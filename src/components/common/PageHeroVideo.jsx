@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useRef, useMemo } from 'react';
+
 import { queryDocuments } from '@/utils/firestore';
 
 const variants = {
@@ -38,20 +39,28 @@ export default function PageHeroVideo({ pageType = 'home', cityName = null }) {
       let allSlides;
 
       if (pageType === 'city' && cityName) {
-        allSlides = await queryDocuments('hero_slides', [
-          ['page_type', '==', 'city'],
-          ['city_name', '==', cityName],
-          ['is_active', '==', true],
-        ], {
-          orderBy: { field: 'order', direction: 'asc' }
-        });
+        allSlides = await queryDocuments(
+          'hero_slides',
+          [
+            ['page_type', '==', 'city'],
+            ['city_name', '==', cityName],
+            ['is_active', '==', true],
+          ],
+          {
+            orderBy: { field: 'order', direction: 'asc' },
+          }
+        );
       } else {
-        allSlides = await queryDocuments('hero_slides', [
-          ['page_type', '==', pageType],
-          ['is_active', '==', true],
-        ], {
-          orderBy: { field: 'order', direction: 'asc' }
-        });
+        allSlides = await queryDocuments(
+          'hero_slides',
+          [
+            ['page_type', '==', pageType],
+            ['is_active', '==', true],
+          ],
+          {
+            orderBy: { field: 'order', direction: 'asc' },
+          }
+        );
       }
 
       const validSlides = allSlides.filter((s) => s.video_url);
@@ -173,7 +182,7 @@ export default function PageHeroVideo({ pageType = 'home', cityName = null }) {
             alt=''
             className='w-full h-full object-cover'
             loading='eager'
-            fetchpriority='high'
+            fetchPriority='high'
           />
         </motion.div>
       )}
@@ -228,7 +237,7 @@ export default function PageHeroVideo({ pageType = 'home', cityName = null }) {
             setVideosReady((prev) => ({ ...prev, [page]: true }));
           }}
           onError={() => {
-            console.warn('⚠️ Video failed:', currentSlide.video_url);
+            console.warn(' Video failed:', currentSlide.video_url);
             setTimeout(() => {
               if (slides.length > 1) {
                 setPage((prev) => (prev + 1) % slides.length);

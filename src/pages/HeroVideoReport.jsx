@@ -1,15 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
 import {
-  TrendingUp,
-  TrendingDown,
   Minus,
   Video,
-  Clock,
   Database,
   Zap,
   Smartphone,
@@ -24,6 +16,12 @@ import {
   HardDrive,
   Wifi,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { queryDocuments } from '@/utils/firestore';
 
 export default function HeroVideoReport() {
   const [metrics, setMetrics] = useState({
@@ -36,10 +34,11 @@ export default function HeroVideoReport() {
   const { data: slides = [] } = useQuery({
     queryKey: ['heroSlides', 'home'],
     queryFn: async () => {
-      const allSlides = await base44.entities.HeroSlide.filter({
-        page_type: 'home',
-        is_active: true,
-      });
+      const allSlides = await queryDocuments(
+        'heroslides',
+        ['page_type', '==', 'home'],
+        ['is_active', '==', true]
+      );
       return allSlides.filter((s) => s.video_url).sort((a, b) => (a.order || 0) - (b.order || 0));
     },
   });
@@ -55,7 +54,7 @@ export default function HeroVideoReport() {
 
     let frameCount = 0;
     let lastTime = performance.now();
-    let memoryReadings = [];
+    const memoryReadings = [];
 
     const measureFPS = () => {
       const now = performance.now();
@@ -117,10 +116,10 @@ export default function HeroVideoReport() {
     };
 
     if (slides.length > 1) report.issues.push('🚨 Too many videos (>1) - Optimal is 1 video.');
-    if (parseFloat(metrics.memory.peak) > 200) report.issues.push('⚠️ High memory usage');
-    if (metrics.fps.lowest < 30) report.issues.push('⚠️ Low FPS detected');
+    if (parseFloat(metrics.memory.peak) > 200) report.issues.push(' High memory usage');
+    if (metrics.fps.lowest < 30) report.issues.push(' Low FPS detected');
     if (slides.some((s) => (s.display_duration || 10) > 25))
-      report.issues.push('⚠️ Video duration too long (>25s)');
+      report.issues.push(' Video duration too long (>25s)');
 
     const blob = new Blob([JSON.stringify(report, null, 2)], {
       type: 'application/json',
@@ -171,7 +170,7 @@ export default function HeroVideoReport() {
           <div className='flex items-center justify-between flex-wrap gap-4'>
             <div>
               <h1 className='text-3xl sm:text-4xl font-bold text-gray-900 mb-2'>
-                📊 Hero Video Performance Report
+                Hero Video Performance Report
               </h1>
               <p className='text-gray-600'>Real-time monitoring and optimization recommendations</p>
             </div>
@@ -250,7 +249,7 @@ export default function HeroVideoReport() {
                   {slides[0] && (slides[0].display_duration || 0) <= 25 ? (
                     <Badge className='bg-green-100 text-green-800'> OK</Badge>
                   ) : (
-                    <Badge className='bg-yellow-100 text-yellow-800'>⚠️ Long</Badge>
+                    <Badge className='bg-yellow-100 text-yellow-800'> Long</Badge>
                   )}
                 </div>
                 <p className='text-xs text-gray-600 mt-2'>Max recommended: 25 seconds</p>

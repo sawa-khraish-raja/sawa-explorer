@@ -1,38 +1,23 @@
-import React, { useMemo, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  TrendingUp,
   Users,
   DollarSign,
   Target,
   Activity,
-  Globe,
-  BarChart3,
   Zap,
   RefreshCw,
-  Eye,
   Clock,
   ArrowUpRight,
   ArrowDownRight,
   Loader2,
-  CheckCircle2,
-  AlertCircle,
   MapPin,
   Smartphone,
   Monitor,
   Tablet,
-  Calendar,
   TrendingDown,
 } from 'lucide-react';
-import { toast } from 'sonner';
-import MarketingLayout from '@/components/marketing/MarketingLayout';
+import { useMemo, useState } from 'react';
 import {
-  LineChart,
-  Line,
   BarChart,
   Bar,
   PieChart,
@@ -42,9 +27,16 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { toast } from 'sonner';
+
+import MarketingLayout from '@/components/marketing/MarketingLayout';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { getAllDocuments, queryDocuments } from '@/utils/firestore';
+import { invokeFunction } from '@/utils/functions';
 
 const COLORS = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ef4444'];
 
@@ -56,7 +48,7 @@ export default function MarketingDashboard() {
   const { data: analytics, isLoading: analyticsLoading } = useQuery({
     queryKey: ['analyticsData'],
     queryFn: async () => {
-      const data = await base44.entities.AnalyticsData.list('-sync_timestamp', 1);
+      const data = await getAllDocuments('analytics_data', '-sync_timestamp', 1);
       return data[0] || null;
     },
     refetchInterval: 60000, // Refresh every minute
@@ -65,7 +57,7 @@ export default function MarketingDashboard() {
   //  Fetch campaigns
   const { data: campaigns = [] } = useQuery({
     queryKey: ['smartCampaigns'],
-    queryFn: () => base44.entities.SmartCampaign.list('-created_date', 20),
+    queryFn: () => getAllDocuments('smart_campaigns', '-created_date', 20),
   });
 
   //  Fetch campaign performance
@@ -74,7 +66,7 @@ export default function MarketingDashboard() {
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      return base44.entities.CampaignPerformance.filter({
+      return queryDocuments('campaign_performance', {
         date: { $gte: weekAgo },
       });
     },
@@ -85,7 +77,7 @@ export default function MarketingDashboard() {
     queryKey: ['conversions'],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
-      return base44.entities.ConversionEvent.filter({
+      return queryDocuments('conversion_events', {
         created_date: { $gte: today },
       });
     },
@@ -94,15 +86,15 @@ export default function MarketingDashboard() {
   //  Fetch city data
   const { data: cityData = [] } = useQuery({
     queryKey: ['cityMarketingData'],
-    queryFn: () => base44.entities.CityMarketingData.list(),
+    queryFn: () => getAllDocuments('citymarketingdatas'),
   });
 
   //  Sync GA4 data
   const handleSyncGA4 = async () => {
     setSyncing(true);
     try {
-      toast.info('📊 Syncing with Google Analytics...');
-      const response = await base44.functions.invoke('GA4_Real_Sync', {});
+      toast.info('Syncing with Google Analytics...');
+      const response = await invokeFunction('GA4_Real_Sync', {});
 
       if (response.data?.ok) {
         toast.success(' Analytics synced successfully!');

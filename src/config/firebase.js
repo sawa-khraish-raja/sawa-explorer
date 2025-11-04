@@ -1,7 +1,8 @@
+import { getAnalytics } from 'firebase/analytics';
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import { getAnalytics } from 'firebase/analytics';
+import { getFunctions } from 'firebase/functions';
 import { getMessaging } from 'firebase/messaging';
 import { getStorage } from 'firebase/storage';
 
@@ -27,6 +28,9 @@ export const db = getFirestore(app, databaseId);
 
 // Initialize Firebase Storage
 export const storage = getStorage(app);
+
+// Initialize Firebase Functions
+export const functions = getFunctions(app);
 
 export const messaging =
   typeof window !== 'undefined'

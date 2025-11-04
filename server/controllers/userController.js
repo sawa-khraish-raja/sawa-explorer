@@ -137,11 +137,10 @@ export const deleteUser = async (req, res) => {
     // Delete from Firebase Authentication first
     try {
       await auth.deleteUser(id);
-      console.log(`✓ Deleted user ${id} from Firebase Auth`);
     } catch (authError) {
       // If user doesn't exist in Auth, log but continue with Firestore deletion
       if (authError.code === 'auth/user-not-found') {
-        console.log(`⚠️ User ${id} not found in Firebase Auth (may already be deleted)`);
+        console.log(`User ${id} not found in Firebase Auth (may already be deleted)`);
       } else {
         // For other auth errors, throw to catch block
         throw authError;
@@ -150,7 +149,6 @@ export const deleteUser = async (req, res) => {
 
     // Delete from Firestore
     await db.collection(USERS_COLLECTION).doc(id).delete();
-    console.log(`✓ Deleted user ${id} from Firestore`);
 
     res.status(200).json({
       success: true,

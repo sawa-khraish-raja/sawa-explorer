@@ -55,5 +55,5 @@ export function truncateText(str, maxLength = 100) {
   if (!str) return '';
   const normalized = normalizeText(str);
   if (normalized.length <= maxLength) return normalized;
-  return normalized.slice(0, maxLength).trim() + '...';
+  return `${normalized.slice(0, maxLength).trim()  }...`;
 }

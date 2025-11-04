@@ -57,7 +57,7 @@ export function maskEmail(email) {
   if (!domain) return email;
 
   const visibleChars = Math.min(3, localPart.length);
-  const masked = localPart.substring(0, visibleChars) + '***';
+  const masked = `${localPart.substring(0, visibleChars)  }***`;
   return `${masked}@${domain}`;
 }
 

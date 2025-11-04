@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useEffect } from 'react';
 
 const enTranslations = {
   nav: {
@@ -199,7 +199,7 @@ export const LanguageProvider = ({ children }) => {
 
   const setLanguage = (lang) => {
     if (lang === 'ar') {
-      console.warn('⚠️ Arabic is only available for chat translation, not UI');
+      console.warn(' Arabic is only available for chat translation, not UI');
       return;
     }
     setLanguageState(lang);

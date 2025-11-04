@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Star, ThumbsUp, Flag, MessageSquare, X, Send, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { Star, ThumbsUp, Flag, MessageSquare, X, Send, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { updateDocument } from '@/utils/firestore';
-import { toast } from 'sonner';
+
 
 const StarDisplay = ({ rating, showNumber = true }) => {
   return (

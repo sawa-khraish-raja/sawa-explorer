@@ -1,15 +1,16 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Users, DollarSign, Star, TrendingUp, Loader2 } from 'lucide-react';
+
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { queryDocuments } from '@/utils/firestore';
 
 export default function OfficeOverview({ office }) {
   const { data: officeHosts = [], isLoading: hostsLoading } = useQuery({
     queryKey: ['officeHosts', office.id],
     queryFn: async () => {
       if (!office.id) return [];
-      return await base44.entities.User.filter({ office_id: office.id, host_approved: true });
+      return queryDocuments('users', ['office_id', '==', office.id],
+            ['host_approved', '==', true ]);
     },
     enabled: !!office?.id,
   });
@@ -18,10 +19,8 @@ export default function OfficeOverview({ office }) {
     queryKey: ['officeOverview', office.id],
     queryFn: async () => {
       if (!office.id) return { totalBookings: 0, totalRevenue: 0, avgRating: 0 };
-      const hosts = await base44.entities.User.filter({
-        office_id: office.id,
-        host_approved: true,
-      });
+      const hosts = await queryDocuments('users', ['office_id', '==', office.id],
+            ['host_approved', '==', true]);
 
       if (!hosts || hosts.length === 0) {
         return { totalBookings: 0, totalRevenue: 0, avgRating: 0 };

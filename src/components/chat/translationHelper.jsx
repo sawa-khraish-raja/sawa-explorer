@@ -1,7 +1,6 @@
-import { base44 } from '@/api/base44Client';
-import { normLang } from '../i18n/i18nLang';
-import { isFeatureEnabled } from '../config/featureFlags';
 import { isAIFeatureEnabled, AI_ALLOWED_CONTEXTS } from '../config/aiFlags';
+import { isFeatureEnabled } from '../config/featureFlags';
+import { normLang } from '../i18n/i18nLang';
 
 //  Client-side translation cache
 class TranslationCache {
@@ -89,12 +88,12 @@ async function translateMessageRaw(text, toLang) {
   // Check cache
   const cached = translationCache.get(text, targetLang);
   if (cached) {
-    console.log(`💾 [Translation] Cache hit for ${targetLang}`);
+    console.log(`[Translation] Cache hit for ${targetLang}`);
     return cached;
   }
 
   try {
-    const response = await base44.functions.invoke('translate', {
+    const response = await translateText({
       text,
       from: 'auto',
       to: targetLang,
@@ -140,8 +139,6 @@ export async function batchTranslateMessages(messages, targetLang) {
     return [];
   }
 
-  console.log(`🌍 [Translation] Batch translating ${messages.length} messages to ${normalized}`);
-
   const batchSize = 5;
   const batches = [];
 
@@ -168,7 +165,7 @@ export async function batchTranslateMessages(messages, targetLang) {
             }
 
             //  إرسال Context مع الترجمة
-            const { data } = await base44.functions.invoke('translate', {
+            const { data } = await translateText({
               text: originalText,
               from: 'auto',
               to: normalized,
@@ -213,5 +210,4 @@ export async function batchTranslateMessages(messages, targetLang) {
 
 export function clearTranslationCache() {
   translationCache.clear();
-  console.log('🗑️ [Translation] Cache cleared');
 }

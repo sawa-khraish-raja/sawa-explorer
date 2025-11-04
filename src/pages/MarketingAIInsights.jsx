@@ -1,11 +1,5 @@
-import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import MarketingLayout from '../components/marketing/MarketingLayout';
-import MarketingGuard from '../components/marketing/MarketingGuard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 import {
   Brain,
   FileText,
@@ -21,8 +15,19 @@ import {
   AlertCircle,
   Clock,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { useState } from 'react';
 import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getAllDocuments } from '@/utils/firestore';
+import { invokeFunction } from '@/utils/functions';
+
+import MarketingGuard from '../components/marketing/MarketingGuard';
+import MarketingLayout from '../components/marketing/MarketingLayout';
+
+
 
 export default function MarketingAIInsights() {
   const queryClient = useQueryClient();
@@ -33,7 +38,7 @@ export default function MarketingAIInsights() {
     queryKey: ['latest_ai_report'],
     queryFn: async () => {
       try {
-        const reports = await base44.entities.AIReports.list('-created_date', 1);
+        const reports = await getAllDocuments('ai_reports', '-created_date', 1);
         return reports && reports.length > 0 ? reports[0] : null;
       } catch (error) {
         console.error('Failed to fetch AI reports:', error);
@@ -48,7 +53,7 @@ export default function MarketingAIInsights() {
     queryKey: ['audience_analytics'],
     queryFn: async () => {
       try {
-        const analytics = await base44.entities.AudienceAnalytics.list('-updated_date', 100);
+        const analytics = await getAllDocuments('audience_analytics', '-updated_date', 100);
         return analytics || [];
       } catch (error) {
         console.error('Failed to fetch audience analytics:', error);
@@ -63,7 +68,7 @@ export default function MarketingAIInsights() {
     queryKey: ['marketing_personas'],
     queryFn: async () => {
       try {
-        const allPersonas = await base44.entities.MarketingPersonas.list('-user_count', 10);
+        const allPersonas = await getAllDocuments('marketing_personas', '-user_count', 10);
         return allPersonas || [];
       } catch (error) {
         console.error('Failed to fetch personas:', error);
@@ -72,13 +77,13 @@ export default function MarketingAIInsights() {
     },
     refetchInterval: 30000,
     retry: 1,
-  });
+  })
 
   const { data: jobLogs = [] } = useQuery({
     queryKey: ['ai_jobs_log'],
     queryFn: async () => {
       try {
-        const logs = await base44.entities.AIJobsLog.list('-created_date', 10);
+        const logs = await getAllDocuments('ai_jobs_log', '-created_date', 10);
         return logs || [];
       } catch (error) {
         console.error('Failed to fetch job logs:', error);
@@ -92,7 +97,7 @@ export default function MarketingAIInsights() {
   const generateReportMutation = useMutation({
     mutationFn: async () => {
       setIsGenerating(true);
-      const response = await base44.functions.invoke('AI_Analyze_Data_V2', {});
+      const response = await invokeFunction('AI_Analyze_Data_V2', {});
 
       if (!response?.data?.ok) {
         throw new Error(response?.data?.error || 'Report generation failed');
@@ -121,7 +126,7 @@ export default function MarketingAIInsights() {
   const analyzeAudienceMutation = useMutation({
     mutationFn: async () => {
       setIsAnalyzingAudience(true);
-      const response = await base44.functions.invoke('AI_Audience_Intelligence', {});
+      const response = await invokeFunction('AI_Audience_Intelligence', {});
 
       if (!response?.data?.ok) {
         throw new Error(response?.data?.error || 'Audience analysis failed');

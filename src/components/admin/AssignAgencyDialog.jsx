@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { Building2, Loader2, User, DollarSign } from 'lucide-react';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -8,24 +11,20 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Building2, Loader2, User, DollarSign } from 'lucide-react';
+import { queryDocuments, addDocument, updateDocument } from '@/utils/firestore';
+
 import { showNotification } from '../notifications/NotificationManager';
 
 export default function AssignAgencyDialog({ host, isOpen, onClose }) {
+  const { user } = useAppContext();
   const queryClient = useQueryClient();
   const [selectedAgencyId, setSelectedAgencyId] = useState(host?.agency_id || '');
 
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
 
   const { data: agencies = [] } = useQuery({
     queryKey: ['allAgencies'],
-    queryFn: () => base44.entities.Agency.filter({ is_active: true }),
+    queryFn: () => queryDocuments('agencies', [['is_active', '==', true]]),
   });
 
   const assignAgencyMutation = useMutation({
@@ -35,18 +34,22 @@ export default function AssignAgencyDialog({ host, isOpen, onClose }) {
         agency_id: selectedAgencyId || null,
       };
 
-      await base44.entities.User.update(host.id, updates);
+      await updateDocument('users', host.id, {
+        ...updates,
+        updated_date: new Date().toISOString()
+      });
 
       // Update agency hosts count
       if (selectedAgencyId) {
         const agency = agencies.find((a) => a.id === selectedAgencyId);
         if (agency) {
-          const hostsInAgency = await base44.entities.User.filter({
-            agency_id: selectedAgencyId,
-            host_approved: true,
-          });
-          await base44.entities.Agency.update(selectedAgencyId, {
+          const hostsInAgency = await queryDocuments('users', [
+            ['agency_id', '==', selectedAgencyId],
+            ['host_approved', '==', true]
+          ]);
+          await updateDocument('agencies', selectedAgencyId, {
             total_hosts: hostsInAgency.length + 1,
+            updated_date: new Date().toISOString()
           });
         }
       }
@@ -55,14 +58,15 @@ export default function AssignAgencyDialog({ host, isOpen, onClose }) {
       if (host.agency_id && host.agency_id !== selectedAgencyId) {
         const oldAgency = agencies.find((a) => a.id === host.agency_id);
         if (oldAgency && oldAgency.total_hosts > 0) {
-          await base44.entities.Agency.update(host.agency_id, {
+          await updateDocument('agencies', host.agency_id, {
             total_hosts: oldAgency.total_hosts - 1,
+            updated_date: new Date().toISOString()
           });
         }
       }
 
       // Audit log
-      await base44.entities.AuditLog.create({
+      await addDocument('auditlogs', {
         admin_email: currentUser.email,
         action: 'host_reassigned',
         affected_user_email: host.email,
@@ -72,6 +76,7 @@ export default function AssignAgencyDialog({ host, isOpen, onClose }) {
           previousType: host.host_type,
           newType: selectedAgencyId ? 'agency' : 'freelancer',
         }),
+        created_date: new Date().toISOString()
       });
     },
     onSuccess: () => {

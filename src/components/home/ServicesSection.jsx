@@ -1,8 +1,8 @@
-import React from 'react';
 import { Package } from 'lucide-react';
+
+import ServiceCard from '../common/ServiceCard';
 import { SAWA_SERVICES } from '../config/sawaServices';
 import { useTranslation } from '../i18n/LanguageContext';
-import ServiceCard from '../common/ServiceCard';
 
 export default function ServicesSection() {
   const { language } = useTranslation();

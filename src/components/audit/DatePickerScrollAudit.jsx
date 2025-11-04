@@ -1,10 +1,10 @@
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { AlertCircle, CheckCircle, Zap } from 'lucide-react';
 
+import { Badge } from '@/components/ui/badge';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+
 /**
- * 🔍 DATE PICKER SCROLL ISSUE AUDIT
+ *  DATE PICKER SCROLL ISSUE AUDIT
  * ==================================
  *
  * تحليل مشكلة: "لما أختار تاريخ، بياخدني لفوق الصفحة"
@@ -13,7 +13,7 @@ import { AlertCircle, CheckCircle, Zap } from 'lucide-react';
 export default function DatePickerScrollAudit() {
   return (
     <div className='max-w-4xl mx-auto p-6 space-y-6'>
-      <h1 className='text-3xl font-bold text-gray-900'>🔍 تقييم مشكلة Date Picker Scroll</h1>
+      <h1 className='text-3xl font-bold text-gray-900'> تقييم مشكلة Date Picker Scroll</h1>
 
       {/* المشكلة */}
       <Card className='border-2 border-red-200 bg-red-50'>
@@ -46,7 +46,7 @@ export default function DatePickerScrollAudit() {
               <li>📅 BookingForm - تاريخ الوصول والمغادرة</li>
               <li>🤖 AITripPlanner - تواريخ الرحلة</li>
               <li>🎯 AdventureBooking - تاريخ المغامرة</li>
-              <li>🔍 SearchBar (Home) - تواريخ البحث</li>
+              <li> SearchBar (Home) - تواريخ البحث</li>
             </ul>
           </div>
         </CardContent>
@@ -57,7 +57,7 @@ export default function DatePickerScrollAudit() {
         <CardHeader>
           <CardTitle className='flex items-center gap-2 text-yellow-900'>
             <Zap className='w-6 h-6' />
-            🔍 تحليل السبب الجذري
+            تحليل السبب الجذري
           </CardTitle>
         </CardHeader>
         <CardContent className='space-y-3 text-sm'>
@@ -125,7 +125,7 @@ const handleDateSelect = (date) => {
             <p className='text-xs text-green-700 mt-2'>
               المزايا: بسيط، فعال 100%، مضمون
               <br />
-              ⚠️ العيوب: لا يوجد
+              العيوب: لا يوجد
             </p>
           </div>
 
@@ -152,7 +152,7 @@ const handleDateSelect = (date) => {
             <p className='text-xs text-green-700 mt-2'>
               المزايا: تجربة سلسة
               <br />
-              ⚠️ العيوب: ممكن يزعج المستخدم
+              العيوب: ممكن يزعج المستخدم
             </p>
           </div>
 
@@ -171,7 +171,7 @@ const handleDateSelect = (date) => {
             <p className='text-xs text-green-700 mt-2'>
               المزايا: يمنع أي scroll غير مرغوب
               <br />
-              ⚠️ العيوب: ممكن يمنع scroll مطلوب
+              العيوب: ممكن يمنع scroll مطلوب
             </p>
           </div>
         </CardContent>
@@ -193,7 +193,7 @@ const handleDateSelect = (date) => {
           </ul>
 
           <div className='bg-indigo-100 p-3 rounded mt-3'>
-            <p className='font-bold mb-1'>📝 خطة التنفيذ:</p>
+            <p className='font-bold mb-1'>خطة التنفيذ:</p>
             <ol className='list-decimal list-inside space-y-1 text-xs'>
               <li>تعديل SimpleDatePicker - إضافة scroll prevention</li>
               <li>اختبار على: BookingForm, AITripPlanner, SearchBar</li>

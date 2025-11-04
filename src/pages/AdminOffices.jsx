@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import AdminLayout from '../components/admin/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Building2, Plus, Search, Users, Calendar, DollarSign, Eye } from 'lucide-react'; // Added Eye
-import { toast } from 'sonner';
-import CreateOfficeDialog from '../components/admin/CreateOfficeDialog';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Added useNavigate
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils'; // Added createPageUrl
+import { getAllDocuments } from '@/utils/firestore';
+
+import AdminLayout from '../components/admin/AdminLayout';
+import CreateOfficeDialog from '../components/admin/CreateOfficeDialog';
+
+
 
 export default function AdminOffices() {
   const queryClient = useQueryClient();
@@ -19,7 +22,7 @@ export default function AdminOffices() {
 
   const { data: offices = [], isLoading } = useQuery({
     queryKey: ['allOffices'],
-    queryFn: () => base44.entities.Office.list('-created_date'),
+    queryFn: () => getAllDocuments('offices'),
     refetchOnWindowFocus: true,
   });
 

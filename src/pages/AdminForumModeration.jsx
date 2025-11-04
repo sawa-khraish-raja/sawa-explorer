@@ -1,23 +1,18 @@
-import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import AdminLayout from '@/components/admin/AdminLayout';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+import { format } from 'date-fns';
 import {
   MessageSquare,
   CheckCircle,
   XCircle,
-  Archive,
-  Eye,
   Loader2,
-  AlertCircle,
 } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+
+import AdminLayout from '@/components/admin/AdminLayout';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -25,6 +20,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { queryDocuments, updateDocument } from '@/utils/firestore';
 
 export default function AdminForumModeration() {
   const queryClient = useQueryClient();
@@ -36,7 +34,7 @@ export default function AdminForumModeration() {
   const { data: pendingPosts = [], isLoading: postsLoading } = useQuery({
     queryKey: ['adminForumPosts', 'pending'],
     queryFn: async () => {
-      return await base44.entities.ForumPost.filter({ status: 'pending_review' }, '-created_date');
+      return queryDocuments('forum_posts', [['status', '==', 'pending_review']], '-created_date');
     },
   });
 
@@ -44,8 +42,9 @@ export default function AdminForumModeration() {
   const { data: pendingComments = [], isLoading: commentsLoading } = useQuery({
     queryKey: ['adminForumComments', 'pending'],
     queryFn: async () => {
-      return await base44.entities.ForumComment.filter(
-        { status: 'pending_review' },
+      return queryDocuments(
+        'forum_comments',
+        [['status', '==', 'pending_review']],
         '-created_date'
       );
     },
@@ -54,7 +53,7 @@ export default function AdminForumModeration() {
   // Approve post mutation
   const approvePostMutation = useMutation({
     mutationFn: async (postId) => {
-      await base44.entities.ForumPost.update(postId, { status: 'published' });
+      await updateDocument('forumposts', postId, { ...{ status: 'published' }, updated_date: new Date().toISOString() });
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminForumPosts']);
@@ -65,10 +64,10 @@ export default function AdminForumModeration() {
   // Reject post mutation
   const rejectPostMutation = useMutation({
     mutationFn: async ({ postId, notes }) => {
-      await base44.entities.ForumPost.update(postId, {
+      await updateDocument('forumposts', postId, { ...{
         status: 'rejected',
         admin_notes: notes,
-      });
+      }, updated_date: new Date().toISOString() });
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminForumPosts']);
@@ -81,9 +80,9 @@ export default function AdminForumModeration() {
   // Approve comment mutation
   const approveCommentMutation = useMutation({
     mutationFn: async (commentId) => {
-      await base44.entities.ForumComment.update(commentId, {
+      await updateDocument('forumcomments', commentId, { ...{
         status: 'published',
-      });
+      }, updated_date: new Date().toISOString() });
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminForumComments']);
@@ -94,9 +93,9 @@ export default function AdminForumModeration() {
   // Reject comment mutation
   const rejectCommentMutation = useMutation({
     mutationFn: async (commentId) => {
-      await base44.entities.ForumComment.update(commentId, {
+      await updateDocument('forumcomments', commentId, { ...{
         status: 'rejected',
-      });
+      }, updated_date: new Date().toISOString() });
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminForumComments']);

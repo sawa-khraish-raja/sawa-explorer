@@ -1,8 +1,4 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   MapPin,
   Users,
@@ -15,13 +11,19 @@ import {
   Star,
   Loader2,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { createPageUrl } from '@/utils';
+import { queryDocuments, getAllDocuments } from '@/utils/firestore';
+
 import PageHeroVideo from '../common/PageHeroVideo';
-import SimpleBookingForm from './SimpleBookingForm';
-import EventCard from './EventCard';
 import { normalizeText } from '../utils/textHelpers';
 import { getUserDisplayName } from '../utils/userHelpers';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+
+import EventCard from './EventCard';
+import SimpleBookingForm from './SimpleBookingForm';
 
 export default function BookingPageTemplate({ city }) {
   const navigate = useNavigate();
@@ -29,7 +31,7 @@ export default function BookingPageTemplate({ city }) {
   const { data: events = [] } = useQuery({
     queryKey: ['cityEvents', city.name],
     queryFn: async () => {
-      const allEvents = await base44.entities.Event.filter({ city: city.name });
+      const allEvents = await queryDocuments('events', [['city', '==', city.name]]);
       const now = new Date();
       return allEvents.filter((e) => new Date(e.start_datetime) > now).slice(0, 3);
     },
@@ -40,22 +42,17 @@ export default function BookingPageTemplate({ city }) {
   const { data: hosts = [], isLoading: isLoadingHosts } = useQuery({
     queryKey: ['cityHosts', city.name],
     queryFn: async () => {
-      console.log('🔍 [BookingPageTemplate] Fetching hosts for:', city.name);
+      console.log(' [BookingPageTemplate] Fetching hosts for:', city.name);
 
       try {
-        const response = await base44.functions.invoke('getCityHosts', {
-          city: city.name,
-        });
+        // Get all users who are approved hosts and visible in this city
+        const allUsers = await getAllDocuments('users');
+        const cityHosts = allUsers.filter(
+          (u) => u.host_approved === true && u.visible_in_city === true && u.city === city.name
+        );
 
-        console.log('📡 [BookingPageTemplate] Response:', response);
-
-        if (response.data?.ok && response.data?.hosts) {
-          console.log(' [BookingPageTemplate] Found hosts:', response.data.hosts.length);
-          return response.data.hosts.slice(0, 6);
-        }
-
-        console.warn('⚠️ [BookingPageTemplate] No hosts found or response not OK.');
-        return [];
+        console.log(' [BookingPageTemplate] Found hosts:', cityHosts.length);
+        return cityHosts.slice(0, 6);
       } catch (error) {
         console.error(' [BookingPageTemplate] Error fetching hosts:', error);
         return [];
@@ -69,13 +66,13 @@ export default function BookingPageTemplate({ city }) {
   const { data: cityData } = useQuery({
     queryKey: ['cityData', city.name],
     queryFn: async () => {
-      const cities = await base44.entities.City.filter({ name: city.name });
+      const cities = await queryDocuments('cities', [['name', '==', city.name]]);
       return cities[0];
     },
     enabled: !!city.name,
   });
 
-  console.log('📊 [BookingPageTemplate] Rendering with:', {
+  console.log('[BookingPageTemplate] Rendering with:', {
     city: city.name,
     hostsCount: hosts.length,
     isLoadingHosts,
@@ -140,7 +137,7 @@ export default function BookingPageTemplate({ city }) {
                 <div
                   key={host.id}
                   onClick={() => {
-                    console.log('🔗 [BookingPageTemplate] Navigating to host:', host.email);
+                    console.log('[BookingPageTemplate] Navigating to host:', host.email);
                     navigate(createPageUrl(`HostProfile?email=${encodeURIComponent(host.email)}`));
                   }}
                   className='flex flex-col items-center gap-3 p-4 bg-white rounded-xl hover:bg-purple-50 transition-all cursor-pointer group border border-purple-100 hover:border-purple-300 hover:shadow-lg'

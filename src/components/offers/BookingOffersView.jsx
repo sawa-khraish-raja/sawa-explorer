@@ -1,12 +1,13 @@
-import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2, Clock, User, MessageCircle, Star } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { createPageUrl } from '@/utils';
+import { queryDocuments, updateDocument, deleteDocument } from '@/utils/firestore';
+
 import { NotificationHelpers } from '../notifications/notificationHelpers';
 
 function AcceptedHostItem({ hostEmail, booking }) {
@@ -20,7 +21,7 @@ function AcceptedHostItem({ hostEmail, booking }) {
   } = useQuery({
     queryKey: ['acceptedHost', hostEmail],
     queryFn: async () => {
-      const users = await base44.entities.User.filter({ email: hostEmail });
+      const users = await queryDocuments('users', [['email', '==', hostEmail]]);
       if (users && users.length > 0) {
         return users[0];
       }
@@ -33,9 +34,9 @@ function AcceptedHostItem({ hostEmail, booking }) {
   const { data: hostConversation } = useQuery({
     queryKey: ['hostConversation', booking.id, hostEmail],
     queryFn: async () => {
-      const conversations = await base44.entities.Conversation.filter({
-        booking_id: booking.id,
-      });
+      const conversations = await queryDocuments('conversations', [
+        ['booking_id', '==', booking.id],
+      ]);
       return conversations.find((c) => c.host_emails && c.host_emails.includes(hostEmail));
     },
     enabled: !!booking.id && !!hostEmail,
@@ -44,16 +45,25 @@ function AcceptedHostItem({ hostEmail, booking }) {
   const acceptOfferMutation = useMutation({
     mutationFn: async ({ offer }) => {
       // 1. Update the offer status
-      const updatedOffer = await base44.entities.Offer.update(offer.id, {
+      await updateDocument('offers', offer.id, {
         status: 'accepted',
+        updated_date: new Date().toISOString(),
       });
+      const updatedOffer = { ...offer, status: 'accepted' };
 
       // 2. Update the booking status and assign host
-      const updatedBooking = await base44.entities.Booking.update(booking.id, {
+      await updateDocument('bookings', booking.id, {
         status: 'confirmed',
         host_email: offer.host_email,
         total_price: offer.price,
+        updated_date: new Date().toISOString(),
       });
+      const updatedBooking = {
+        ...booking,
+        status: 'confirmed',
+        host_email: offer.host_email,
+        total_price: offer.price,
+      };
 
       // 3. Send notifications
       await NotificationHelpers.onOfferAccepted(updatedOffer, updatedBooking);
@@ -82,16 +92,13 @@ function AcceptedHostItem({ hostEmail, booking }) {
 
       // --- NEW: CLEANUP LOGIC FOR OTHER HOSTS ---
       try {
-        console.log('🚀 Starting cleanup for other hosts...');
         const winningHostEmail = acceptedOffer.host_email;
         const bookingId = updatedBooking.id;
 
-        const allConversations = await base44.entities.Conversation.filter({
-          booking_id: bookingId,
-        });
-        const allOffers = await base44.entities.Offer.filter({
-          booking_id: bookingId,
-        });
+        const allConversations = await queryDocuments('conversations', [
+          ['booking_id', '==', bookingId],
+        ]);
+        const allOffers = await queryDocuments('offers', [['booking_id', '==', bookingId]]);
 
         const conversationsToDelete = allConversations.filter(
           (c) => c.host_emails && !c.host_emails.includes(winningHostEmail)
@@ -99,13 +106,13 @@ function AcceptedHostItem({ hostEmail, booking }) {
 
         for (const convo of conversationsToDelete) {
           console.log(`Deleting conversation ${convo.id} for losing host...`);
-          const messagesToDelete = await base44.entities.Message.filter({
-            conversation_id: convo.id,
-          });
+          const messagesToDelete = await queryDocuments('messages', [
+            ['conversation_id', '==', convo.id],
+          ]);
           for (const msg of messagesToDelete) {
-            await base44.entities.Message.delete(msg.id);
+            await deleteDocument('messages', msg.id);
           }
-          await base44.entities.Conversation.delete(convo.id);
+          await deleteDocument('conversations', convo.id);
         }
 
         const offersToDelete = allOffers.filter(
@@ -114,7 +121,7 @@ function AcceptedHostItem({ hostEmail, booking }) {
 
         for (const offer of offersToDelete) {
           console.log(`Deleting offer ${offer.id} for losing host...`);
-          await base44.entities.Offer.delete(offer.id);
+          await deleteDocument('offers', offer.id);
         }
 
         queryClient.invalidateQueries({ queryKey: ['hostBookings'] });
@@ -157,10 +164,10 @@ function AcceptedHostItem({ hostEmail, booking }) {
   const { data: offers } = useQuery({
     queryKey: ['offersFromHost', booking.id, hostEmail],
     queryFn: () =>
-      base44.entities.Offer.filter({
-        booking_id: booking.id,
-        host_email: hostEmail,
-      }),
+      queryDocuments('offers', [
+        ['booking_id', '==', booking.id],
+        ['host_email', '==', hostEmail],
+      ]),
     enabled: !!booking.id && !!hostEmail,
   });
 
@@ -171,10 +178,10 @@ function AcceptedHostItem({ hostEmail, booking }) {
     return (
       <div className='bg-white rounded-2xl p-4 shadow-sm border-2 border-gray-100 animate-pulse'>
         <div className='flex items-center gap-4'>
-          <div className='w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded-full flex-shrink-0'></div>
+          <div className='w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded-full flex-shrink-0' />
           <div className='flex-1 space-y-3'>
-            <div className='h-5 w-32 bg-gray-200 rounded'></div>
-            <div className='h-4 w-24 bg-gray-200 rounded'></div>
+            <div className='h-5 w-32 bg-gray-200 rounded' />
+            <div className='h-4 w-24 bg-gray-200 rounded' />
           </div>
         </div>
       </div>
@@ -265,8 +272,7 @@ export default function BookingOffersView({ booking, onBack }) {
   const { data: conversations, isLoading: isLoadingConversations } = useQuery({
     queryKey: ['bookingConversations', booking.id],
     queryFn: async () => {
-      const allConvos = await base44.entities.Conversation.list();
-      return allConvos.filter((c) => c.booking_id === booking.id);
+      return queryDocuments('conversations', [['booking_id', '==', booking.id]]);
     },
     enabled: !!booking.id,
     refetchInterval: 5000,
@@ -274,7 +280,7 @@ export default function BookingOffersView({ booking, onBack }) {
 
   const { data: offers, isLoading: isLoadingOffers } = useQuery({
     queryKey: ['offersForBooking', booking.id],
-    queryFn: () => base44.entities.Offer.filter({ booking_id: booking.id }),
+    queryFn: () => queryDocuments('offers', [['booking_id', '==', booking.id]]),
     enabled: !!booking.id,
   });
 

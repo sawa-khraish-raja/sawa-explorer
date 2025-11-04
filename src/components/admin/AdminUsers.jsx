@@ -1,26 +1,4 @@
-import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, updateDocument, getDocument } from '@/utils/firestore';
-import AdminLayout from './AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
 import {
   Loader2,
   MoreVertical,
@@ -33,10 +11,9 @@ import {
   Building2,
   Settings2,
 } from 'lucide-react';
+import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
-import AdminPermissionsDialog from './AdminPermissionsDialog';
-import ApproveHostDialog from './ApproveHostDialog';
-import AssignOfficeDialog from './AssignOfficeDialog';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +24,31 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { getAllDocuments, updateDocument, getDocument } from '@/utils/firestore';
+
+import AdminLayout from './AdminLayout';
+import AdminPermissionsDialog from './AdminPermissionsDialog';
+import ApproveHostDialog from './ApproveHostDialog';
+import AssignOfficeDialog from './AssignOfficeDialog';
 
 export default function AdminUsers() {
   const queryClient = useQueryClient();
@@ -99,7 +101,6 @@ export default function AdminUsers() {
     mutationFn: async (officeId) => {
       if (!officeId) return;
       // TODO: Implement office host count update when offices collection is migrated
-      console.log('Office host count update skipped - offices not yet migrated');
       return null;
     },
     onSuccess: () => {
@@ -135,7 +136,9 @@ export default function AdminUsers() {
       return { updatedUser, oldCity, oldOfficeId };
     },
     onSuccess: ({ updatedUser, oldCity }) => {
-      toast.success(`Host access revoked for ${updatedUser?.full_name || updatedUser?.email || 'user'}`);
+      toast.success(
+        `Host access revoked for ${updatedUser?.full_name || updatedUser?.email || 'user'}`
+      );
       queryClient.invalidateQueries({ queryKey: ['allAdminUsers'] });
       if (oldCity) {
         queryClient.invalidateQueries({ queryKey: ['hosts', oldCity] });
@@ -154,7 +157,6 @@ export default function AdminUsers() {
   const makeAdminMutation = useMutation({
     mutationFn: async (userId) => {
       setUpdatingUserId(userId);
-      console.log('🔐 Making user admin:', userId);
       const userToUpdate = await getDocument('users', userId);
 
       const updates = {
@@ -176,7 +178,7 @@ export default function AdminUsers() {
       }
 
       await updateDocument('users', userId, updates);
-      return await getDocument('users', userId);
+      return getDocument('users', userId);
     },
     onSuccess: (updatedUser) => {
       queryClient.invalidateQueries({ queryKey: ['allAdminUsers'] });
@@ -198,12 +200,11 @@ export default function AdminUsers() {
   const revokeAdminMutation = useMutation({
     mutationFn: async (userId) => {
       setUpdatingUserId(userId);
-      console.log('🔓 Revoking admin from user:', userId);
       await updateDocument('users', userId, {
         role_type: 'user',
         updated_date: new Date().toISOString(),
       });
-      return await getDocument('users', userId);
+      return getDocument('users', userId);
     },
     onSuccess: (updatedUser) => {
       queryClient.invalidateQueries({ queryKey: ['allAdminUsers'] });
@@ -223,7 +224,6 @@ export default function AdminUsers() {
   const makeOfficeMutation = useMutation({
     mutationFn: async (userId) => {
       setUpdatingUserId(userId);
-      console.log('🏢 Making user office manager:', userId);
       const userToUpdate = await getDocument('users', userId);
 
       const updates = {
@@ -245,7 +245,7 @@ export default function AdminUsers() {
       }
 
       await updateDocument('users', userId, updates);
-      return await getDocument('users', userId);
+      return getDocument('users', userId);
     },
     onSuccess: (updatedUser) => {
       queryClient.invalidateQueries({ queryKey: ['allAdminUsers'] });
@@ -265,12 +265,11 @@ export default function AdminUsers() {
   const revokeOfficeMutation = useMutation({
     mutationFn: async (userId) => {
       setUpdatingUserId(userId);
-      console.log('🔓 Revoking office manager role from user:', userId);
       await updateDocument('users', userId, {
         role_type: 'user',
         updated_date: new Date().toISOString(),
       });
-      return await getDocument('users', userId);
+      return getDocument('users', userId);
     },
     onSuccess: (updatedUser) => {
       queryClient.invalidateQueries({ queryKey: ['allAdminUsers'] });
@@ -469,7 +468,7 @@ export default function AdminUsers() {
                     <th className='text-left p-3 font-semibold hidden md:table-cell'>Role</th>
                     <th className='text-left p-3 font-semibold hidden lg:table-cell'>Status</th>
                     <th className='text-left p-3 font-semibold hidden lg:table-cell'>Details</th>
-                    <th className='text-right p-3'></th>
+                    <th className='text-right p-3' />
                   </tr>
                 </thead>
                 <tbody>

@@ -1,24 +1,9 @@
-import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import AdminLayout from '../components/admin/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
+import { format } from 'date-fns';
 import {
   Building2,
   Plus,
   Edit,
-  Trash2,
   Users,
   DollarSign,
   MapPin,
@@ -26,14 +11,31 @@ import {
   Mail,
   Search,
   Loader2,
-  Eye,
   AlertCircle,
 } from 'lucide-react';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { getAllDocuments, addDocument, updateDocument } from '@/utils/firestore';
+
+import AdminLayout from '../components/admin/AdminLayout';
+import { useAppContext } from '../components/context/AppContext';
 import { showNotification } from '../components/notifications/NotificationManager';
-import { format } from 'date-fns';
 
 export default function AdminAgencies() {
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingAgency, setEditingAgency] = useState(null);
@@ -46,28 +48,26 @@ export default function AdminAgencies() {
     contact_phone: '',
   });
 
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
-
   const { data: agencies = [], isLoading } = useQuery({
     queryKey: ['allAgencies'],
-    queryFn: () => base44.entities.Agency.list('-created_date'),
+    queryFn: async () => {
+      const allAgencies = await getAllDocuments('agencies');
+      return allAgencies.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+    },
     refetchInterval: 5000,
   });
 
   const { data: allHosts = [] } = useQuery({
     queryKey: ['allHosts'],
     queryFn: async () => {
-      const users = await base44.entities.User.list();
+      const users = await getAllDocuments('users');
       return users.filter((u) => u.host_approved);
     },
   });
 
   const createAgencyMutation = useMutation({
     mutationFn: async (agencyData) => {
-      const agency = await base44.entities.Agency.create({
+      const agencyId = await addDocument('agencies', {
         ...agencyData,
         commission_sawa_default: 28,
         commission_office_default: 7,
@@ -75,17 +75,20 @@ export default function AdminAgencies() {
         total_bookings: 0,
         total_revenue: 0,
         is_active: true,
+        created_date: new Date().toISOString(),
+        updated_date: new Date().toISOString(),
       });
 
       // Audit log
-      await base44.entities.AuditLog.create({
+      await addDocument('audit_logs', {
         admin_email: currentUser.email,
         action: 'agency_created',
         affected_user_email: agencyData.email,
-        details: JSON.stringify({ agencyId: agency.id, name: agencyData.name }),
+        details: JSON.stringify({ agencyId, name: agencyData.name }),
+        created_date: new Date().toISOString(),
       });
 
-      return agency;
+      return { id: agencyId, ...agencyData };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allAgencies'] });
@@ -116,14 +119,18 @@ export default function AdminAgencies() {
 
   const updateAgencyMutation = useMutation({
     mutationFn: async ({ agencyId, updates }) => {
-      await base44.entities.Agency.update(agencyId, updates);
+      await updateDocument('agencies', agencyId, {
+        ...updates,
+        updated_date: new Date().toISOString(),
+      });
 
       // Audit log
-      await base44.entities.AuditLog.create({
+      await addDocument('audit_logs', {
         admin_email: currentUser.email,
         action: 'agency_updated',
         affected_user_email: updates.email,
         details: JSON.stringify({ agencyId, updates }),
+        created_date: new Date().toISOString(),
       });
     },
     onSuccess: () => {
@@ -146,14 +153,18 @@ export default function AdminAgencies() {
 
   const toggleAgencyStatusMutation = useMutation({
     mutationFn: async ({ agencyId, newStatus }) => {
-      await base44.entities.Agency.update(agencyId, { is_active: newStatus });
+      await updateDocument('agencies', agencyId, {
+        is_active: newStatus,
+        updated_date: new Date().toISOString(),
+      });
 
       // Audit log
-      await base44.entities.AuditLog.create({
+      await addDocument('audit_logs', {
         admin_email: currentUser.email,
         action: newStatus ? 'agency_activated' : 'agency_suspended',
         affected_user_email: agencies.find((a) => a.id === agencyId)?.email,
         details: JSON.stringify({ agencyId, newStatus }),
+        created_date: new Date().toISOString(),
       });
     },
     onSuccess: () => {
@@ -176,7 +187,7 @@ export default function AdminAgencies() {
   const handleCreateAgency = () => {
     if (!newAgency.name || !newAgency.email || !newAgency.city) {
       showNotification({
-        title: '⚠️ Validation Error',
+        title: ' Validation Error',
         message: 'Please fill in all required fields',
         type: 'warning',
       });

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Button } from '@/components/ui/button';
+import { useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
 
 export default function SyncHostsButton() {
   const queryClient = useQueryClient();
@@ -12,7 +12,7 @@ export default function SyncHostsButton() {
   const syncHosts = async () => {
     setSyncing(true);
     try {
-      console.log('🔄 Syncing hosts...');
+      console.log('Syncing hosts...');
 
       // Just refresh the queries
       await queryClient.invalidateQueries({ queryKey: ['allUsers'] });

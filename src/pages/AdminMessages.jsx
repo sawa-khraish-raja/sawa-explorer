@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import AdminLayout from '../components/admin/AdminLayout';
+import { format } from 'date-fns';
+import { Search, Loader2, MessageSquare, Briefcase, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Loader2, MessageSquare, Briefcase, Sparkles } from 'lucide-react';
-import { format } from 'date-fns';
+import { getAllDocuments } from '@/utils/firestore';
+
+import AdminLayout from '../components/admin/AdminLayout';
+
+
 
 export default function AdminMessages() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,12 +19,12 @@ export default function AdminMessages() {
 
   const { data: conversations = [], isLoading } = useQuery({
     queryKey: ['allConversations'],
-    queryFn: () => base44.entities.Conversation.list('-last_message_timestamp'),
+    queryFn: () => getAllDocuments('conversations', '-last_message_timestamp'),
   });
 
   const { data: messages = [] } = useQuery({
     queryKey: ['allMessages'],
-    queryFn: () => base44.entities.Message.list('-created_date', 500),
+    queryFn: () => getAllDocuments('messages', '-created_date', 500),
   });
 
   //  Separate service and adventure conversations

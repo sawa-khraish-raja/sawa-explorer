@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getAllDocuments } from '@/utils/firestore';
-import { createPageUrl } from '@/utils';
-import { Users, MapPin, Search, Loader2, X, ChevronLeft } from 'lucide-react';
+import { MapPin, Search, Loader2, X } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { useTranslation } from '@/components/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -12,9 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useTranslation } from '@/components/i18n/LanguageContext';
-import SimpleDatePicker from '../booking/SimpleDatePicker';
+import { createPageUrl } from '@/utils';
+import { getAllDocuments } from '@/utils/firestore';
+
 import GuestSelector from '../booking/GuestSelector';
+import SimpleDatePicker from '../booking/SimpleDatePicker';
 import { showError } from '../utils/notifications';
 
 export default function SearchBar() {
@@ -109,10 +111,10 @@ export default function SearchBar() {
 
   //  Handle search submission
   const handleSearch = async () => {
-    console.log('🔍 handleSearch called!', { destination, checkIn, checkOut });
+    console.log(' handleSearch called!', { destination, checkIn, checkOut });
 
     const errors = validateSearch();
-    console.log('✅ Validation errors:', errors);
+    console.log(' Validation errors:', errors);
 
     if (errors.length > 0) {
       showError(language === 'ar' ? 'خطأ في البحث' : 'Search Error', errors[0]);
@@ -120,17 +122,17 @@ export default function SearchBar() {
     }
 
     const city = cities.find((c) => c.name === destination);
-    console.log('🏙️ Found city:', city);
+    console.log('Found city:', city);
 
     if (!city) {
-      console.log('❌ City not found!');
+      console.log('City not found!');
       return;
     }
 
     // Create page name for routing - format: "BookingCityName"
     // If city has page_slug, use it; otherwise create from city name
     const pageName = city.page_slug || `Booking${city.name.replace(/\s+/g, '')}`;
-    console.log('📍 Using page name:', pageName);
+    console.log('Using page name:', pageName);
 
     //  Save to recent searches
     saveToRecentSearches({
@@ -346,15 +348,14 @@ export default function SearchBar() {
                 {/* Debug info */}
                 {cities.length === 0 && !isLoadingCities && (
                   <div className='mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800'>
-                    ⚠️ No cities found. Please go to DevTools and click "Seed Cities" to add cities
-                    to the database.
+                    No cities found. Please go to DevTools and click "Seed Cities" to add cities to
+                    the database.
                   </div>
                 )}
 
                 <Select
                   value={destination}
                   onValueChange={(value) => {
-                    console.log('🎯 Selected city:', value);
                     setDestination(value);
                   }}
                   disabled={isLoadingCities || isSearching}
@@ -401,7 +402,6 @@ export default function SearchBar() {
                   label={t('search.checkin')}
                   value={checkIn}
                   onChange={(date) => {
-                    console.log('📅 Check-in date selected:', date);
                     setCheckIn(date);
                   }}
                   minDate={today}
@@ -413,7 +413,6 @@ export default function SearchBar() {
                   label={t('search.checkout')}
                   value={checkOut}
                   onChange={(date) => {
-                    console.log('📅 Check-out date selected:', date);
                     setCheckOut(date);
                   }}
                   minDate={checkIn || today}

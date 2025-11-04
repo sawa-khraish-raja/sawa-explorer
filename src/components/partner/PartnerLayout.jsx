@@ -1,6 +1,3 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import {
   LayoutDashboard,
   UserCircle,
@@ -18,8 +15,13 @@ import {
   Menu,
   Loader2,
 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+
 import { Button } from '@/components/ui/button';
+import { createPageUrl } from '@/utils';
+
+import { useAppContext } from '../context/AppContext';
 
 const navItems = [
   { name: 'Overview', icon: LayoutDashboard, href: 'PartnerDashboard' },
@@ -34,6 +36,7 @@ const navItems = [
 ];
 
 export default function PartnerLayout({ children }) {
+  const { logout, user: contextUser } = useAppContext();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [language, setLanguage] = useState('en');
@@ -44,25 +47,29 @@ export default function PartnerLayout({ children }) {
   useEffect(() => {
     async function checkAuth() {
       try {
-        const currentUser = await base44.auth.me();
+        if (!contextUser) {
+          navigate('/login');
+          return;
+        }
+
         if (
-          !currentUser.host_approved &&
-          currentUser.role !== 'admin' &&
-          currentUser.partner_type !== 'agency'
+          !contextUser.host_approved &&
+          contextUser.role !== 'admin' &&
+          contextUser.partner_type !== 'agency'
         ) {
           alert('Access denied. You are not an approved partner.');
           navigate(createPageUrl('Home'));
           return;
         }
-        setUser(currentUser);
+        setUser(contextUser);
       } catch (error) {
-        base44.auth.redirectToLogin(location.pathname);
+        navigate('/login');
       } finally {
         setLoading(false);
       }
     }
     checkAuth();
-  }, [navigate, location.pathname]);
+  }, [navigate, location.pathname, contextUser]);
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -153,14 +160,14 @@ export default function PartnerLayout({ children }) {
           >
             {isSidebarOpen ? <X className='h-6 w-6' /> : <Menu className='h-6 w-6' />}
           </Button>
-          <div className='flex-1'></div>
+          <div className='flex-1' />
           <div className='flex items-center gap-4'>
             <Button variant='ghost' size='icon' onClick={toggleLanguage}>
               <Globe className='w-5 h-5' />
             </Button>
             <Button
               variant='ghost'
-              onClick={() => base44.auth.logout()}
+              onClick={() => logout()}
               className='flex items-center gap-2 text-gray-600 hover:text-gray-900'
             >
               <LogOut className='w-5 h-5' />

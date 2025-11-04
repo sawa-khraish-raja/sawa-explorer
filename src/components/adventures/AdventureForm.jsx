@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { Loader2, Upload, X, DollarSign, Info } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -10,11 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Upload, X, DollarSign, Info } from 'lucide-react';
-import { calculateAdventureCommissions } from './commissionCalculator';
+import { Textarea } from '@/components/ui/textarea';
 import { uploadImage } from '@/utils/storage';
-import { toast } from 'sonner';
+
+import { calculateAdventureCommissions } from './commissionCalculator';
 
 export default function AdventureForm({ adventure, hostType, onSubmit, onCancel, isSubmitting }) {
   const [formData, setFormData] = useState({
@@ -205,11 +207,11 @@ export default function AdventureForm({ adventure, hostType, onSubmit, onCancel,
       },
     };
 
-    console.log('📝 Submitting adventure data:', submissionData);
-    console.log('🖼️ Images being saved:', {
+    console.log('Submitting adventure data:', submissionData);
+    console.log('Images being saved:', {
       images: submissionData.images,
       image_url: submissionData.image_url,
-      image_count: submissionData.images.length
+      image_count: submissionData.images.length,
     });
     onSubmit(submissionData);
   };

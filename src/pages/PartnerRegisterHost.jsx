@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { CheckCircle, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
+
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -12,11 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { toast } from 'sonner';
-import { CheckCircle, Loader2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Textarea } from '@/components/ui/textarea';
 import { createPageUrl } from '@/utils';
+import { addDocument } from '@/utils/firestore';
+
 import CountrySelector from '../components/common/CountrySelector';
 
 const CITIES = ['Damascus', 'Amman', 'Istanbul'];
@@ -35,11 +37,11 @@ export default function PartnerRegisterHost() {
 
   const mutation = useMutation({
     mutationFn: (data) =>
-      base44.entities.User.create({
+      addDocument('users', { ...{
         ...data,
         host_status: 'Pending Review',
         show_on_website: false,
-      }),
+      }, created_date: new Date().toISOString() }),
     onSuccess: () => {
       setIsSubmitted(true);
     },

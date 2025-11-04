@@ -1,8 +1,10 @@
-import React from 'react';
-import { Compass, ShieldCheck, Leaf, HeartHandshake } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { useTranslation } from '../i18n/LanguageContext';
 import { motion } from 'framer-motion';
+import { Compass, ShieldCheck, Leaf, HeartHandshake } from 'lucide-react';
+
+import { Card, CardContent } from '@/components/ui/card';
+
+import { useTranslation } from '../i18n/LanguageContext';
+
 
 const features = [
   {

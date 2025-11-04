@@ -1,9 +1,5 @@
-import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getDocument, addDocument } from '@/utils/firestore';
-import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { format } from 'date-fns';
 import {
   Calendar,
   Users,
@@ -11,18 +7,23 @@ import {
   Clock,
   MapPin,
   ArrowLeft,
-  Star,
   CheckCircle2,
   Loader2,
   Share2,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { createNotification } from '@/components/notifications/notificationHelpers';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { showSuccess, showError } from '../components/utils/notifications';
+import { useAuth } from '@/contexts/AuthContext';
+import { createPageUrl } from '@/utils';
+import { getDocument, addDocument } from '@/utils/firestore';
+
 import { trackAdventureView, trackEvent } from '../components/analytics/GoogleAnalytics';
-import { createNotification } from '@/components/notifications/notificationHelpers';
+import { showSuccess, showError } from '../components/utils/notifications';
 
 export default function AdventureDetails() {
   const navigate = useNavigate();
@@ -98,14 +99,14 @@ export default function AdventureDetails() {
         payment_status: 'pending', // pending, paid, refunded
       };
 
-      console.log('📋 Booking data to be saved:', bookingData);
+      console.log('Booking data to be saved:', bookingData);
 
       try {
         const bookingId = await addDocument('bookings', bookingData);
         console.log('Booking created successfully! ID:', bookingId);
         return bookingId;
       } catch (error) {
-        console.error('❌ Booking creation failed:', error);
+        console.error('Booking creation failed:', error);
         console.error('Error code:', error.code);
         console.error('Error message:', error.message);
         throw error;

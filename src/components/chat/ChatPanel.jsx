@@ -1,19 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
-import { X, Send, Loader2, Globe, ChevronDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
-import { toast } from 'sonner';
+import { X, Send, Loader2, Globe, ChevronDown } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
+import { assistantChat } from '@/utils/functions';
+
+import { useAppContext } from '../context/AppContext';
+
 
 const SUPPORTED_LANGUAGES = [
   { code: 'ar', name: 'العربية', flag: '🇸🇦' },
@@ -28,22 +31,12 @@ const SUPPORTED_LANGUAGES = [
 ];
 
 export default function ChatPanel({ onClose }) {
+  const { user } = useAppContext();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [language, setLanguage] = useState('ar');
   const messagesEndRef = useRef(null);
-
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: async () => {
-      try {
-        return await base44.auth.me();
-      } catch {
-        return null;
-      }
-    },
-  });
 
   useEffect(() => {
     const savedLang = localStorage.getItem('chat_language') || 'ar';
@@ -63,7 +56,7 @@ export default function ChatPanel({ onClose }) {
     setIsLoading(true);
 
     try {
-      const response = await base44.functions.invoke('assistantChat', {
+      const response = await assistantChat( {
         messages: [...messages, userMessage],
         language,
         userEmail: user?.email,

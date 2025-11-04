@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { motion } from 'framer-motion';
 import { Loader2, Search, MapPin, Compass } from 'lucide-react';
+import { useState } from 'react';
+
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -10,7 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { motion } from 'framer-motion';
+import { queryDocuments } from '@/utils/firestore';
+
+
+
+
 import AdventureCard from './AdventureCard';
 
 export default function AdventuresList() {
@@ -21,13 +26,10 @@ export default function AdventuresList() {
   const { data: adventurePosts = [], isLoading } = useQuery({
     queryKey: ['adventurePosts'],
     queryFn: async () => {
-      const allPosts = await base44.entities.ForumPost.filter(
-        {
-          status: 'published',
-          is_adventure_listing: true,
-        },
-        '-created_date'
-      );
+      const allPosts = await queryDocuments('forum_posts', [
+        ['status', '==', 'published'],
+        ['is_adventure_listing', '==', true]
+      ], '-created_date');
       return allPosts;
     },
     staleTime: 30000,

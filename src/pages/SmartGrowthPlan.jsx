@@ -1,11 +1,4 @@
-import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import MarketingLayout from '../components/marketing/MarketingLayout';
-import MarketingGuard from '../components/marketing/MarketingGuard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   TrendingUp,
   Target,
@@ -14,15 +7,24 @@ import {
   Sparkles,
   MapPin,
   DollarSign,
-  Calendar,
   Loader2,
   RefreshCw,
-  Download,
   Brain,
-  BarChart3,
   Lightbulb,
 } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { queryDocuments } from '@/utils/firestore';
+import { invokeFunction } from '@/utils/functions';
+
+import MarketingGuard from '../components/marketing/MarketingGuard';
+import MarketingLayout from '../components/marketing/MarketingLayout';
+
+
 
 export default function SmartGrowthPlan() {
   const queryClient = useQueryClient();
@@ -32,9 +34,8 @@ export default function SmartGrowthPlan() {
   const { data: plan, isLoading: planLoading } = useQuery({
     queryKey: ['active_growth_plan'],
     queryFn: async () => {
-      const plans = await base44.entities.GrowthPlan.filter({
-        status: 'active',
-      });
+      const plans = await queryDocuments('growthplans', [['status', '==', 'active',
+      ]]);
       return plans.length > 0 ? plans[0] : null;
     },
     refetchInterval: 60000,
@@ -44,7 +45,7 @@ export default function SmartGrowthPlan() {
   const generatePlanMutation = useMutation({
     mutationFn: async () => {
       setGenerating(true);
-      const response = await base44.functions.invoke('AI_Smart_Growth_Planner', {});
+      const response = await invokeFunction('AI_Smart_Growth_Planner', {});
 
       if (!response?.data?.ok) {
         throw new Error(response?.data?.error || 'Generation failed');

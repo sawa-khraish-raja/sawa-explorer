@@ -1,7 +1,8 @@
 import React from 'react';
+
+import { useTranslation } from '@/components/i18n/LanguageContext';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useTranslation } from '@/components/i18n/LanguageContext';
 
 export default function TravelerInfoForm({
   travelerInfo,
@@ -13,7 +14,7 @@ export default function TravelerInfoForm({
 
   // Runtime Guard (Unified Safety Layer)
   if (typeof React.createElement !== 'function') {
-    console.error('⚠️ React runtime invalid in this module. Booking component stopped.');
+    console.error(' React runtime invalid in this module. Booking component stopped.');
     return <div className='text-red-500 p-3 text-sm'>Component temporarily unavailable.</div>;
   }
 

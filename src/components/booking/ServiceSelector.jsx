@@ -1,12 +1,13 @@
-import React from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
 import ServiceCard from '../common/ServiceCard';
 import {
   SAWA_SERVICES,
   getConflictingServices,
   isFlexibleDurationService,
 } from '../config/sawaServices';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+
 
 export default function ServiceSelector({
   selectedServices,

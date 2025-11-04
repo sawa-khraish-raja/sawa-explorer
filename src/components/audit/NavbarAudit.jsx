@@ -1,11 +1,7 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   CheckCircle,
   AlertCircle,
   XCircle,
-  Monitor,
   Smartphone,
   Zap,
   Database,
@@ -13,6 +9,9 @@ import {
   Ruler,
   Activity,
 } from 'lucide-react';
+
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 export default function NavbarAudit() {
@@ -411,7 +410,7 @@ export default function NavbarAudit() {
               {/* Issues */}
               {section.issues && section.issues.length > 0 && (
                 <div className='space-y-3'>
-                  <h4 className='font-semibold text-sm text-gray-700'>⚠️ Issues Found:</h4>
+                  <h4 className='font-semibold text-sm text-gray-700'> Issues Found:</h4>
                   {section.issues.map((issue, idx) => (
                     <div
                       key={idx}
@@ -484,7 +483,7 @@ export default function NavbarAudit() {
               </div>
 
               <div className='border-l-4 border-orange-500 pl-4 bg-orange-50 py-3 rounded-r'>
-                <h4 className='font-bold text-orange-900'>⚠️ High Priority (This Week)</h4>
+                <h4 className='font-bold text-orange-900'> High Priority (This Week)</h4>
                 <ul className='mt-2 space-y-1 text-sm text-orange-800'>
                   <li>1. زيادة gap بين الأيقونات من 8px إلى 12px</li>
                   <li>2. تصغير icon buttons من 48px إلى 40px</li>

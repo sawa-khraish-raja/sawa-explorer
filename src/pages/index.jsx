@@ -1,176 +1,91 @@
-import Layout from './Layout.jsx';
-
-import Home from './Home';
-
-import BookingDamascus from './BookingDamascus';
-
-import BookingAmman from './BookingAmman';
-
-import BookingIstanbul from './BookingIstanbul';
-
-import MyOffers from './MyOffers';
-
-import HostDashboard from './HostDashboard';
-
-import UserProfile from './UserProfile';
+import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 import About from './About';
-
-import PartnerDashboard from './PartnerDashboard';
-
-import PartnerRequests from './PartnerRequests';
-
-import PartnerProfile from './PartnerProfile';
-
-import PartnerInventory from './PartnerInventory';
-
-import PartnerOffers from './PartnerOffers';
-
-import PartnerMessages from './PartnerMessages';
-
-import PartnerAvailability from './PartnerAvailability';
-
-import PartnerPayouts from './PartnerPayouts';
-
-import PartnerAnalytics from './PartnerAnalytics';
-
-import PartnerSettings from './PartnerSettings';
-
-import AdminDashboard from './AdminDashboard';
-
-import TermsOfService from './TermsOfService';
-
-import PrivacyPolicy from './PrivacyPolicy';
-
-import CookiePolicy from './CookiePolicy';
-
-import AdminHosts from './AdminHosts';
-
-import PartnerRegisterHost from './PartnerRegisterHost';
-
-import CreateBooking from './CreateBooking';
-
-import Partner from './Partner';
-
-import HostProfile from './HostProfile';
-
-import AdminEvents from './AdminEvents';
-
-import Messages from './Messages';
-
-import CommunityGuidelines from './CommunityGuidelines';
-
-import BecomeAPartner from './BecomeAPartner';
-
-import Adventures from './Adventures';
-
-import AdventureDetails from './AdventureDetails';
-
-import CreateAdventureBooking from './CreateAdventureBooking';
-
-import AdminUsers from './AdminUsers';
-
-import AdminBookings from './AdminBookings';
-
-import AdminMessages from './AdminMessages';
-
-import AdminAnalytics from './AdminAnalytics';
-
-import AdminCities from './AdminCities';
-
-import OfficeDashboard from './OfficeDashboard';
-
-import AdminOffices from './AdminOffices';
-
-import OfficeAddHost from './OfficeAddHost';
-
-import AdminHostRequests from './AdminHostRequests';
-
-import AdminHeroSlides from './AdminHeroSlides';
-
-import OfficeOverview from './OfficeOverview';
-
-import OfficeHosts from './OfficeHosts';
-
-import OfficeBookings from './OfficeBookings';
-
-import OfficeOffers from './OfficeOffers';
-
-import OfficeMessages from './OfficeMessages';
-
-import CustomerSupport from './CustomerSupport';
-
-import AdminPartnerRequests from './AdminPartnerRequests';
-
-import BookingCairo from './BookingCairo';
-
-import BecomeAHost from './BecomeAHost';
-
-import AdminAIMonitoring from './AdminAIMonitoring';
-
-import AdminAgencies from './AdminAgencies';
-
-import AdminAuditLogs from './AdminAuditLogs';
-
-import NotFound from './NotFound';
-
-import AdminAdventures from './AdminAdventures';
-
-import HostAdventures from './HostAdventures';
-
-import AdminAdventurePosts from './AdminAdventurePosts';
-
-import OfficeAdventures from './OfficeAdventures';
-
-import ProductionReport from './ProductionReport';
-
-import Destinations from './Destinations';
-
-import ForumHome from './ForumHome';
-
-import ForumPostDetail from './ForumPostDetail';
-
-import AdminForumModeration from './AdminForumModeration';
-
-import PerformanceReport from './PerformanceReport';
-
-import DesignAudit from './DesignAudit';
-
-import WriteReview from './WriteReview';
-
-import AdminCancellations from './AdminCancellations';
-
-import AdminBroadcast from './AdminBroadcast';
-
-import HeroPerformanceAudit from './HeroPerformanceAudit';
-
-import HeroVideoReport from './HeroVideoReport';
-
-import BookingTunis from './BookingTunis';
-
 import AccountDeleted from './AccountDeleted';
-
-import MarketingDashboard from './MarketingDashboard';
-
-import MarketingReports from './MarketingReports';
-
-import MarketingAIInsights from './MarketingAIInsights';
-
-import MarketingLogs from './MarketingLogs';
-
-import MarketingSettings from './MarketingSettings';
-
-import MarketingAnalytics from './MarketingAnalytics';
-
-import ReportView from './ReportView';
-
-import SmartCampaigns from './SmartCampaigns';
-
-import SmartGrowthPlan from './SmartGrowthPlan';
-
+import AdminAdventurePosts from './AdminAdventurePosts';
+import AdminAdventures from './AdminAdventures';
+import AdminAgencies from './AdminAgencies';
+import AdminAIMonitoring from './AdminAIMonitoring';
+import AdminAnalytics from './AdminAnalytics';
+import AdminAuditLogs from './AdminAuditLogs';
+import AdminBookings from './AdminBookings';
+import AdminBroadcast from './AdminBroadcast';
+import AdminCancellations from './AdminCancellations';
+import AdminCities from './AdminCities';
+import AdminDashboard from './AdminDashboard';
+import AdminEvents from './AdminEvents';
+import AdminForumModeration from './AdminForumModeration';
+import AdminHeroSlides from './AdminHeroSlides';
+import AdminHostRequests from './AdminHostRequests';
+import AdminHosts from './AdminHosts';
+import AdminMessages from './AdminMessages';
+import AdminOffices from './AdminOffices';
+import AdminPartnerRequests from './AdminPartnerRequests';
+import AdminUsers from './AdminUsers';
+import AdventureDetails from './AdventureDetails';
+import Adventures from './Adventures';
+import BecomeAHost from './BecomeAHost';
+import BecomeAPartner from './BecomeAPartner';
+import BookingAmman from './BookingAmman';
+import BookingCairo from './BookingCairo';
+import BookingDamascus from './BookingDamascus';
+import BookingIstanbul from './BookingIstanbul';
+import BookingTunis from './BookingTunis';
+import CommunityGuidelines from './CommunityGuidelines';
+import CookiePolicy from './CookiePolicy';
+import CreateAdventureBooking from './CreateAdventureBooking';
+import CreateBooking from './CreateBooking';
+import CustomerSupport from './CustomerSupport';
+import DesignAudit from './DesignAudit';
+import Destinations from './Destinations';
 import DevTools from './DevTools';
-
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import ForumHome from './ForumHome';
+import ForumPostDetail from './ForumPostDetail';
+import HeroPerformanceAudit from './HeroPerformanceAudit';
+import HeroVideoReport from './HeroVideoReport';
+import Home from './Home';
+import HostAdventures from './HostAdventures';
+import HostDashboard from './HostDashboard';
+import HostProfile from './HostProfile';
+import Layout from './Layout.jsx';
+import MarketingAIInsights from './MarketingAIInsights';
+import MarketingAnalytics from './MarketingAnalytics';
+import MarketingDashboard from './MarketingDashboard';
+import MarketingLogs from './MarketingLogs';
+import MarketingReports from './MarketingReports';
+import MarketingSettings from './MarketingSettings';
+import Messages from './Messages';
+import MyOffers from './MyOffers';
+import NotFound from './NotFound';
+import OfficeAddHost from './OfficeAddHost';
+import OfficeAdventures from './OfficeAdventures';
+import OfficeBookings from './OfficeBookings';
+import OfficeDashboard from './OfficeDashboard';
+import OfficeHosts from './OfficeHosts';
+import OfficeMessages from './OfficeMessages';
+import OfficeOffers from './OfficeOffers';
+import OfficeOverview from './OfficeOverview';
+import Partner from './Partner';
+import PartnerAnalytics from './PartnerAnalytics';
+import PartnerAvailability from './PartnerAvailability';
+import PartnerDashboard from './PartnerDashboard';
+import PartnerInventory from './PartnerInventory';
+import PartnerMessages from './PartnerMessages';
+import PartnerOffers from './PartnerOffers';
+import PartnerPayouts from './PartnerPayouts';
+import PartnerProfile from './PartnerProfile';
+import PartnerRegisterHost from './PartnerRegisterHost';
+import PartnerRequests from './PartnerRequests';
+import PartnerSettings from './PartnerSettings';
+import PerformanceReport from './PerformanceReport';
+import PrivacyPolicy from './PrivacyPolicy';
+import ProductionReport from './ProductionReport';
+import ReportView from './ReportView';
+import SmartCampaigns from './SmartCampaigns';
+import SmartGrowthPlan from './SmartGrowthPlan';
+import TermsOfService from './TermsOfService';
+import UserProfile from './UserProfile';
+import WriteReview from './WriteReview';
 
 const PAGES = {
   Home: Home,

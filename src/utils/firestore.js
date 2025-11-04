@@ -14,6 +14,7 @@ import {
   serverTimestamp,
   onSnapshot,
 } from 'firebase/firestore';
+
 import { db } from '@/config/firebase';
 import { notificationEntity } from '@/services/firebaseEntities/notificationEntity';
 
@@ -37,7 +38,7 @@ export const addDocument = async (collectionName, data) => {
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
     });
-    console.log(` Document created in ${collectionName} with ID:`, docRef.id);
+
     return docRef.id;
   } catch (error) {
     console.error(` Error adding document to ${collectionName}:`, error);
@@ -80,10 +81,9 @@ export const getDocument = async (collectionName, docId) => {
 
     if (docSnap.exists()) {
       return { id: docSnap.id, ...docSnap.data() };
-    } else {
-      console.log(`Document ${collectionName}/${docId} not found`);
-      return null;
     }
+    console.log(`Document ${collectionName}/${docId} not found`);
+    return null;
   } catch (error) {
     console.error(` Error getting document ${collectionName}/${docId}:`, error);
     throw error;
@@ -145,7 +145,6 @@ export const queryDocuments = async (collectionName, filters = [], options = {})
       documents.push({ id: doc.id, ...doc.data() });
     });
 
-    console.log(` Query found ${documents.length} documents in ${collectionName}`);
     return documents;
   } catch (error) {
     console.error(` Error querying ${collectionName}:`, error);
@@ -184,7 +183,6 @@ export const updateDocument = async (collectionName, docId, data) => {
 export const deleteDocument = async (collectionName, docId) => {
   try {
     await deleteDoc(doc(db, collectionName, docId));
-    console.log(` Document deleted: ${collectionName}/${docId}`);
   } catch (error) {
     console.error(` Error deleting document ${collectionName}/${docId}:`, error);
     throw error;
@@ -197,7 +195,7 @@ export const deleteDocument = async (collectionName, docId) => {
  * Example: Create a city
  */
 export const createCity = async (cityData) => {
-  return await addDocument('cities', {
+  return addDocument('cities', {
     name: cityData.name,
     country: cityData.country,
     description: cityData.description,
@@ -210,7 +208,7 @@ export const createCity = async (cityData) => {
  * Example: Create a booking
  */
 export const createBooking = async (bookingData) => {
-  return await addDocument('bookings', {
+  return addDocument('bookings', {
     user_id: bookingData.user_id,
     city_id: bookingData.city_id,
     check_in: bookingData.check_in,
@@ -225,7 +223,7 @@ export const createBooking = async (bookingData) => {
  * Example: Get user's bookings
  */
 export const getUserBookings = async (userId) => {
-  return await queryDocuments('bookings', [['user_id', '==', userId]], {
+  return queryDocuments('bookings', [['user_id', '==', userId]], {
     orderBy: { field: 'created_at', direction: 'desc' },
   });
 };
@@ -240,7 +238,7 @@ export const getHostBookings = async (hostId, status = null) => {
   if (status) {
     filters.push(['status', '==', status]);
   }
-  return await queryDocuments('bookings', filters, {
+  return queryDocuments('bookings', filters, {
     orderBy: { field: 'booking_date', direction: 'asc' },
   });
 };
@@ -249,7 +247,7 @@ export const getHostBookings = async (hostId, status = null) => {
  * Get adventure bookings
  */
 export const getAdventureBookings = async (adventureId) => {
-  return await queryDocuments('bookings', [['adventure_id', '==', adventureId]], {
+  return queryDocuments('bookings', [['adventure_id', '==', adventureId]], {
     orderBy: { field: 'booking_date', direction: 'asc' },
   });
 };
@@ -258,7 +256,7 @@ export const getAdventureBookings = async (adventureId) => {
  * Update booking status
  */
 export const updateBookingStatus = async (bookingId, status, updates = {}) => {
-  return await updateDocument('bookings', bookingId, {
+  return updateDocument('bookings', bookingId, {
     status,
     ...updates,
   });
@@ -270,7 +268,7 @@ export const updateBookingStatus = async (bookingId, status, updates = {}) => {
  * Get adventure reviews
  */
 export const getAdventureReviews = async (adventureId, limitCount = null) => {
-  return await queryDocuments('reviews', [['adventure_id', '==', adventureId]], {
+  return queryDocuments('reviews', [['adventure_id', '==', adventureId]], {
     orderBy: { field: 'created_at', direction: 'desc' },
     limit: limitCount,
   });
@@ -280,7 +278,7 @@ export const getAdventureReviews = async (adventureId, limitCount = null) => {
  * Get user reviews (written by user)
  */
 export const getUserReviews = async (userId) => {
-  return await queryDocuments('reviews', [['reviewer_id', '==', userId]], {
+  return queryDocuments('reviews', [['reviewer_id', '==', userId]], {
     orderBy: { field: 'created_at', direction: 'desc' },
   });
 };
@@ -289,7 +287,7 @@ export const getUserReviews = async (userId) => {
  * Get host reviews (reviews for host's adventures)
  */
 export const getHostReviews = async (hostId) => {
-  return await queryDocuments('reviews', [['host_id', '==', hostId]], {
+  return queryDocuments('reviews', [['host_id', '==', hostId]], {
     orderBy: { field: 'created_at', direction: 'desc' },
   });
 };
@@ -298,7 +296,7 @@ export const getHostReviews = async (hostId) => {
  * Create review
  */
 export const createReview = async (reviewData) => {
-  return await addDocument('reviews', {
+  return addDocument('reviews', {
     adventure_id: reviewData.adventure_id,
     adventure_title: reviewData.adventure_title,
     reviewer_id: reviewData.reviewer_id,
@@ -322,7 +320,7 @@ export const createReview = async (reviewData) => {
  * Get user chats
  */
 export const getUserChats = async (userId) => {
-  return await queryDocuments('chats', [['participants', 'array-contains', userId]], {
+  return queryDocuments('chats', [['participants', 'array-contains', userId]], {
     orderBy: { field: 'last_message_at', direction: 'desc' },
   });
 };
@@ -419,7 +417,6 @@ export const getUserNotifications = async (userId, unreadOnly = false, userEmail
       emailCriteria.read = false;
     }
     const emailResults = await notificationEntity.filter(emailCriteria);
-    console.log('🔔 Found by email:', emailResults.length);
 
     const existingIds = new Set(results.map((item) => item.id));
     emailResults.forEach((item) => {
@@ -450,14 +447,14 @@ export const getUserNotifications = async (userId, unreadOnly = false, userEmail
  * Create notification
  */
 export const createNotification = async (notificationData) => {
-  return await notificationEntity.create(notificationData);
+  return notificationEntity.create(notificationData);
 };
 
 /**
  * Mark notification as read
  */
 export const markNotificationAsRead = async (notificationId) => {
-  return await notificationEntity.update(notificationId, {
+  return notificationEntity.update(notificationId, {
     read: true,
     read_at: serverTimestamp(),
   });
@@ -474,7 +471,7 @@ export const markAllNotificationsAsRead = async (userId, userEmail = null) => {
       read_at: serverTimestamp(),
     })
   );
-  return await Promise.all(updates);
+  return Promise.all(updates);
 };
 
 /**
@@ -511,7 +508,7 @@ export const saveDeviceToken = async (userId, userEmail, token, platform = 'web'
  * Get user favorites
  */
 export const getUserFavorites = async (userId) => {
-  return await queryDocuments('favorites', [['user_id', '==', userId]], {
+  return queryDocuments('favorites', [['user_id', '==', userId]], {
     orderBy: { field: 'created_at', direction: 'desc' },
   });
 };
@@ -520,7 +517,7 @@ export const getUserFavorites = async (userId) => {
  * Add to favorites
  */
 export const addToFavorites = async (userId, adventureData) => {
-  return await addDocument('favorites', {
+  return addDocument('favorites', {
     user_id: userId,
     adventure_id: adventureData.id,
     adventure_title: adventureData.title,
@@ -538,7 +535,7 @@ export const removeFromFavorites = async (userId, adventureId) => {
   ]);
 
   if (favorites.length > 0) {
-    return await deleteDocument('favorites', favorites[0].id);
+    return deleteDocument('favorites', favorites[0].id);
   }
 };
 
@@ -559,7 +556,7 @@ export const isAdventureFavorited = async (userId, adventureId) => {
  * Get adventures by city
  */
 export const getAdventuresByCity = async (cityId) => {
-  return await queryDocuments(
+  return queryDocuments(
     'adventures',
     [
       ['city_id', '==', cityId],
@@ -573,7 +570,7 @@ export const getAdventuresByCity = async (cityId) => {
  * Get host adventures
  */
 export const getHostAdventures = async (hostId) => {
-  return await queryDocuments('adventures', [['host_id', '==', hostId]], {
+  return queryDocuments('adventures', [['host_id', '==', hostId]], {
     orderBy: { field: 'created_at', direction: 'desc' },
   });
 };
@@ -592,7 +589,7 @@ export const searchAdventures = async (searchParams) => {
     filters.push(['category', '==', searchParams.category]);
   }
 
-  return await queryDocuments('adventures', filters, {
+  return queryDocuments('adventures', filters, {
     orderBy: { field: searchParams.sortBy || 'rating', direction: 'desc' },
     limit: searchParams.limit || 20,
   });
@@ -607,7 +604,7 @@ export const searchAdventures = async (searchParams) => {
  */
 export const getOrCreateConversation = async (bookingData) => {
   try {
-    console.log('💬 getOrCreateConversation:', bookingData);
+    console.log('getOrCreateConversation:', bookingData);
 
     // Try to find existing conversation for this booking
     try {
@@ -616,12 +613,12 @@ export const getOrCreateConversation = async (bookingData) => {
       ]);
 
       if (existing.length > 0) {
-        console.log('💬 Found existing conversation:', existing[0].id);
+        console.log('Found existing conversation:', existing[0].id);
         return existing[0];
       }
     } catch (queryError) {
       console.warn(
-        '⚠️ Could not query existing conversations (will create new):',
+        ' Could not query existing conversations (will create new):',
         queryError.message
       );
       // If query fails due to permissions, proceed to create new conversation
@@ -641,29 +638,29 @@ export const getOrCreateConversation = async (bookingData) => {
       unread_by_hosts: [],
     };
 
-    console.log('💬 Creating conversation with data:', {
+    console.log('Creating conversation with data:', {
       booking_id: conversationData.booking_id,
       traveler_email: conversationData.traveler_email,
       host_emails: conversationData.host_emails,
     });
 
     const conversationId = await addDocument('conversations', conversationData);
-    console.log('💬 Created new conversation:', conversationId);
+    console.log('Created new conversation:', conversationId);
 
     // Verify we can read it back before returning
     try {
       const verifyDoc = await getDocument('conversations', conversationId);
-      console.log('✅ Verified conversation is readable:', verifyDoc.id);
+      console.log(' Verified conversation is readable:', verifyDoc.id);
       return verifyDoc;
     } catch (verifyError) {
       console.warn(
-        '⚠️ Could not verify conversation read, returning created data:',
+        ' Could not verify conversation read, returning created data:',
         verifyError.message
       );
       return { id: conversationId, ...conversationData };
     }
   } catch (error) {
-    console.error('❌ Error creating conversation:', error);
+    console.error('Error creating conversation:', error);
     throw error;
   }
 };
@@ -706,14 +703,14 @@ export const subscribeToConversations = (userEmail, isHost, callback) => {
         callback(conversations);
       },
       (error) => {
-        console.error('❌ Error in conversations subscription:', error);
+        console.error('Error in conversations subscription:', error);
         callback([]);
       }
     );
 
     return unsubscribe;
   } catch (error) {
-    console.error('❌ Error subscribing to conversations:', error);
+    console.error('Error subscribing to conversations:', error);
     return () => {};
   }
 };
@@ -743,14 +740,14 @@ export const subscribeToMessages = (conversationId, callback) => {
         callback(messages);
       },
       (error) => {
-        console.error('❌ Error in messages subscription:', error);
+        console.error('Error in messages subscription:', error);
         callback([]);
       }
     );
 
     return unsubscribe;
   } catch (error) {
-    console.error('❌ Error subscribing to messages:', error);
+    console.error('Error subscribing to messages:', error);
     return () => {};
   }
 };
@@ -763,7 +760,7 @@ export const subscribeToMessages = (conversationId, callback) => {
  */
 export const sendMessageToConversation = async (conversationId, messageData) => {
   try {
-    console.log('💬 Sending message to conversation:', conversationId);
+    console.log('Sending message to conversation:', conversationId);
 
     // Get conversation to determine sender role
     const conversation = await getDocument('conversations', conversationId);
@@ -784,7 +781,7 @@ export const sendMessageToConversation = async (conversationId, messageData) => 
     };
 
     const messageId = await addDocument('messages', message);
-    console.log('💬 Message created:', messageId);
+    console.log('Message created:', messageId);
 
     // Determine if sender is host or traveler
     const isHost = conversation.host_emails?.includes(messageData.sender_email);
@@ -810,7 +807,7 @@ export const sendMessageToConversation = async (conversationId, messageData) => 
 
     return messageId;
   } catch (error) {
-    console.error('❌ Error sending message:', error);
+    console.error('Error sending message:', error);
     throw error;
   }
 };
@@ -824,7 +821,7 @@ export const sendMessageToConversation = async (conversationId, messageData) => 
  */
 export const markMessagesAsRead = async (messageIds, userEmail, conversationId = null) => {
   try {
-    console.log('✅ Marking messages as read:', messageIds.length);
+    console.log(' Marking messages as read:', messageIds.length);
 
     const updates = messageIds.map(async (messageId) => {
       const message = await getDocument('messages', messageId);
@@ -835,7 +832,7 @@ export const markMessagesAsRead = async (messageIds, userEmail, conversationId =
     });
 
     await Promise.all(updates);
-    console.log('✅ Messages marked as read');
+    console.log(' Messages marked as read');
 
     // Update conversation unread flags
     if (conversationId && messageIds.length > 0) {
@@ -857,10 +854,10 @@ export const markMessagesAsRead = async (messageIds, userEmail, conversationId =
         }
 
         await updateDocument('conversations', conversationId, unreadUpdates);
-        console.log('✅ Updated conversation unread flags');
+        console.log(' Updated conversation unread flags');
       }
     }
   } catch (error) {
-    console.error('❌ Error marking messages as read:', error);
+    console.error('Error marking messages as read:', error);
   }
 };

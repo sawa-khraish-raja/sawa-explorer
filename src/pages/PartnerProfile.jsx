@@ -1,5 +1,5 @@
-import React from 'react';
 import PartnerLayout from '../components/partner/PartnerLayout';
+
 export default function PartnerProfile() {
   return (
     <PartnerLayout>

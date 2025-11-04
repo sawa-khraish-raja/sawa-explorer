@@ -1,19 +1,19 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import MarketingLayout from '../components/marketing/MarketingLayout';
-import MarketingGuard from '../components/marketing/MarketingGuard';
-import { Card, CardContent } from '@/components/ui/card';
-import { ScrollText, Loader2, Eye } from 'lucide-react';
 import { format } from 'date-fns';
+import { ScrollText, Loader2, Eye } from 'lucide-react';
+
+import { Card, CardContent } from '@/components/ui/card';
+import { queryDocuments } from '@/utils/firestore';
+
+import MarketingGuard from '../components/marketing/MarketingGuard';
+import MarketingLayout from '../components/marketing/MarketingLayout';
 
 export default function MarketingLogs() {
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ['marketing_logs'],
     queryFn: async () => {
-      const allLogs = await base44.entities.AuditLog.filter({
-        action: 'marketing_data_access',
-      });
+      const allLogs = await queryDocuments('auditlogs', [['action', '==', 'marketing_data_access',
+      ]]);
       return allLogs
         .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
         .slice(0, 100);

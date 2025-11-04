@@ -1,7 +1,3 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
   FileText,
@@ -14,7 +10,13 @@ import {
   Menu,
   X,
 } from 'lucide-react';
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { createPageUrl } from '@/utils';
+
 import { useMarketingAuth } from './MarketingGuard';
 
 export default function MarketingLayout({ children }) {

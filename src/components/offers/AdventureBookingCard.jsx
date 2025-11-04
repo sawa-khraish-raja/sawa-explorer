@@ -1,41 +1,38 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { format } from 'date-fns';
 import {
   Calendar,
   Users,
   MapPin,
   MessageSquare,
-  Loader2,
   ChevronRight,
-  Info,
   CheckCircle,
   XCircle,
   Clock,
   Sparkles,
 } from 'lucide-react';
-import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { createPageUrl } from '@/utils';
+import { queryDocuments, getDocument } from '@/utils/firestore';
 
 export default function AdventureBookingCard({ booking }) {
   const navigate = useNavigate();
 
   const { data: adventure, isLoading } = useQuery({
     queryKey: ['adventure', booking.adventure_id],
-    queryFn: () => base44.entities.Adventure.get(booking.adventure_id),
+    queryFn: () => getDocument('adventures', booking.adventure_id),
     enabled: !!booking.adventure_id,
   });
 
   const { data: conversation } = useQuery({
     queryKey: ['conversation', booking.id],
     queryFn: async () => {
-      const convos = await base44.entities.Conversation.filter({
-        booking_id: booking.id,
-      });
+      const convos = await queryDocuments('conversations', [['booking_id', '==', booking.id,
+      ]]);
       return convos[0];
     },
     enabled: !!booking.id,
@@ -44,9 +41,8 @@ export default function AdventureBookingCard({ booking }) {
   const { data: host } = useQuery({
     queryKey: ['adventureHost', adventure?.host_email],
     queryFn: async () => {
-      const users = await base44.entities.User.filter({
-        email: adventure.host_email,
-      });
+      const users = await queryDocuments('users', [['email', '==', adventure.host_email,
+      ]]);
       return users[0];
     },
     enabled: !!adventure?.host_email && booking.status === 'confirmed',
@@ -56,7 +52,7 @@ export default function AdventureBookingCard({ booking }) {
     return (
       <Card className='animate-pulse bg-gradient-to-br from-purple-50 to-pink-50'>
         <CardContent className='p-6'>
-          <div className='h-24 bg-purple-200 rounded'></div>
+          <div className='h-24 bg-purple-200 rounded' />
         </CardContent>
       </Card>
     );

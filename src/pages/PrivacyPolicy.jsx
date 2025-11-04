@@ -1,4 +1,3 @@
-import React from 'react';
 
 export default function PrivacyPolicy() {
   return (
@@ -785,7 +784,7 @@ export default function PrivacyPolicy() {
             </tr>
             <tr>
               <td className='border p-2'>L. Sensitive personal Information</td>
-              <td className='border p-2'></td>
+              <td className='border p-2' />
               <td className='border p-2'>NO</td>
             </tr>
           </tbody>

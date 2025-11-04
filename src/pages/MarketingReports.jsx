@@ -1,15 +1,7 @@
-import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import MarketingLayout from '../components/marketing/MarketingLayout';
-import MarketingGuard from '../components/marketing/MarketingGuard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 import {
   FileText,
-  Download,
-  TrendingUp,
   Users,
   DollarSign,
   Calendar,
@@ -20,10 +12,22 @@ import {
   Brain,
   CheckCircle2,
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { toast } from 'sonner';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { createPageUrl } from '@/utils';
+import { getAllDocuments, queryDocuments } from '@/utils/firestore';
+import { invokeFunction } from '@/utils/functions';
+
+import MarketingGuard from '../components/marketing/MarketingGuard';
+import MarketingLayout from '../components/marketing/MarketingLayout';
+
+
+
 
 export default function MarketingReports() {
   const queryClient = useQueryClient();
@@ -35,7 +39,7 @@ export default function MarketingReports() {
     queryKey: ['all_ai_reports'],
     queryFn: async () => {
       try {
-        const allReports = await base44.entities.AIReports.list('-created_date', 20);
+        const allReports = await getAllDocuments('ai_reports', '-created_date', 20);
         return allReports || [];
       } catch (error) {
         console.error('Failed to fetch reports:', error);
@@ -51,9 +55,8 @@ export default function MarketingReports() {
     queryKey: ['marketing_sync_reports'],
     queryFn: async () => {
       try {
-        const meta = await base44.entities.SystemMeta.filter({
-          key: 'marketing_last_sync',
-        });
+        const meta = await queryDocuments('systemmetas', [['key', '==', 'marketing_last_sync',
+        ]]);
         if (meta && meta.length > 0) {
           return JSON.parse(meta[0].value);
         }
@@ -71,7 +74,7 @@ export default function MarketingReports() {
       setGeneratingReport(reportType.id);
 
       //  Pass report type to function
-      const response = await base44.functions.invoke('AI_Analyze_Data_V2', {
+      const response = await invokeFunction('AI_Analyze_Data_V2', {
         report_type: reportType.id,
         report_title: reportType.title,
         report_focus: reportType.focus,
@@ -160,7 +163,7 @@ export default function MarketingReports() {
 
   //  View Report
   const viewReport = (report) => {
-    navigate(createPageUrl('ReportView') + `?id=${report.id}`);
+    navigate(`${createPageUrl('ReportView')  }?id=${report.id}`);
   };
 
   if (reportsLoading) {

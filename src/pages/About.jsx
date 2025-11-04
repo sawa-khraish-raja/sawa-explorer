@@ -1,4 +1,5 @@
-import React from 'react';
+
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   Heart,
@@ -14,14 +15,14 @@ import {
   Info,
   Star,
 } from 'lucide-react';
-import { normalizeText } from '../components/utils/textHelpers';
-import PageHeroVideo from '../components/common/PageHeroVideo';
+import { useNavigate } from 'react-router-dom';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments } from '@/utils/firestore';
+
+import PageHeroVideo from '../components/common/PageHeroVideo';
 
 export default function About() {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export default function About() {
   const { data: cities = [], isLoading: citiesLoading } = useQuery({
     queryKey: ['activeCities'],
     queryFn: async () => {
-      const allCities = await base44.entities.City.list();
+      const allCities = await getAllDocuments('citys');
       const activeCities = allCities.filter((city) => city.is_active !== false && city.page_slug);
       const uniqueCities = activeCities.reduce((acc, city) => {
         if (!acc.find((c) => c.name === city.name)) {
@@ -345,7 +346,7 @@ export default function About() {
 
           {citiesLoading ? (
             <div className='flex justify-center items-center py-12'>
-              <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-[#9933CC]'></div>
+              <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-[#9933CC]' />
             </div>
           ) : cities.length === 0 ? (
             <div className='text-center py-12'>
@@ -378,7 +379,7 @@ export default function About() {
                       className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
                     />
                   </div>
-                  <div className='absolute inset-0 bg-gradient-to-t from-[#330066] via-[#330066]/60 to-transparent'></div>
+                  <div className='absolute inset-0 bg-gradient-to-t from-[#330066] via-[#330066]/60 to-transparent' />
                   <div className='absolute bottom-0 left-0 right-0 p-6 text-white'>
                     <h3 className='text-2xl font-bold mb-1'>{city.name}</h3>
                     <p className='text-white/80 text-sm mb-2'>{city.country}</p>

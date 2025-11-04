@@ -1,8 +1,8 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { Button } from '@/components/ui/button';
 import { Home, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+import { Button } from '@/components/ui/button';
+import { createPageUrl } from '@/utils';
 
 export default function NotFound() {
   const navigate = useNavigate();

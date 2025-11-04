@@ -34,7 +34,7 @@ export function isFeatureEnabled(flagName) {
 export async function withFeature(flagName, callback, fallback = () => null) {
   if (isFeatureEnabled(flagName)) {
     try {
-      return await callback();
+      return callback();
     } catch (error) {
       console.error(`[Feature ${flagName}] Error:`, error);
       return fallback();

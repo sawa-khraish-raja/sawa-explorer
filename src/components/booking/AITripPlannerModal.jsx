@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useAppContext } from '../context/AppContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import { uploadImage, uploadVideo } from '@/utils/storage';
 import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
@@ -41,16 +43,17 @@ import { toast } from 'sonner';
 import { AnimatePresence, motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import { useTranslation } from '../i18n/LanguageContext';
+import { invokeLLM } from '@/utils/llm';
 
 const INTERESTS = ['culture', 'food', 'nature', 'nightlife', 'shopping', 'history', 'adventure'];
 
 const logError = async (message, details) => {
   try {
-    await base44.entities.AILog.create({
+    await addDocument('ailogs', { ...{
       scope: 'planner',
       level: 'error',
       message: message,
-      meta_json: JSON.stringify(details),
+      meta_json: JSON.stringify(details, created_date: new Date().toISOString() }),
     });
   } catch (e) {
     console.error('Failed to log error:', e);
@@ -300,16 +303,13 @@ const PlanResult = ({ plan, onBack, hosts }) => {
 };
 
 export default function AITripPlannerModal({ isOpen, onClose, city }) {
+  const { user } = useAppContext();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
   const [request, setRequest] = useState({ city });
   const [plan, setPlan] = useState(null);
   const [regenerationCount, setRegenerationCount] = useState(0);
 
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-    staleTime: Infinity,
   });
 
   const cacheKey = useMemo(() => {
@@ -321,7 +321,7 @@ export default function AITripPlannerModal({ isOpen, onClose, city }) {
     queryKey: ['aiCache', cacheKey],
     queryFn: async () => {
       if (!cacheKey) return null;
-      const results = await base44.entities.AICache.filter({ query_hash: cacheKey });
+      const results = await queryDocuments('aicaches', [['query_hash', '==', cacheKey ]]);
       if (results && results.length > 0) {
         const cached = results[0];
         if (new Date(cached.expires_at) > new Date()) {
@@ -337,7 +337,7 @@ export default function AITripPlannerModal({ isOpen, onClose, city }) {
   const { data: hosts, isLoading: areHostsLoading } = useQuery({
     queryKey: ['suggestedHosts', city],
     queryFn: () =>
-      base44.entities.HostProfile.filter(
+      queryDocuments('host_profiles', [
         { city: city, is_active: true },
         '-rating', // Order by rating descending
         3 // Limit to 3
@@ -351,7 +351,7 @@ export default function AITripPlannerModal({ isOpen, onClose, city }) {
 
       const fullPrompt = `You are SAWA’s AI Trip Planner... (Full system prompt here, same as user request)`; // Truncated for brevity
 
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await invokeLLM({
         prompt: `Generate a plan based on these details: ${JSON.stringify(planRequest)}. ${fullPrompt}`,
         add_context_from_internet: true,
         response_json_schema: {
@@ -389,9 +389,9 @@ export default function AITripPlannerModal({ isOpen, onClose, city }) {
     onSuccess: async (data) => {
       setPlan(data);
       setStep(2);
-      await base44.entities.AICache.create({
+      await addDocument('aicaches', { ...{
         query_hash: cacheKey,
-        payload_json: JSON.stringify(data),
+        payload_json: JSON.stringify(data, created_date: new Date().toISOString() }),
         expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
       });
     },

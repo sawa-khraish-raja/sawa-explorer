@@ -1,9 +1,10 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getAllDocuments } from '@/utils/firestore';
-import { createPageUrl } from '@/utils';
 import { Loader2, MapPin, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+import { createPageUrl } from '@/utils';
+import { getAllDocuments } from '@/utils/firestore';
+
 
 export default function DestinationIcons() {
   const navigate = useNavigate();
@@ -76,7 +77,7 @@ export default function DestinationIcons() {
                   className='w-full h-full object-cover transition-transform duration-700 group-hover:scale-110'
                   loading={index < 3 ? 'eager' : 'lazy'}
                   decoding={index < 3 ? 'sync' : 'async'}
-                  fetchpriority={index < 2 ? 'high' : 'auto'}
+                  fetchPriority={index < 2 ? 'high' : 'auto'}
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src =

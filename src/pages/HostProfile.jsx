@@ -1,10 +1,4 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   MapPin,
   Star,
@@ -20,21 +14,27 @@ import {
   ShieldCheck,
   CheckCircle,
   Globe,
-  Phone,
-  Mail,
   Instagram,
   Facebook,
   Image as ImageIcon,
   Sparkles,
   TrendingUp,
 } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { getUserDisplayName } from '../components/utils/userHelpers';
-import { normalizeText } from '../components/utils/textHelpers';
 import { toast } from 'sonner';
-import ReviewsList from '../components/reviews/ReviewsList';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { createPageUrl } from '@/utils';
+import { queryDocuments } from '@/utils/firestore';
+
 import Lightbox from '../components/booking/Lightbox';
+import ReviewsList from '../components/reviews/ReviewsList';
+import { normalizeText } from '../components/utils/textHelpers';
+import { getUserDisplayName } from '../components/utils/userHelpers';
 
 const EXPERTISE_ICONS = {
   Photography: Camera,
@@ -52,6 +52,7 @@ const EXPERTISE_ICONS = {
 };
 
 export default function HostProfile() {
+  const { user } = useAppContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -64,7 +65,7 @@ export default function HostProfile() {
     queryKey: ['currentUser'],
     queryFn: async () => {
       try {
-        return await base44.auth.me();
+        return user;
       } catch {
         return null;
       }
@@ -74,10 +75,8 @@ export default function HostProfile() {
   const { data: host, isLoading } = useQuery({
     queryKey: ['hostProfile', hostEmail],
     queryFn: async () => {
-      const hosts = await base44.entities.User.filter({
-        email: hostEmail,
-        host_approved: true,
-      });
+      const hosts = await queryDocuments('users', ['email', '==', hostEmail],
+            ['host_approved', '==', true]);
       if (!hosts || hosts.length === 0) {
         throw new Error('Host not found');
       }
@@ -89,11 +88,11 @@ export default function HostProfile() {
   const { data: reviews = [] } = useQuery({
     queryKey: ['hostReviews', hostEmail],
     queryFn: async () => {
-      const allReviews = await base44.entities.Review.filter({
-        reviewed_email: hostEmail,
-        status: 'published',
-        review_type: 'traveler_to_host',
-      });
+      const allReviews = await queryDocuments('reviews', [
+        ['reviewed_email', '==', hostEmail],
+        ['status', '==', 'published'],
+        ['review_type', '==', 'traveler_to_host']
+      ]);
       return allReviews.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
     enabled: !!hostEmail,
@@ -102,7 +101,7 @@ export default function HostProfile() {
   const handleContactHost = () => {
     if (!currentUser) {
       toast.error('Please login to contact host');
-      base44.auth.redirectToLogin(window.location.pathname);
+      navigate('/login');
       return;
     }
     navigate(createPageUrl(`Messages?contact=${host.email}`));

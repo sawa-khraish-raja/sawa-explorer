@@ -1,18 +1,21 @@
-import React, { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { addDocument, queryDocuments } from '@/utils/firestore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Calendar, Users, Send, Loader2, Plus, Minus, Package, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { createPageUrl } from '@/utils';
-import SimpleDatePicker from './SimpleDatePicker';
+import { addDocument, queryDocuments } from '@/utils/firestore';
+
 import ServiceCard from '../common/ServiceCard';
 import { SAWA_SERVICES } from '../config/sawaServices';
 import { useAppContext } from '../context/AppContext';
+
+import SimpleDatePicker from './SimpleDatePicker';
 
 export default function SimpleBookingForm({ city, onSuccess }) {
   const navigate = useNavigate();
@@ -32,7 +35,7 @@ export default function SimpleBookingForm({ city, onSuccess }) {
       if (!city?.name) return [];
       const allUsers = await queryDocuments('users', [['host_approved', '==', true]]);
       const hostsInCity = allUsers.filter((host) => host.city === city.name);
-      console.log(`📍 Found ${hostsInCity.length} hosts in ${city.name}`);
+      console.log(`Found ${hostsInCity.length} hosts in ${city.name}`);
       return hostsInCity;
     },
     enabled: !!city?.name,
@@ -41,7 +44,7 @@ export default function SimpleBookingForm({ city, onSuccess }) {
 
   const createBookingMutation = useMutation({
     mutationFn: async () => {
-      console.log('🔍 Starting booking creation...');
+      console.log(' Starting booking creation...');
 
       //  Validate user
       if (!user) {
@@ -66,7 +69,7 @@ export default function SimpleBookingForm({ city, onSuccess }) {
       const formattedStartDate = formatDate(startDate);
       const formattedEndDate = formatDate(endDate);
 
-      console.log('📝 Booking data:', {
+      console.log('Booking data:', {
         user_id: user.id, // ← Added for Firestore rules
         user_email: user.email,
         traveler_email: user.email,
@@ -98,7 +101,7 @@ export default function SimpleBookingForm({ city, onSuccess }) {
         updated_date: new Date().toISOString(),
       });
 
-      console.log('✅ Booking created with ID:', bookingId);
+      console.log(' Booking created with ID:', bookingId);
 
       // Send notifications to hosts in this city
       // Wrapped in try-catch because notification creation requires admin permissions
@@ -121,9 +124,9 @@ export default function SimpleBookingForm({ city, onSuccess }) {
 
           await addDocument('notifications', notificationData);
         }
-        console.log(`✅ Sent notifications to ${cityHosts.length} host(s)`);
+        console.log(` Sent notifications to ${cityHosts.length} host(s)`);
       } catch (error) {
-        console.warn('⚠️ Could not send notifications (requires admin permissions):', error.message);
+        console.warn(' Could not send notifications (requires admin permissions):', error.message);
         // Don't throw - booking was already created successfully
       }
 

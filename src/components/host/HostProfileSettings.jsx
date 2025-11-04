@@ -1,28 +1,25 @@
-import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   Camera,
   Save,
   Loader2,
   Plus,
   X,
-  Globe,
-  MapPin, // Keep MapPin for potential future use or if needed elsewhere in the component
+  Globe, // Keep MapPin for potential future use or if needed elsewhere in the component
   User,
   Briefcase,
   Image as ImageIcon,
   Sparkles,
-  Eye,
-  AlertCircle, // Keep AlertCircle for potential future use or if needed elsewhere in the component
+  Eye, // Keep AlertCircle for potential future use or if needed elsewhere in the component
 } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -30,7 +27,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { createPageUrl } from '@/utils';
+import { queryDocuments, addDocument, updateDocument } from '@/utils/firestore';
+import { uploadImage } from '@/utils/storage';
+
+import { useAppContext } from '../context/AppContext';
 
 const AVAILABLE_SERVICES = [
   'Airport Transportation Service',
@@ -169,27 +171,19 @@ export default function HostProfileSettings({ user, onProfileUpdated }) {
 
       try {
         let uploadedProfilePhoto = user.profile_photo;
-        let uploadedCoverPhotos = [...existingCoverPhotos];
+        const uploadedCoverPhotos = [...existingCoverPhotos];
 
         //  Upload profile photo if changed
         if (profilePhoto) {
-          console.log('📤 Uploading profile photo...');
-          const { file_url } = await base44.integrations.Core.UploadFile({
-            file: profilePhoto,
-          });
+          const { file_url } = await uploadImage(profilePhoto, 'uploads');
           uploadedProfilePhoto = file_url;
-          console.log(' Profile photo uploaded:', file_url);
         }
 
         //  Upload new cover photos
         if (coverPhotos.length > 0) {
-          console.log('📤 Uploading cover photos...');
           for (const photo of coverPhotos) {
-            const { file_url } = await base44.integrations.Core.UploadFile({
-              file: photo,
-            });
+            const { file_url } = await uploadImage(photo, 'uploads');
             uploadedCoverPhotos.push(file_url);
-            console.log(' Cover photo uploaded:', file_url);
           }
         }
 
@@ -204,17 +198,17 @@ export default function HostProfileSettings({ user, onProfileUpdated }) {
           office_name: profileData.office_name,
         };
 
-        console.log('💾 Updating User entity...');
-        await base44.auth.updateMe(updateData);
+        console.log('Updating User entity...');
+        await updateMe(updateData);
 
         // Fetch the user again to get the latest state including admin-controlled fields
-        const freshUser = await base44.auth.me();
+        const freshUser = await useAppContext().user;
 
         //  Update or Create HostProfile for unified display
-        console.log('💾 Syncing HostProfile...');
-        const hostProfiles = await base44.entities.HostProfile.filter({
-          user_email: freshUser.email,
-        });
+        console.log('Syncing HostProfile...');
+        const hostProfiles = await queryDocuments('hostprofiles', [
+          ['user_email', '==', freshUser.email],
+        ]);
 
         const hostProfileData = {
           user_email: freshUser.email,
@@ -243,10 +237,16 @@ export default function HostProfileSettings({ user, onProfileUpdated }) {
         };
 
         if (hostProfiles && hostProfiles.length > 0) {
-          await base44.entities.HostProfile.update(hostProfiles[0].id, hostProfileData);
+          await updateDocument('hostprofiles', hostProfiles[0].id, {
+            ...hostProfileData,
+            updated_date: new Date().toISOString(),
+          });
           console.log(' HostProfile updated');
         } else if (freshUser.host_approved) {
-          await base44.entities.HostProfile.create(hostProfileData);
+          await addDocument('hostprofiles', {
+            ...hostProfileData,
+            created_date: new Date().toISOString(),
+          });
           console.log(' HostProfile created');
         } else {
           console.log('HostProfile not created: user is not host_approved.');

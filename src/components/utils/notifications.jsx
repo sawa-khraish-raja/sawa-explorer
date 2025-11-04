@@ -25,11 +25,11 @@ const NOTIFICATION_MESSAGES = {
       message: 'Your booking has been cancelled.',
     },
     MESSAGE_RECEIVED: {
-      title: '💬 New Message',
+      title: 'New Message',
       message: 'You have received a new message.',
     },
     SELECT_DESTINATION: {
-      title: '📍 Select Destination',
+      title: 'Select Destination',
       message: 'Please select a destination to continue',
     },
     ENTER_BUDGET: {
@@ -37,7 +37,7 @@ const NOTIFICATION_MESSAGES = {
       message: 'Please enter your budget to continue',
     },
     AI_PLANNER_UNAVAILABLE: {
-      title: '🚫 AI Planner Unavailable',
+      title: ' AI Planner Unavailable',
       message: 'AI Trip Planner is currently unavailable. Please try again later.',
     },
     PLAN_GENERATED: {
@@ -67,11 +67,11 @@ const NOTIFICATION_MESSAGES = {
       message: 'تم إلغاء حجزك.',
     },
     MESSAGE_RECEIVED: {
-      title: '💬 رسالة جديدة',
+      title: 'رسالة جديدة',
       message: 'لديك رسالة جديدة.',
     },
     SELECT_DESTINATION: {
-      title: '📍 اختر الوجهة',
+      title: 'اختر الوجهة',
       message: 'الرجاء اختيار وجهة للمتابعة',
     },
     ENTER_BUDGET: {
@@ -79,7 +79,7 @@ const NOTIFICATION_MESSAGES = {
       message: 'الرجاء إدخال ميزانيتك للمتابعة',
     },
     AI_PLANNER_UNAVAILABLE: {
-      title: '🚫 المخطط غير متاح',
+      title: ' المخطط غير متاح',
       message: 'مخطط الرحلات بالذكاء الاصطناعي غير متاح حالياً. حاول مرة أخرى لاحقاً.',
     },
     PLAN_GENERATED: {
@@ -94,7 +94,7 @@ export const showPredefinedNotification = (type, level = 'info', language = 'en'
   const notification = NOTIFICATION_MESSAGES[lang][type];
 
   if (!notification) {
-    console.warn(`⚠️ Unknown notification type: ${type}`);
+    console.warn(` Unknown notification type: ${type}`);
     return;
   }
 

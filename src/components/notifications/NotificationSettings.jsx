@@ -1,29 +1,26 @@
-import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import {
   Bell,
-  BellOff,
   Mail,
   Volume2,
   VolumeX,
   Moon,
   Briefcase,
   MessageSquare,
-  Star,
   DollarSign,
-  Megaphone,
-  Save,
   Loader2,
   Check,
 } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { queryDocuments, addDocument, updateDocument } from '@/utils/firestore';
+
 import { useAppContext } from '../context/AppContext';
 
 export default function NotificationSettings() {
@@ -35,16 +32,16 @@ export default function NotificationSettings() {
     queryKey: ['notificationPreferences', user?.email],
     queryFn: async () => {
       if (!user?.email) return null;
-      const prefs = await base44.entities.NotificationPreferences.filter({
-        user_email: user.email,
-      });
+      const prefs = await queryDocuments('notification_preferences', [
+        ['user_email', '==', user.email],
+      ]);
 
       if (prefs.length > 0) {
         return prefs[0];
       }
 
       // Create default preferences
-      return await base44.entities.NotificationPreferences.create({
+      const prefId = await addDocument('notification_preferences', {
         user_email: user.email,
         push_enabled: true,
         email_enabled: true,
@@ -60,7 +57,10 @@ export default function NotificationSettings() {
         promotional: false,
         sound_enabled: true,
         quiet_hours_enabled: false,
+        created_date: new Date().toISOString(),
       });
+
+      return { id: prefId, user_email: user.email };
     },
     enabled: !!user?.email,
   });
@@ -68,7 +68,10 @@ export default function NotificationSettings() {
   const updatePreferences = useMutation({
     mutationFn: async (updates) => {
       if (!preferences?.id) return;
-      return await base44.entities.NotificationPreferences.update(preferences.id, updates);
+      return updateDocument('notification_preferences', preferences.id, {
+        ...updates,
+        updated_date: new Date().toISOString(),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notificationPreferences', user?.email] });

@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { updateDocument } from '@/utils/firestore';
-import { useAppContext } from '../context/AppContext';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -10,11 +12,14 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'; // Added import
-import { toast } from 'sonner';
+import { updateDocument } from '@/utils/firestore';
+
+import { useAppContext } from '../context/AppContext';
+
+
+
 import { ADMIN_PAGES } from './PermissionGuard';
 
 // Transform ADMIN_PAGES object into an array of page objects for easier mapping in the UI

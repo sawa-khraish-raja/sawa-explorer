@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { Send, Loader2, CheckCircle, Home, Star  } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -11,12 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { Sparkles, UserPlus, Send, Loader2, CheckCircle } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { addDocument } from '@/utils/firestore';
+
+
 import PageHero from '../components/common/PageHero';
-import { Home, Star } from 'lucide-react';
 
 export default function BecomeAHost() {
   const [formData, setFormData] = useState({
@@ -32,7 +34,13 @@ export default function BecomeAHost() {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const createHostRequestMutation = useMutation({
-    mutationFn: (requestData) => base44.entities.HostRequest.create(requestData),
+    mutationFn: async (requestData) => {
+      await addDocument('host_requests', {
+        ...requestData,
+        status: 'pending',
+        created_date: new Date().toISOString(),
+      });
+    },
     onSuccess: () => {
       setIsSubmitted(true);
       toast.success('Your request has been sent successfully!');
@@ -94,8 +102,7 @@ export default function BecomeAHost() {
           text: 'Join Our Community',
         }}
         actions={
-          <>
-            <Button
+          <Button
               onClick={() =>
                 document.getElementById('host-form')?.scrollIntoView({ behavior: 'smooth' })
               }
@@ -104,7 +111,6 @@ export default function BecomeAHost() {
               <Star className='w-5 h-5 mr-2' />
               Start Your Journey
             </Button>
-          </>
         }
       />
 

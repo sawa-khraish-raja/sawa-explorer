@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
-import AdminLayout from '../components/admin/AdminLayout';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { format, formatDistanceToNow } from 'date-fns';
+import { Loader2, Sparkles, Trash2, Clock, Calendar } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   Table,
@@ -11,11 +15,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Sparkles, Trash2, Clock, Calendar } from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
+import { getAllDocuments, queryDocuments } from '@/utils/firestore';
+import { invokeFunction } from '@/utils/functions';
+
+import AdminLayout from '../components/admin/AdminLayout';
 
 export default function AdminEvents() {
   const queryClient = useQueryClient();
@@ -26,7 +29,7 @@ export default function AdminEvents() {
   const { data: events = [], isLoading: isLoadingEvents } = useQuery({
     queryKey: ['all-events'],
     queryFn: async () => {
-      const allEvents = await base44.entities.Event.list('-start_datetime');
+      const allEvents = await getAllDocuments('events', '-start_datetime');
 
       //  Filter: Only future events
       const now = new Date();
@@ -44,9 +47,8 @@ export default function AdminEvents() {
   const { data: lastSync } = useQuery({
     queryKey: ['eventsLastSync'],
     queryFn: async () => {
-      const meta = await base44.entities.SystemMeta.filter({
-        key: 'events_last_sync',
-      });
+      const meta = await queryDocuments('systemmetas', [['key', '==', 'events_last_sync',
+      ]]);
       return meta[0]?.value || null;
     },
   });
@@ -55,7 +57,7 @@ export default function AdminEvents() {
   const handleSyncEvents = async (city = null) => {
     setSyncing(true);
     try {
-      const response = await base44.functions.invoke('syncCityEvents', {
+      const response = await invokeFunction('syncCityEvents', {
         city,
         forceRefresh: true,
       });
@@ -84,7 +86,7 @@ export default function AdminEvents() {
   const handleCleanOldEvents = async () => {
     setCleaning(true);
     try {
-      const response = await base44.functions.invoke('cleanupExpiredEvents', {});
+      const response = await invokeFunction('cleanupExpiredEvents', {});
 
       if (response.data.ok) {
         toast.success(` Deleted ${response.data.deletedCount} expired events`);

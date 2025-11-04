@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { Loader2, CheckCircle2, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+import CountrySelector from '@/components/common/CountrySelector';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import CountrySelector from '@/components/common/CountrySelector';
-import { Loader2, CheckCircle2, Sparkles } from 'lucide-react';
-import { toast } from 'sonner';
+import { Textarea } from '@/components/ui/textarea';
+
 
 const translations = {
   en: {
@@ -99,7 +100,7 @@ ${data.message}
 ---
 This application was submitted via the SAWA Become a Partner form.`;
 
-      return base44.integrations.Core.SendEmail({
+      return sendEmail({
         to: 'sawa.khraish.raja@gmail.com',
         subject: `New Partner Application - ${data.full_name}`,
         body: emailBody,

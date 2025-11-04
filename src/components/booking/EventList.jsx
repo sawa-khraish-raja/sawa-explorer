@@ -1,18 +1,19 @@
-import React, { useMemo } from 'react';
-import EventCard from './EventCard';
-import { Loader2, Calendar, Sparkles, Clock } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { formatDistanceToNow } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { formatDistanceToNow } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2, Calendar, Sparkles, Clock } from 'lucide-react';
+import { useMemo } from 'react';
+
+import { queryDocuments } from '@/utils/firestore';
+
+import EventCard from './EventCard';
 
 export default function EventList({ city, events = [], isLoading = false, filters = {} }) {
   const { data: lastSync } = useQuery({
     queryKey: ['eventsLastSync'],
     queryFn: async () => {
-      const meta = await base44.entities.SystemMeta.filter({
-        key: 'events_last_sync',
-      });
+      const meta = await queryDocuments('systemmetas', [['key', '==', 'events_last_sync',
+      ]]);
       return meta[0]?.value || null;
     },
     staleTime: 5 * 60 * 1000,

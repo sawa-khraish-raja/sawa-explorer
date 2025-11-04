@@ -12,6 +12,7 @@ import {
   orderBy,
   limit as limitDocuments,
 } from 'firebase/firestore';
+
 import { db } from '@/config/firebase';
 
 const COLLECTION = 'notification_preferences';
@@ -54,7 +55,7 @@ const fetchDocs = async (constraints = [], limitValue = null) => {
 };
 
 const list = async (orderOrLimit, maybeLimit) => {
-  let constraints = [];
+  const constraints = [];
   let limitValue = null;
 
   if (typeof orderOrLimit === 'string') {

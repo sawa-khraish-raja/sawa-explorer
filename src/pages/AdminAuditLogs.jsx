@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import AdminLayout from '../components/admin/AdminLayout';
+import { format } from 'date-fns';
+import { Search, FileText, Calendar, User, Loader2, Filter } from 'lucide-react';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Search, FileText, Calendar, User, Loader2, Filter } from 'lucide-react';
-import { format } from 'date-fns';
+import { getAllDocuments } from '@/utils/firestore';
+
+import AdminLayout from '../components/admin/AdminLayout';
 
 export default function AdminAuditLogs() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,7 +16,7 @@ export default function AdminAuditLogs() {
 
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ['auditLogs'],
-    queryFn: () => base44.entities.AuditLog.list('-created_date', 100),
+    queryFn: () => getAllDocuments('auditlogs', '-created_date', 100),
     refetchInterval: 10000,
   });
 

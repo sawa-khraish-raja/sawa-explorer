@@ -1,26 +1,22 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
 import { Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import { createPageUrl } from '@/utils';
 
-export default function HostGuard({ children, requireHost = true }) {
-  const navigate = useNavigate();
+import { useAppContext } from '../context/AppContext';
 
-  const { data: user, isLoading } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: async () => {
-      try {
-        return await base44.auth.me();
-      } catch (error) {
-        return null;
-      }
-    },
-    staleTime: 0,
-    cacheTime: 0,
-    refetchInterval: 5000,
-  });
+
+
+export default function HostGuard({ children, requireHost = true }) {
+  const { user } = useAppContext();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading check - AppContext should handle auth state
+    setIsLoading(false);
+  }, [user]);
 
   useEffect(() => {
     if (!isLoading && user) {

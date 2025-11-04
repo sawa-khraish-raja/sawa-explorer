@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input'; // Keeping this as per outline, though not used in the final JSX
 import { Textarea } from '@/components/ui/textarea';
-import { showSuccess, showError } from '../utils/notifications';
-import { useTranslation } from '../i18n/LanguageContext';
+import { addDocument } from '@/utils/firestore';
+
 import { trackBookingStart, trackBookingComplete } from '../analytics/GoogleAnalytics'; // New import
+import { useAppContext } from '../context/AppContext';
+// Keeping this as per outline, though not used in the final JSX
+
+import { useTranslation } from '../i18n/LanguageContext';
+import { showSuccess, showError } from '../utils/notifications';
+
 
 export default function BookingForm({
   city,
@@ -18,6 +24,8 @@ export default function BookingForm({
   onSuccess,
 }) {
   const { t, language } = useTranslation();
+  const { user } = useAppContext();
+  const navigate = useNavigate();
   const [notes, setNotes] = useState('');
   const [email, setEmail] = useState(''); // Keeping this as per outline, though not used in the final JSX
   const queryClient = useQueryClient();
@@ -32,7 +40,12 @@ export default function BookingForm({
         selectedServices
       );
 
-      const booking = await base44.entities.Booking.create(bookingData);
+      const bookingId = await addDocument('bookings', {
+        ...bookingData,
+        created_date: new Date().toISOString(),
+      });
+
+      const booking = { id: bookingId, ...bookingData };
 
       //  Track booking completion
       if (booking) {
@@ -66,14 +79,17 @@ export default function BookingForm({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const user = await base44.auth.me().catch(() => null);
-
     if (!user) {
-      base44.auth.redirectToLogin();
+      showError(
+        language === 'ar' ? 'تسجيل الدخول مطلوب' : 'Login Required',
+        language === 'ar' ? 'يرجى تسجيل الدخول للمتابعة' : 'Please log in to continue'
+      );
+      navigate('/login');
       return;
     }
 
     const bookingData = {
+      user_id: user.uid,
       traveler_email: user.email,
       city,
       start_date: startDate,

@@ -1,19 +1,6 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate, useLocation } from 'react-router-dom';
-import {
-  getDocument,
-  getAllDocuments,
-  subscribeToMessages,
-  sendMessageToConversation,
-  markMessagesAsRead,
-  updateDocument,
-  queryDocuments,
-  addDocument,
-} from '@/utils/firestore';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Send,
   Loader2,
@@ -30,10 +17,13 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
-import MessageBubble from './MessageBubble';
-import TypingIndicator from './TypingIndicator';
-import MessageStatus from './MessageStatus';
-import { format } from 'date-fns';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -47,14 +37,27 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { getUserDisplayName } from '../utils/userHelpers';
-import { toast } from 'sonner';
-import BookingServicesDisplay from '../booking/BookingServicesDisplay';
-import { motion, AnimatePresence } from 'framer-motion';
 import { createPageUrl } from '@/utils';
+import {
+  getDocument,
+  getAllDocuments,
+  subscribeToMessages,
+  sendMessageToConversation,
+  markMessagesAsRead,
+  updateDocument,
+  queryDocuments,
+  addDocument,
+} from '@/utils/firestore';
+
+import BookingServicesDisplay from '../booking/BookingServicesDisplay';
+import { getUserDisplayName } from '../utils/userHelpers';
+
+import MessageBubble from './MessageBubble';
+import MessageStatus from './MessageStatus';
+import TypingIndicator from './TypingIndicator';
 
 const SUPPORTED_LANGUAGES = [
   { code: 'ar', name: 'العربية', flag: '🇸🇦' },
@@ -79,7 +82,7 @@ const detectBrowserLanguage = () => {
 
     return 'en';
   } catch (error) {
-    console.warn('⚠️ [Chat] Failed to detect browser language:', error);
+    console.warn(' [Chat] Failed to detect browser language:', error);
     return 'en';
   }
 };
@@ -138,7 +141,7 @@ export default function ConversationView({ conversationId, currentUser, onBack }
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
     }
   }, [messageText]);
 
@@ -220,7 +223,7 @@ export default function ConversationView({ conversationId, currentUser, onBack }
     });
 
     return () => {
-      console.log('📡 Cleaning up messages subscription');
+      console.log('Cleaning up messages subscription');
       unsubscribe();
     };
   }, [conversationId, currentUser.email]);
@@ -308,7 +311,7 @@ export default function ConversationView({ conversationId, currentUser, onBack }
     queryKey: ['bookingForConvo', conversation?.booking_id],
     queryFn: async () => {
       if (!conversation?.booking_id) return null;
-      return await getDocument('bookings', conversation.booking_id);
+      return getDocument('bookings', conversation.booking_id);
     },
     enabled: !!conversation?.booking_id,
   });
@@ -353,7 +356,7 @@ export default function ConversationView({ conversationId, currentUser, onBack }
 
         return Array.isArray(bookingOffers) ? bookingOffers : [];
       } catch (error) {
-        console.warn('⚠️ Could not fetch offers for booking:', error.message);
+        console.warn(' Could not fetch offers for booking:', error.message);
         return [];
       }
     },
@@ -445,7 +448,7 @@ export default function ConversationView({ conversationId, currentUser, onBack }
         attachments: tempMessage.attachments,
       });
 
-      console.log('✅ Message sent:', messageId);
+      console.log(' Message sent:', messageId);
 
       // Update local state with the message ID
       setLocalMessages((prev) =>
@@ -546,7 +549,7 @@ export default function ConversationView({ conversationId, currentUser, onBack }
         updated_date: new Date().toISOString(),
       });
 
-      console.log('✅ Offer created:', offerId);
+      console.log(' Offer created:', offerId);
 
       // Send message about the offer
       await sendMessageToConversation(conversation.id, {
@@ -684,7 +687,7 @@ export default function ConversationView({ conversationId, currentUser, onBack }
         );
       }
 
-      console.log('❌ Declining offer:', offerId);
+      console.log('Declining offer:', offerId);
 
       // Update offer status to declined
       await updateDocument('offers', offerId, {

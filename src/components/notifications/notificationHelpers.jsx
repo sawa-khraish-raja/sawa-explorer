@@ -1,4 +1,5 @@
 import { toast } from 'sonner';
+
 import { createNotification as createFirestoreNotification } from '@/utils/firestore';
 
 /**
@@ -16,13 +17,6 @@ export async function createNotification({
   related_conversation_id,
 }) {
   try {
-    console.log('🔔 Creating notification:', {
-      recipient_email,
-      type,
-      title,
-      message,
-    });
-
     //  Validate required fields
     if (!recipient_email) {
       console.error(' Cannot create notification: missing recipient_email');
@@ -117,7 +111,7 @@ export const NOTIFICATION_TEMPLATES = {
   }),
 
   MESSAGE_RECEIVED: (conversationId, senderName) => ({
-    title: '💬 New Message',
+    title: 'New Message',
     message: `You have a new message from ${senderName}`,
     link: `/Messages?conversation_id=${conversationId}`,
     type: 'message_received',

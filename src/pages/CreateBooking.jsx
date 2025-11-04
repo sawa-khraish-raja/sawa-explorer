@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createPageUrl } from '@/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Loader2, Send, User, CheckCircle2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import TravelerInfoForm from '../components/booking/TravelerInfoForm';
-import ProgressBar from '../components/booking/ProgressBar';
+
 import { useAppContext } from '@/components/context/AppContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { createPageUrl } from '@/utils';
 import { addDocument, queryDocuments, createNotification } from '@/utils/firestore';
+
+import ProgressBar from '../components/booking/ProgressBar';
+import TravelerInfoForm from '../components/booking/TravelerInfoForm';
 
 export default function CreateBooking() {
   const navigate = useNavigate();
@@ -44,12 +45,12 @@ export default function CreateBooking() {
     queryKey: ['cityHosts', bookingData?.city],
     queryFn: async () => {
       if (!bookingData?.city) return [];
-      console.log('🔍 Fetching hosts for city:', bookingData.city);
+      console.log(' Fetching hosts for city:', bookingData.city);
 
       const allUsers = await queryDocuments('users', [['host_approved', '==', true]]);
       const cityHosts = allUsers.filter((host) => host.city === bookingData.city);
 
-      console.log(`✅ Found ${cityHosts.length} hosts in ${bookingData.city}`);
+      console.log(` Found ${cityHosts.length} hosts in ${bookingData.city}`);
       return cityHosts;
     },
     enabled: !!bookingData?.city,
@@ -77,12 +78,11 @@ export default function CreateBooking() {
         updated_date: new Date().toISOString(),
       });
 
-      console.log('✅ Booking created with ID:', bookingId);
+      console.log(' Booking created with ID:', bookingId);
       return { id: bookingId, ...bookingPayload };
     },
     onSuccess: async (newBooking) => {
-      console.log('✅ Booking created successfully:', newBooking);
-      console.log('📧 User email for booking:', newBooking.traveler_email);
+      console.log(' Booking created successfully:', newBooking);
 
       const message = selectedHostId
         ? 'Your booking request has been sent to the selected host!'
@@ -95,8 +95,6 @@ export default function CreateBooking() {
         const hostsToNotify = selectedHostId
           ? availableHosts.filter((h) => h.id === selectedHostId)
           : availableHosts;
-
-        console.log(`📧 Sending notifications to ${hostsToNotify.length} host(s)`);
 
         // Send notifications to hosts
         for (const host of hostsToNotify) {
@@ -118,9 +116,9 @@ export default function CreateBooking() {
           await createNotification(notificationData);
         }
 
-        console.log(`✅ Sent ${hostsToNotify.length} notification(s)`);
+        console.log(` Sent ${hostsToNotify.length} notification(s)`);
       } catch (error) {
-        console.error('❌ Failed to send booking request notifications:', error);
+        console.error('Failed to send booking request notifications:', error);
         // Don't block user flow, but log the error
       }
 
@@ -129,7 +127,7 @@ export default function CreateBooking() {
     },
     onError: (error) => {
       toast.error('There was a problem sending your request. Please try again.');
-      console.error('❌ Booking Creation Error:', error);
+      console.error('Booking Creation Error:', error);
     },
   });
 
@@ -199,9 +197,7 @@ export default function CreateBooking() {
                           <Send className='w-5 h-5 text-[#330066]' />
                         </div>
                         <div>
-                          <h3 className='font-semibold text-gray-900'>
-                            Broadcast to All Hosts
-                          </h3>
+                          <h3 className='font-semibold text-gray-900'>Broadcast to All Hosts</h3>
                           <p className='text-sm text-gray-600'>
                             Get offers from all {availableHosts.length} available hosts
                           </p>
@@ -243,9 +239,7 @@ export default function CreateBooking() {
                             </h3>
                             <p className='text-sm text-gray-600'>{host.email}</p>
                             {host.bio && (
-                              <p className='text-sm text-gray-500 mt-1 line-clamp-1'>
-                                {host.bio}
-                              </p>
+                              <p className='text-sm text-gray-500 mt-1 line-clamp-1'>{host.bio}</p>
                             )}
                           </div>
                         </div>

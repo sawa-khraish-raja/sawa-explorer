@@ -1,11 +1,5 @@
-import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 import {
   UserPlus,
   Loader2,
@@ -19,10 +13,19 @@ import {
   MapPin,
   User,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { createPageUrl } from '@/utils';
-import { format } from 'date-fns';
+import { getAllDocuments, addDocument } from '@/utils/firestore';
+
+import { useAppContext } from '../components/context/AppContext';
 
 export default function OfficeAddHost() {
   const navigate = useNavigate();
@@ -37,7 +40,7 @@ export default function OfficeAddHost() {
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: async () => {
-      const currentUser = await base44.auth.me();
+      const currentUser = await useAppContext().user;
       if (!currentUser || (currentUser.role_type !== 'office' && currentUser.role !== 'office')) {
         toast.error('Access denied');
         navigate(createPageUrl('Home'));
@@ -52,7 +55,7 @@ export default function OfficeAddHost() {
   const { data: office, isLoading: officeLoading } = useQuery({
     queryKey: ['office', user?.email],
     queryFn: async () => {
-      const offices = await base44.entities.Office.list();
+      const offices = await getAllDocuments('offices');
       const myOffice = offices.find((o) => o.email?.toLowerCase() === user.email.toLowerCase());
       if (!myOffice) {
         toast.error('Office profile not found');
@@ -68,7 +71,7 @@ export default function OfficeAddHost() {
   const { data: requests = [], isLoading: requestsLoading } = useQuery({
     queryKey: ['hostRequests', office?.name],
     queryFn: async () => {
-      const allRequests = await base44.entities.HostRequest.list('-created_date');
+      const allRequests = await getAllDocuments('hostrequests');
       return allRequests.filter((r) => r.office_name === office.name);
     },
     enabled: !!office?.name,
@@ -78,21 +81,24 @@ export default function OfficeAddHost() {
   // Submit host request
   const submitRequestMutation = useMutation({
     mutationFn: async (formData) => {
-      console.log('📝 Creating host request:', formData);
+      console.log('Creating host request:', formData);
 
-      const newRequest = await base44.entities.HostRequest.create({
-        office_name: office.name,
-        office_email: office.email,
-        host_full_name: formData.host_full_name,
-        host_email: formData.host_email,
-        host_phone: formData.host_phone,
-        host_whatsapp: formData.host_whatsapp || formData.host_phone,
-        host_city: office.city,
-        host_bio: formData.host_bio || '',
-        experience_years: 1,
-        languages: ['English', 'Arabic'],
-        services_offered: [],
-        status: 'pending',
+      const newRequest = await addDocument('hostrequests', {
+        ...{
+          office_name: office.name,
+          office_email: office.email,
+          host_full_name: formData.host_full_name,
+          host_email: formData.host_email,
+          host_phone: formData.host_phone,
+          host_whatsapp: formData.host_whatsapp || formData.host_phone,
+          host_city: office.city,
+          host_bio: formData.host_bio || '',
+          experience_years: 1,
+          languages: ['English', 'Arabic'],
+          services_offered: [],
+          status: 'pending',
+        },
+        created_date: new Date().toISOString(),
       });
 
       console.log(' Request created:', newRequest.id);
@@ -395,7 +401,7 @@ export default function OfficeAddHost() {
                       <li>Host appears on your dashboard</li>
                     </ol>
                     <p className='mt-3 font-bold text-blue-800'>
-                      ⚠️ The host must be registered and approved by admin first!
+                      The host must be registered and approved by admin first!
                     </p>
                   </div>
                 </div>

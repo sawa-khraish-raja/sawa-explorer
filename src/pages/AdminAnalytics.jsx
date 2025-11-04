@@ -1,12 +1,8 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import AdminLayout from '../components/admin/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { subDays, startOfMonth, endOfMonth } from 'date-fns';
 import {
   Loader2,
   TrendingUp,
-  TrendingDown,
   Users,
   DollarSign,
   Calendar,
@@ -15,27 +11,32 @@ import {
   Building2,
   UserCheck,
 } from 'lucide-react';
-import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getAllDocuments } from '@/utils/firestore';
+
+import AdminLayout from '../components/admin/AdminLayout';
+
 
 export default function AdminAnalytics() {
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: () => getAllDocuments('users'),
   });
 
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
     queryKey: ['allBookings'],
-    queryFn: () => base44.entities.Booking.list('-created_date'),
+    queryFn: () => getAllDocuments('bookings'),
   });
 
   const { data: conversations = [], isLoading: conversationsLoading } = useQuery({
     queryKey: ['allConversations'],
-    queryFn: () => base44.entities.Conversation.list(),
+    queryFn: () => getAllDocuments('conversations'),
   });
 
   const { data: offers = [], isLoading: offersLoading } = useQuery({
     queryKey: ['allOffers'],
-    queryFn: () => base44.entities.Offer.list(),
+    queryFn: () => getAllDocuments('offers'),
   });
 
   if (usersLoading || bookingsLoading || conversationsLoading || offersLoading) {

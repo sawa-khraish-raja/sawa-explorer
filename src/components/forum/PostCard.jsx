@@ -1,9 +1,6 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
+import { motion } from 'framer-motion';
 import {
   Heart,
   MessageCircle,
@@ -13,12 +10,14 @@ import {
   Video,
   MapPin,
   Users,
-  DollarSign,
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { motion } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { useNavigate } from 'react-router-dom';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { createPageUrl } from '@/utils';
+import { queryDocuments } from '@/utils/firestore';
 
 export default function PostCard({ post }) {
   const navigate = useNavigate();
@@ -27,9 +26,9 @@ export default function PostCard({ post }) {
   const { data: authorUser } = useQuery({
     queryKey: ['user', post.author_email],
     queryFn: async () => {
-      const users = await base44.entities.User.filter({
-        email: post.author_email,
-      });
+      const users = await queryDocuments('users', [
+        ['email', '==', post.author_email],
+      ]);
       return users[0] || null;
     },
     staleTime: 300000, // 5 minutes

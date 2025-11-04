@@ -1,9 +1,5 @@
-import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { formatDistanceToNow, format } from 'date-fns';
 import {
   MessageSquare,
   Loader2,
@@ -11,19 +7,25 @@ import {
   MapPin,
   Calendar,
   Eye,
-  CheckCircle,
   DollarSign,
 } from 'lucide-react';
-import { formatDistanceToNow, format } from 'date-fns';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { BookingID } from '../components/common/BookingID';
-import { useSawaTranslation } from '../components/chat/useSawaTranslation';
+
+
 import { normLang } from '@/components/i18n/i18nVoice';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { createPageUrl } from '@/utils';
+import { getAllDocuments, queryDocuments, getDocument } from '@/utils/firestore';
+
 import MessageBubble from '../components/chat/MessageBubble';
+import { useSawaTranslation } from '../components/chat/useSawaTranslation';
 
 export default function OfficeMessages() {
+  const { user } = useAppContext();
   const navigate = useNavigate();
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [showConversationDialog, setShowConversationDialog] = useState(false);
@@ -31,15 +33,10 @@ export default function OfficeMessages() {
     normLang(localStorage.getItem('sawa_display_lang') || 'ar')
   );
 
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
-
   const { data: office } = useQuery({
     queryKey: ['office', user?.email],
     queryFn: async () => {
-      const allOffices = await base44.entities.Office.list();
+      const allOffices = await getAllDocuments('offices');
       return (allOffices || []).find(
         (o) =>
           typeof o.email === 'string' &&
@@ -53,7 +50,7 @@ export default function OfficeMessages() {
   const { data: hosts = [] } = useQuery({
     queryKey: ['officeHosts', office?.name],
     queryFn: async () => {
-      const allRequests = await base44.entities.HostRequest.list('-created_date');
+      const allRequests = await getAllDocuments('hostrequests');
       const approvedRequests = (allRequests || []).filter(
         (r) => r.office_name === office.name && r.status === 'approved'
       );
@@ -71,7 +68,7 @@ export default function OfficeMessages() {
     queryFn: async () => {
       if (!hosts.length) return [];
       const hostEmails = hosts.map((h) => h.email);
-      const allConvos = await base44.entities.Conversation.list('-last_message_timestamp');
+      const allConvos = await getAllDocuments('conversations', '-last_message_timestamp');
       return (allConvos || []).filter(
         (c) =>
           Array.isArray(c.host_emails) && c.host_emails.some((email) => hostEmails.includes(email))
@@ -84,10 +81,9 @@ export default function OfficeMessages() {
     queryKey: ['conversationMessages', selectedConversation?.id],
     queryFn: async () => {
       if (!selectedConversation) return [];
-      return await base44.entities.Message.filter(
-        {
-          conversation_id: selectedConversation.id,
-        },
+      return queryDocuments(
+        'messages',
+        [['conversation_id', '==', selectedConversation.id]],
         'created_date'
       );
     },
@@ -104,7 +100,7 @@ export default function OfficeMessages() {
     queryKey: ['conversationBooking', selectedConversation?.booking_id],
     queryFn: async () => {
       if (!selectedConversation?.booking_id) return null;
-      return await base44.entities.Booking.get(selectedConversation.booking_id);
+      return getDocument('bookings', selectedConversation.booking_id);
     },
     enabled: !!selectedConversation?.booking_id,
   });
@@ -113,9 +109,8 @@ export default function OfficeMessages() {
     queryKey: ['conversationOffers', selectedConversation?.booking_id],
     queryFn: async () => {
       if (!selectedConversation?.booking_id) return [];
-      return await base44.entities.Offer.filter({
-        booking_id: selectedConversation.booking_id,
-      });
+      return queryDocuments('offers', [['booking_id', '==', selectedConversation.booking_id,
+      ]]);
     },
     enabled: !!selectedConversation?.booking_id,
   });
