@@ -25,4 +25,10 @@ dist-ssr
 
 # Environment and secrets
 .env
+.env.local
+.env.development
+.env.production
+.env.*.local
 serviceAccountKey.json
+firebase-debug.log
+.firebase/

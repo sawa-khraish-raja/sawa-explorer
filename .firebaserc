@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "sawa-explorer"
+    "default": "sawa-explorer",
+    "dev": "sawa-explorer-dev",
+    "prd": "sawa-explorer"
   }
 }
