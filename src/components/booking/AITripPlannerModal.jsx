@@ -387,9 +387,10 @@ export default function AITripPlannerModal({ isOpen, onClose, city }) {
     onSuccess: async (data) => {
       setPlan(data);
       setStep(2);
-      await addDocument('aicaches', { ...{
+      await addDocument('aicaches', {
         query_hash: cacheKey,
-        payload_json: JSON.stringify(data, created_date: new Date().toISOString() }),
+        payload_json: JSON.stringify(data),
+        created_date: new Date().toISOString(),
         expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
       });
     },
