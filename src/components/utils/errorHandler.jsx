@@ -73,10 +73,11 @@ export const withErrorBoundary = (Component) => {
 
 export const logError = async (section, message, details = {}) => {
   try {
-    await addDocument('errorlogs', { ...{
+    await addDocument('errorlogs', {
       section,
       message,
-      details: JSON.stringify(details, created_date: new Date().toISOString() }),
+      details: JSON.stringify(details),
+      created_date: new Date().toISOString()
     });
   } catch (e) {
     // Silent fail

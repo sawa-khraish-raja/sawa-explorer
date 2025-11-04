@@ -501,8 +501,7 @@ export default function HostConversationView({
       setUploadingImages(true);
       try {
         for (const imageObj of imagesToSend) {
-          const { file_url } = await uploadImage(imageObj.file,
-          , 'uploads');
+          const { file_url } = await uploadImage(imageObj.file, 'uploads');
           uploadedUrls.push(file_url);
         }
       } catch (error) {

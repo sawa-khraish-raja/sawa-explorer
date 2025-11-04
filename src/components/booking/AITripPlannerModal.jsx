@@ -311,8 +311,6 @@ export default function AITripPlannerModal({ isOpen, onClose, city }) {
   const [plan, setPlan] = useState(null);
   const [regenerationCount, setRegenerationCount] = useState(0);
 
-  });
-
   const cacheKey = useMemo(() => {
     if (!request.city || !request.interests) return null;
     return `plan-${request.city}-${request.days}-${request.interests.sort().join('-')}-${request.budget}-${request.language}`;
