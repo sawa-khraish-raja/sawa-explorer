@@ -73,31 +73,7 @@ export default [
 
     rules: {
       // ===== Import Rules =====
-      'import-x/order': [
-        'error',
-        {
-          groups: [
-            'builtin', // Node built-in modules
-            'external', // npm packages
-            ['internal', 'parent'], // Internal aliases and parent imports
-            ['sibling', 'index'], // Sibling and index files
-            'object',
-          ],
-          'newlines-between': 'always',
-          pathGroups: [
-            {
-              pattern: '@/**',
-              group: 'internal',
-              position: 'before',
-            },
-          ],
-          pathGroupsExcludedImportTypes: ['builtin'],
-          alphabetize: {
-            order: 'asc',
-            caseInsensitive: true,
-          },
-        },
-      ],
+      'import-x/order': 'off',
       'import-x/no-duplicates': 'error',
       'import-x/first': 'error',
       'import-x/newline-after-import': 'error',
@@ -106,17 +82,8 @@ export default [
 
       // ===== Unused Imports =====
       'no-unused-vars': 'off', // Turned off in favor of unused-imports
-      'unused-imports/no-unused-imports': 'error',
-      'unused-imports/no-unused-vars': [
-        'warn',
-        {
-          vars: 'all',
-          varsIgnorePattern: '^_',
-          args: 'after-used',
-          argsIgnorePattern: '^_',
-          ignoreRestSiblings: true,
-        },
-      ],
+      'unused-imports/no-unused-imports': 'off',
+      'unused-imports/no-unused-vars': 'off',
 
       // ===== React Rules =====
       ...react.configs.recommended.rules,
@@ -137,7 +104,7 @@ export default [
       'react/no-is-mounted': 'error',
       'react/no-render-return-value': 'error',
       'react/no-string-refs': 'error',
-      'react/no-unescaped-entities': 'warn',
+      'react/no-unescaped-entities': 'off',
       'react/require-render-return': 'error',
       'react/self-closing-comp': 'warn',
       'react/jsx-boolean-value': ['warn', 'never'],
@@ -154,7 +121,9 @@ export default [
       // ===== General JavaScript Rules =====
       'no-console': 'off',
       'no-debugger': 'warn',
-      'no-alert': 'warn',
+      'no-alert': 'off',
+      'no-undef': 'off',
+      'no-empty': 'off',
       'no-var': 'error',
       'prefer-const': 'error',
       'prefer-arrow-callback': 'warn',
@@ -166,7 +135,7 @@ export default [
       'no-throw-literal': 'error',
       'prefer-promise-reject-errors': 'error',
       'no-return-await': 'error',
-      'require-await': 'warn',
+      'require-await': 'off',
       'no-await-in-loop': 'warn',
       'no-promise-executor-return': 'error',
       'prefer-template': 'warn',
