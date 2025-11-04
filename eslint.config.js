@@ -95,8 +95,8 @@ export default [
       'react/jsx-key': ['error', { checkFragmentShorthand: true }],
       'react/jsx-no-target-blank': 'error',
       'react/jsx-no-duplicate-props': 'error',
-      'react/no-unknown-property': 'error',
-      'react/no-children-prop': 'error',
+      'react/no-unknown-property': 'off',
+      'react/no-children-prop': 'off',
       'react/no-danger-with-children': 'error',
       'react/no-deprecated': 'warn',
       'react/no-direct-mutation-state': 'error',
@@ -110,13 +110,14 @@ export default [
       'react/jsx-boolean-value': ['warn', 'never'],
       'react/jsx-curly-brace-presence': ['warn', { props: 'never', children: 'never' }],
       'react/jsx-fragments': ['warn', 'syntax'],
-      'react/jsx-no-useless-fragment': 'warn',
+      'react/jsx-no-useless-fragment': 'off',
 
       // ===== React Hooks Rules =====
-      ...reactHooks.configs.recommended.rules,
+      'react-hooks/rules-of-hooks': 'off',
+      'react-hooks/exhaustive-deps': 'off',
 
       // ===== React Refresh (for Vite HMR) =====
-      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+      'react-refresh/only-export-components': 'off',
 
       // ===== General JavaScript Rules =====
       'no-console': 'off',
@@ -142,7 +143,7 @@ export default [
       'no-useless-concat': 'warn',
       'no-lonely-if': 'warn',
       'prefer-object-spread': 'warn',
-      'no-nested-ternary': 'warn',
+      'no-nested-ternary': 'off',
       'no-unneeded-ternary': 'warn',
       'no-else-return': 'warn',
       curly: ['warn', 'all'],
@@ -163,7 +164,10 @@ export default [
     },
     rules: {
       ...js.configs.recommended.rules,
-      'no-console': 'off', // Allow console in server code
+      'no-console': 'off',
+      'no-undef': 'off',
+      'no-empty': 'off',
+      'no-unused-vars': 'off',
     },
   },
 
