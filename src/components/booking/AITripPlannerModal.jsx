@@ -337,10 +337,9 @@ export default function AITripPlannerModal({ isOpen, onClose, city }) {
     queryKey: ['suggestedHosts', city],
     queryFn: () =>
       queryDocuments('host_profiles', [
-        { city: city, is_active: true },
-        '-rating', // Order by rating descending
-        3 // Limit to 3
-      ),
+        ['city', '==', city],
+        ['is_active', '==', true]
+      ]),
     enabled: step === 2, // Only fetch when on the result step
   });
 
