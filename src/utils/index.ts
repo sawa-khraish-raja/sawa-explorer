@@ -2,9 +2,9 @@ export function createPageUrl(pageName: string) {
   // Split page name and query parameters
   const [page, queryString] = pageName.split('?');
 
-  // Lowercase only the page name, preserve query parameters as-is
-  const lowercasedPage = page.toLowerCase().replace(/ /g, '-');
+  // Replace spaces with dashes, but preserve the original case
+  const formattedPage = page.replace(/ /g, '-');
 
   // Reconstruct URL with original query parameters
-  return queryString ? `/${lowercasedPage}?${queryString}` : `/${lowercasedPage}`;
+  return queryString ? `/${formattedPage}?${queryString}` : `/${formattedPage}`;
 }
