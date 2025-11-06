@@ -1,9 +1,7 @@
 name: Deploy to Prd
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -61,7 +59,8 @@ jobs:
         run: |
           echo "Deployment to PRD environment completed successfully"
           echo "Environment: Prd"
-          echo "Branch: main"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Triggered by: ${{ github.actor }}"
           echo "Firebase Project: sawa-explorer"
           echo "URL: https://sawa-explorer.web.app"
 

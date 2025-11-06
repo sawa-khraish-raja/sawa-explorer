@@ -2,8 +2,9 @@ name: Deploy to Dev
 
 on:
   push:
-    branches:
-      - dev
+    branches-ignore:
+      - main
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -55,5 +56,6 @@ jobs:
         run: |
           echo "Deployment to DEV environment completed successfully"
           echo "Environment: Dev"
-          echo "Branch: dev"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Triggered by: ${{ github.actor }}"
           echo "Firebase Project: sawa-explorer-dev"
