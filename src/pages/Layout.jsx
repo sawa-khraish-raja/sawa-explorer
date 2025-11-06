@@ -281,7 +281,7 @@ const AppContent = memo(({ children, currentPageName }) => {
   const handleLogout = async () => {
     try {
       await logout();
-      // No reload needed - React state will update automatically
+      navigate('/', { replace: true });
     } catch (error) {
       console.error('Logout error:', error);
     }

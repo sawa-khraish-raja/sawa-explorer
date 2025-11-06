@@ -167,7 +167,10 @@ export default function PartnerLayout({ children }) {
             </Button>
             <Button
               variant='ghost'
-              onClick={() => logout()}
+              onClick={async () => {
+                await logout();
+                navigate('/', { replace: true });
+              }}
               className='flex items-center gap-2 text-gray-600 hover:text-gray-900'
             >
               <LogOut className='w-5 h-5' />
