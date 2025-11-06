@@ -1,10 +1,19 @@
+import { useState } from 'react';
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, Save, Upload, Eye, EyeOff, Film, Loader2 } from 'lucide-react';
-import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -30,6 +39,7 @@ export default function AdminHeroSlides() {
   const [selectedCity, setSelectedCity] = useState('Damascus');
   const [editingSlide, setEditingSlide] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [slideToDelete, setSlideToDelete] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: slides = [], isLoading } = useQuery({
@@ -549,11 +559,7 @@ export default function AdminHeroSlides() {
                         <Button
                           size='sm'
                           variant='destructive'
-                          onClick={() => {
-                            if (confirm('Delete this slide?')) {
-                              deleteMutation.mutate(slide.id);
-                            }
-                          }}
+                          onClick={() => setSlideToDelete(slide)}
                         >
                           <Trash2 className='w-4 h-4' />
                         </Button>
@@ -566,6 +572,33 @@ export default function AdminHeroSlides() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={!!slideToDelete} onOpenChange={() => setSlideToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Slide</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this slide? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant='outline' onClick={() => setSlideToDelete(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant='destructive'
+              onClick={() => {
+                if (slideToDelete) {
+                  deleteMutation.mutate(slideToDelete.id);
+                  setSlideToDelete(null);
+                }
+              }}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }

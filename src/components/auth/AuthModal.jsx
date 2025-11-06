@@ -1,5 +1,5 @@
 import { Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -29,6 +29,24 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'login' }) {
   const { login, signup } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    return () => {
+      document.body.style.pointerEvents = '';
+      document.body.style.overflow = '';
+      const elements = document.querySelectorAll('[data-radix-dialog-overlay]');
+      elements.forEach(el => el.remove());
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setTimeout(() => {
+        document.body.style.pointerEvents = '';
+        document.body.style.overflow = '';
+      }, 300);
+    }
+  }, [isOpen]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
@@ -42,19 +60,16 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'login' }) {
     setLoading(true);
     try {
       await login(email, password);
-      setLoading(false); // Stop loading immediately
-      setSuccess('Login successful!');
+      setLoading(false);
+      onClose();
+      resetForm();
       const returnUrl = firebaseAuthAdapter.getReturnUrl();
       if (returnUrl) {
         firebaseAuthAdapter.clearReturnUrl();
         navigate(returnUrl, { replace: true });
       }
-      setTimeout(() => {
-        onClose();
-        resetForm();
-      }, 500);
     } catch (err) {
-      setLoading(false); // Stop loading on error
+      setLoading(false);
       setError(err.message || 'Failed to login');
     }
   };
@@ -85,23 +100,18 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'login' }) {
       console.log('Modal: Calling signup function...');
       await signup(email, password, fullName);
       console.log('Modal: Signup function returned');
-      setLoading(false); // Stop loading immediately
+      setLoading(false);
       console.log('Modal: Loading stopped');
-      setSuccess('Account created successfully!');
+      onClose();
+      resetForm();
       const returnUrl = firebaseAuthAdapter.getReturnUrl();
       if (returnUrl) {
         firebaseAuthAdapter.clearReturnUrl();
         navigate(returnUrl, { replace: true });
       }
-      console.log('Modal: Success message set');
-      setTimeout(() => {
-        console.log('Modal: Closing modal...');
-        onClose();
-        resetForm();
-      }, 500);
     } catch (err) {
       console.error('Modal: Signup error:', err);
-      setLoading(false); // Stop loading on error
+      setLoading(false);
       setError(err.message || 'Failed to create account');
     }
   };
@@ -125,6 +135,8 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'login' }) {
     resetForm();
     onClose();
   };
+
+  if (!isOpen) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
