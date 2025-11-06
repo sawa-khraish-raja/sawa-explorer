@@ -507,16 +507,23 @@ const QuickActionButton = React.memo(
 
 QuickActionButton.displayName = 'QuickActionButton';
 
-const ActivityItem = React.memo(({ activity }) => (
-  <div className='flex items-start gap-2 sm:gap-3 p-2 sm:p-3 bg-[#E6E6FF]/30 rounded-lg hover:bg-[#E6E6FF]/50 transition-colors'>
-    <div className='w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#9933CC] mt-1.5 sm:mt-2 flex-shrink-0' />
-    <div className='flex-1 min-w-0'>
-      <p className='text-xs sm:text-sm font-medium text-gray-900 break-words'>{activity.action}</p>
-      <p className='text-[10px] sm:text-xs text-gray-600 mt-0.5 sm:mt-1'>
-        {format(new Date(activity.timestamp), 'PPp')}
-      </p>
+const ActivityItem = React.memo(({ activity }) => {
+  const isValidDate = activity.timestamp && !isNaN(new Date(activity.timestamp).getTime());
+  const formattedDate = isValidDate
+    ? format(new Date(activity.timestamp), 'PPp')
+    : 'Date not available';
+
+  return (
+    <div className='flex items-start gap-2 sm:gap-3 p-2 sm:p-3 bg-[#E6E6FF]/30 rounded-lg hover:bg-[#E6E6FF]/50 transition-colors'>
+      <div className='w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#9933CC] mt-1.5 sm:mt-2 flex-shrink-0' />
+      <div className='flex-1 min-w-0'>
+        <p className='text-xs sm:text-sm font-medium text-gray-900 break-words'>{activity.action}</p>
+        <p className='text-[10px] sm:text-xs text-gray-600 mt-0.5 sm:mt-1'>
+          {formattedDate}
+        </p>
+      </div>
     </div>
-  </div>
-));
+  );
+});
 
 ActivityItem.displayName = 'ActivityItem';
