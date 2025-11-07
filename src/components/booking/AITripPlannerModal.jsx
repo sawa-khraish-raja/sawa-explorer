@@ -1,7 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useAppContext } from '../context/AppContext';
+import { UseAppContext } from '../context/AppContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import {
+  getAllDocuments,
+  queryDocuments,
+  getDocument,
+  addDocument,
+  updateDocument,
+  deleteDocument,
+} from '@/utils/firestore';
 import { uploadImage, uploadVideo } from '@/utils/storage';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -54,7 +61,7 @@ const logError = async (message, details) => {
       level: 'error',
       message: message,
       meta_json: JSON.stringify(details),
-      created_date: new Date().toISOString()
+      created_date: new Date().toISOString(),
     });
   } catch (e) {
     console.error('Failed to log error:', e);
@@ -304,7 +311,7 @@ const PlanResult = ({ plan, onBack, hosts }) => {
 };
 
 export default function AITripPlannerModal({ isOpen, onClose, city }) {
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
   const [request, setRequest] = useState({ city });
@@ -320,7 +327,7 @@ export default function AITripPlannerModal({ isOpen, onClose, city }) {
     queryKey: ['aiCache', cacheKey],
     queryFn: async () => {
       if (!cacheKey) return null;
-      const results = await queryDocuments('aicaches', [['query_hash', '==', cacheKey ]]);
+      const results = await queryDocuments('aicaches', [['query_hash', '==', cacheKey]]);
       if (results && results.length > 0) {
         const cached = results[0];
         if (new Date(cached.expires_at) > new Date()) {
@@ -338,7 +345,7 @@ export default function AITripPlannerModal({ isOpen, onClose, city }) {
     queryFn: () =>
       queryDocuments('host_profiles', [
         ['city', '==', city],
-        ['is_active', '==', true]
+        ['is_active', '==', true],
       ]),
     enabled: step === 2, // Only fetch when on the result step
   });

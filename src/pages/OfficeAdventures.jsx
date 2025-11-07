@@ -46,7 +46,7 @@ import { getAllDocuments, addDocument, updateDocument, deleteDocument } from '@/
 
 import AdventureForm from '../components/adventures/AdventureForm';
 import { calculateAdventureCommissions } from '../components/adventures/commissionCalculator';
-import { useAppContext } from '../components/context/AppContext';
+import { UseAppContext } from '../components/context/AppContext';
 
 export default function OfficeAdventures() {
   const navigate = useNavigate();
@@ -60,7 +60,7 @@ export default function OfficeAdventures() {
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: async () => {
-      const currentUser = await useAppContext().user;
+      const currentUser = await UseAppContext().user;
       if (!currentUser || currentUser.role_type !== 'office') {
         navigate(createPageUrl('Home'));
         return null;
@@ -124,10 +124,12 @@ export default function OfficeAdventures() {
       };
 
       if (editingAdventure) {
-        return updateDocument('adventures', editingAdventure.id, { ...dataToSave, updated_date: new Date().toISOString() });
-      } 
-        return addDocument('adventures', { ...dataToSave, created_date: new Date().toISOString() });
-      
+        return updateDocument('adventures', editingAdventure.id, {
+          ...dataToSave,
+          updated_date: new Date().toISOString(),
+        });
+      }
+      return addDocument('adventures', { ...dataToSave, created_date: new Date().toISOString() });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['officeAdventures'] });

@@ -16,9 +16,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'; // Added import
 import { updateDocument } from '@/utils/firestore';
 
-import { useAppContext } from '../context/AppContext';
-
-
+import { UseAppContext } from '../context/AppContext';
 
 import { ADMIN_PAGES } from './PermissionGuard';
 
@@ -27,7 +25,7 @@ const ALL_PAGES = Object.values(ADMIN_PAGES);
 
 export default function AdminPermissionsDialog({ isOpen, onClose, user }) {
   const queryClient = useQueryClient();
-  const { user: currentUser } = useAppContext();
+  const { user: currentUser } = UseAppContext();
   const [currentPermissions, setCurrentPermissions] = useState([]);
   const [accessType, setAccessType] = useState('full');
 

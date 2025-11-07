@@ -5,12 +5,12 @@ import { toast } from 'sonner';
 import { messaging } from '@/config/firebase';
 import { saveDeviceToken } from '@/utils/firestore';
 
-import { useAppContext } from '../context/AppContext';
+import { UseAppContext } from '../context/AppContext';
 
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
 export function FCMProvider({ children }) {
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const fetchedTokenRef = useRef(null);
 
   useEffect(() => {

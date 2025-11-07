@@ -14,7 +14,7 @@ import { createPageUrl } from '@/utils';
 import { getAllDocuments, queryDocuments, addDocument } from '@/utils/firestore';
 
 import PageHero from '../common/PageHero';
-import { useAppContext } from '../context/AppContext';
+import { UseAppContext } from '../context/AppContext';
 import { useTranslation } from '../i18n/LanguageContext';
 import { showSuccess, showError } from '../utils/notifications';
 
@@ -26,7 +26,7 @@ import EventList from './EventList';
 import HostsCarousel from './HostsCarousel';
 
 export default function ImprovedBookingCity({ cityName }) {
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t, language } = useTranslation();

@@ -3,7 +3,7 @@ import { Loader2, ArrowLeft, Search, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useAppContext } from '@/components/context/AppContext';
+import { UseAppContext } from '@/components/context/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,7 +23,7 @@ export default function OfficeHosts() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
 
   const { data: office } = useQuery({
     queryKey: ['userOffice', user?.email],

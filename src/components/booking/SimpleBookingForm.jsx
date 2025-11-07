@@ -13,7 +13,7 @@ import { addDocument, queryDocuments } from '@/utils/firestore';
 
 import ServiceCard from '../common/ServiceCard';
 import { SAWA_SERVICES } from '../config/sawaServices';
-import { useAppContext } from '../context/AppContext';
+import { UseAppContext } from '../context/AppContext';
 
 import SimpleDatePicker from './SimpleDatePicker';
 
@@ -25,7 +25,7 @@ export default function SimpleBookingForm({ city, onSuccess }) {
   const [children, setChildren] = useState(0);
   const [selectedServices, setSelectedServices] = useState([]);
   const [notes, setNotes] = useState('');
-  const { user, userLoading } = useAppContext();
+  const { user, userLoading } = UseAppContext();
   const requiresLogin = !user && !userLoading;
 
   // Query to check for available hosts in this city

@@ -30,12 +30,12 @@ import { Label } from '@/components/ui/label';
 import { getAllDocuments, addDocument, updateDocument } from '@/utils/firestore';
 
 import AdminLayout from '../components/admin/AdminLayout';
-import { useAppContext } from '../components/context/AppContext';
+import { UseAppContext } from '../components/context/AppContext';
 import { showNotification } from '../components/notifications/NotificationManager';
 
 export default function AdminAgencies() {
   const queryClient = useQueryClient();
-  const { user: currentUser } = useAppContext();
+  const { user: currentUser } = UseAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingAgency, setEditingAgency] = useState(null);

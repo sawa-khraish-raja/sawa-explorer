@@ -26,15 +26,12 @@ import { getUserDisplayName } from '@/components/utils/userHelpers';
 import { createPageUrl } from '@/utils';
 import { getDocument, updateDocument, queryDocuments, addDocument } from '@/utils/firestore';
 
-import { useAppContext } from '../components/context/AppContext';
-
-
-
+import { UseAppContext } from '../components/context/AppContext';
 
 export default function ForumPostDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const [newComment, setNewComment] = useState('');
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -64,12 +61,16 @@ export default function ForumPostDetail() {
   const { data: comments = [], isLoading: commentsLoading } = useQuery({
     queryKey: ['forumComments', postId],
     queryFn: async () => {
-      const allComments = await queryDocuments('forum_comments', [
-        ['post_id', '==', postId],
-        ['status', '==', 'published'],
-      ], {
-        orderBy: { field: 'created_date', direction: 'desc' }
-      });
+      const allComments = await queryDocuments(
+        'forum_comments',
+        [
+          ['post_id', '==', postId],
+          ['status', '==', 'published'],
+        ],
+        {
+          orderBy: { field: 'created_date', direction: 'desc' },
+        }
+      );
       return allComments;
     },
     enabled: !!postId,
@@ -396,9 +397,7 @@ export default function ForumPostDetail() {
             ) : (
               <div className='mb-8 text-center py-8 bg-gray-50 rounded-xl'>
                 <p className='text-gray-600 mb-4'>Log in to add a comment</p>
-                <Button onClick={() => navigate('/login')}>
-                  Log In
-                </Button>
+                <Button onClick={() => navigate('/login')}>Log In</Button>
               </div>
             )}
 

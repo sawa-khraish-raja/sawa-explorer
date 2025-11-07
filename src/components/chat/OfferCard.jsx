@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { updateDocument } from '@/utils/firestore';
 
-import { useAppContext } from '../context/AppContext';
+import { UseAppContext } from '../context/AppContext';
 import { showSuccess, showError } from '../utils/notifications';
 
 export default function OfferCard({
@@ -27,7 +27,7 @@ export default function OfferCard({
   onDecline,
   viewerType = 'traveler',
 }) {
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
 

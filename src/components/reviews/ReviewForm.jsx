@@ -9,8 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { addDocument, queryDocuments, updateDocument } from '@/utils/firestore';
 
-import { useAppContext } from '../context/AppContext';
-
+import { UseAppContext } from '../context/AppContext';
 
 const StarRating = ({ value, onChange, label, required = false }) => {
   const [hover, setHover] = useState(0);
@@ -66,7 +65,7 @@ export default function ReviewForm({
   city,
   onSuccess,
 }) {
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     overall_rating: 0,

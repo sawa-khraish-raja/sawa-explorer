@@ -7,13 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 import PageHeroVideo from '../components/common/PageHeroVideo';
-import { useAppContext } from '../components/context/AppContext';
+import { UseAppContext } from '../components/context/AppContext';
 import AdventuresList from '../components/forum/AdventuresList';
 import CreatePostModal from '../components/forum/CreatePostModal';
 import ForumPostsList from '../components/forum/ForumPostsList';
 
 export default function ForumHome() {
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('discussions');

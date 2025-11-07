@@ -15,8 +15,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { assistantChat } from '@/utils/functions';
 
-import { useAppContext } from '../context/AppContext';
-
+import { UseAppContext } from '../context/AppContext';
 
 const SUPPORTED_LANGUAGES = [
   { code: 'ar', name: 'العربية', flag: '🇸🇦' },
@@ -31,7 +30,7 @@ const SUPPORTED_LANGUAGES = [
 ];
 
 export default function ChatPanel({ onClose }) {
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -56,7 +55,7 @@ export default function ChatPanel({ onClose }) {
     setIsLoading(true);
 
     try {
-      const response = await assistantChat( {
+      const response = await assistantChat({
         messages: [...messages, userMessage],
         language,
         userEmail: user?.email,

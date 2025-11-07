@@ -24,10 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { createPageUrl } from '@/utils';
 import { getDocument, addDocument, updateDocument } from '@/utils/firestore';
 
-import { useAppContext } from '../components/context/AppContext';
-
-
-
+import { UseAppContext } from '../components/context/AppContext';
 
 export default function CreateAdventureBooking() {
   const navigate = useNavigate();
@@ -42,7 +39,7 @@ export default function CreateAdventureBooking() {
   const [notes, setNotes] = useState('');
 
   // Use AppContext for user
-  const { user, userLoading } = useAppContext();
+  const { user, userLoading } = UseAppContext();
 
   const { data: adventure, isLoading: adventureLoading } = useQuery({
     queryKey: ['adventure', adventureId],

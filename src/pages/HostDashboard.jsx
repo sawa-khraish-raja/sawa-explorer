@@ -12,6 +12,8 @@ import {
   Users,
   Building2,
   Send,
+  X,
+  Package,
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -39,11 +41,14 @@ import {
   addDocument,
   getDocument,
   getOrCreateConversation,
+  updateDocument,
 } from '@/utils/firestore';
 
-import { useAppContext } from '../components/context/AppContext'; // Updated import path
+import BookingServicesDisplay from '../components/booking/BookingServicesDisplay';
+import { UseAppContext } from '../components/context/AppContext';
 import HostProfileSettings from '../components/host/HostProfileSettings';
 import { useTranslation } from '../components/i18n/LanguageContext';
+import { showSuccess, showError, showInfo } from '../components/utils/notifications';
 import { getUserDisplayName } from '../components/utils/userHelpers';
 
 export default function HostDashboard() {
@@ -60,8 +65,7 @@ export default function HostDashboard() {
     message: '',
   });
 
-  //  FIXED: Use shared user from AppContext
-  const { user, userLoading } = useAppContext();
+  const { user, userLoading } = UseAppContext();
 
   useEffect(() => {
     if (!userLoading && (!user || !user.host_approved)) {
@@ -114,6 +118,22 @@ export default function HostDashboard() {
       const offerId = await addDocument('offers', offer);
       console.log(' Offer created with ID:', offerId);
 
+      // Track host response in booking
+      const currentBooking = await getDocument('bookings', booking.id);
+      const hostResponses = currentBooking.host_responses || {};
+
+      hostResponses[user.email] = {
+        action: 'offered',
+        offer_id: offerId,
+        offered_date: new Date().toISOString(),
+        host_name: user.full_name || user.email,
+      };
+
+      await updateDocument('bookings', booking.id, {
+        host_responses: hostResponses,
+        updated_date: new Date().toISOString(),
+      });
+
       // Create notification for traveler
       const notificationData = {
         recipient_email: booking.traveler_email,
@@ -136,8 +156,10 @@ export default function HostDashboard() {
       return { offerId, booking };
     },
     onSuccess: async (data) => {
+      // Invalidate all relevant queries to update UI immediately
       queryClient.invalidateQueries({ queryKey: ['availableBookings'] });
       queryClient.invalidateQueries({ queryKey: ['myOffers'] });
+      queryClient.invalidateQueries({ queryKey: ['myBookings'] });
       toast.success('Offer sent successfully! Opening chat...');
       setShowOfferDialog(false);
       setSelectedBooking(null);
@@ -199,6 +221,11 @@ export default function HostDashboard() {
           // Exclude bookings where host already sent an offer
           if (myOfferedBookingIds.has(booking.id)) return false;
 
+          // Exclude bookings where this host already rejected
+          if (booking.host_responses && booking.host_responses[user.email]) {
+            return false;
+          }
+
           // Only show pending bookings
           if (booking.status !== 'pending') return false;
 
@@ -213,10 +240,8 @@ export default function HostDashboard() {
       }
     },
     enabled: !!user?.email && hostCities.length > 0,
-    staleTime: 10 * 60 * 1000,
-    cacheTime: 20 * 60 * 1000,
-    refetchInterval: false,
-    refetchOnMount: false,
+    staleTime: 30 * 1000, // 30 seconds - shorter to show updates faster
+    refetchOnMount: true, // Refetch when component mounts
     refetchOnWindowFocus: false,
   });
 
@@ -274,15 +299,64 @@ export default function HostDashboard() {
       }
     },
     enabled: !!user?.email,
-    staleTime: 10 * 60 * 1000,
-    cacheTime: 20 * 60 * 1000,
-    refetchInterval: false,
-    refetchOnMount: false,
+    staleTime: 30 * 1000, // 30 seconds - shorter to show updates faster
+    refetchOnMount: true, // Refetch when component mounts
     refetchOnWindowFocus: false,
   });
 
-  // For now, we'll skip conversations since we're focusing on offers
-  // This can be re-added later when migrating the chat/messages feature
+  const { data: rejectedBookings = [], isLoading: isLoadingRejected } = useQuery({
+    queryKey: ['rejectedBookings', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+
+      try {
+        const allBookings = await queryDocuments('bookings', [['status', '==', 'pending']]);
+
+        const rejected = allBookings.filter((booking) => {
+          return (
+            booking.host_responses &&
+            booking.host_responses[user.email] &&
+            booking.host_responses[user.email].action === 'rejected'
+          );
+        });
+
+        const rejectedWithTravelers = await Promise.all(
+          rejected.map(async (booking) => {
+            try {
+              if (booking.user_id) {
+                const traveler = await getDocument('users', booking.user_id);
+                return {
+                  ...booking,
+                  traveler_name:
+                    traveler?.full_name || traveler?.display_name || booking.traveler_email,
+                };
+              }
+            } catch (error) {
+              console.warn('Could not fetch traveler info:', error);
+            }
+            return {
+              ...booking,
+              traveler_name: booking.traveler_email,
+            };
+          })
+        );
+
+        return rejectedWithTravelers.sort((a, b) => {
+          const aRejectedDate = a.host_responses?.[user.email]?.rejected_date;
+          const bRejectedDate = b.host_responses?.[user.email]?.rejected_date;
+          return new Date(bRejectedDate) - new Date(aRejectedDate);
+        });
+      } catch (error) {
+        console.error('Error fetching rejected bookings:', error);
+        return [];
+      }
+    },
+    enabled: !!user?.email,
+    staleTime: 30 * 1000, // 30 seconds - shorter to show updates faster
+    refetchOnMount: true, // Refetch when component mounts
+    refetchOnWindowFocus: false,
+  });
+
   const conversations = [];
   const unreadCount = 0;
 
@@ -462,6 +536,10 @@ export default function HostDashboard() {
                 <Calendar className='w-4 h-4' />
                 My Bookings ({myBookings.length})
               </TabsTrigger>
+              <TabsTrigger value='rejected' className='flex items-center gap-2 flex-1'>
+                <X className='w-4 h-4' />
+                Rejected ({rejectedBookings.length})
+              </TabsTrigger>
               <TabsTrigger value='profile' className='flex items-center gap-2 flex-1'>
                 <User className='w-4 h-4' />
                 Profile
@@ -523,32 +601,119 @@ export default function HostDashboard() {
                           </div>
                         )}
 
-                        <Button
-                          onClick={async () => {
-                            try {
-                              // Get or create conversation
-                              const conversation = await getOrCreateConversation({
-                                id: booking.id,
-                                traveler_email: booking.traveler_email,
-                                host_email: user.email,
-                                city_name: booking.city_name || booking.city,
-                              });
-                              console.log('Opening chat for booking:', booking.id);
+                        <div className='flex gap-2'>
+                          <Button
+                            onClick={async () => {
+                              try {
+                                const conversation = await getOrCreateConversation({
+                                  id: booking.id,
+                                  traveler_email: booking.traveler_email,
+                                  host_email: user.email,
+                                  city_name: booking.city_name || booking.city,
+                                });
+                                console.log('Opening chat for booking:', booking.id);
 
-                              // Navigate to Messages page with conversation ID
-                              navigate(
-                                createPageUrl(`Messages?conversation_id=${conversation.id}`)
-                              );
-                            } catch (error) {
-                              console.error('Error opening chat:', error);
-                              toast.error('Failed to open chat. Please try again.');
-                            }
-                          }}
-                          className='w-full bg-gradient-to-r from-[#330066] to-[#9933CC] hover:from-[#47008F] hover:to-[#AD5CD6]'
-                        >
-                          <MessageSquare className='w-4 h-4 mr-2' />
-                          Accept Request
-                        </Button>
+                                navigate(
+                                  createPageUrl(`Messages?conversation_id=${conversation.id}`)
+                                );
+                              } catch (error) {
+                                console.error('Error opening chat:', error);
+                                toast.error('Failed to open chat. Please try again.');
+                              }
+                            }}
+                            className='flex-1 bg-gradient-to-r from-[#330066] to-[#9933CC] hover:from-[#47008F] hover:to-[#AD5CD6]'
+                          >
+                            <MessageSquare className='w-4 h-4 mr-2' />
+                            Accept Request
+                          </Button>
+                          <Button
+                            onClick={async () => {
+                              try {
+                                const currentBooking = await getDocument('bookings', booking.id);
+                                const hostResponses = currentBooking.host_responses || {};
+
+                                hostResponses[user.email] = {
+                                  action: 'rejected',
+                                  rejected_date: new Date().toISOString(),
+                                  host_name: user.full_name || user.email,
+                                };
+
+                                // Check if all hosts in the city have rejected
+                                const bookingCity = currentBooking.city_name || currentBooking.city;
+
+                                // Get all approved hosts in this city
+                                const allHostsInCity = await queryDocuments('users', [
+                                  ['host_approved', '==', true],
+                                ]);
+
+                                // Filter hosts who have access to this city
+                                const cityHosts = allHostsInCity.filter((host) => {
+                                  return (
+                                    host.city === bookingCity ||
+                                    (Array.isArray(host.assigned_cities) &&
+                                      host.assigned_cities.includes(bookingCity))
+                                  );
+                                });
+
+                                // Check if all hosts have responded with rejection
+                                const allRejected = cityHosts.every((host) => {
+                                  const response = hostResponses[host.email];
+                                  return response && response.action === 'rejected';
+                                });
+
+                                // Update booking with new status if all hosts rejected
+                                const updateData = {
+                                  host_responses: hostResponses,
+                                  updated_date: new Date().toISOString(),
+                                };
+
+                                if (allRejected) {
+                                  updateData.status = 'rejected';
+                                  updateData.rejected_at = new Date().toISOString();
+                                  updateData.rejection_reason =
+                                    'All hosts in the city have declined this request';
+
+                                  // Notify the traveler
+                                  const notificationData = {
+                                    recipient_email: currentBooking.traveler_email,
+                                    type: 'booking_rejected',
+                                    title: 'Booking Request Declined',
+                                    message: `Unfortunately, all available hosts in ${bookingCity} have declined your booking request. Please try adjusting your dates or requirements.`,
+                                    booking_id: booking.id,
+                                    read: false,
+                                    created_date: new Date().toISOString(),
+                                  };
+
+                                  if (currentBooking.user_id) {
+                                    notificationData.user_id = currentBooking.user_id;
+                                  }
+
+                                  await addDocument('notifications', notificationData);
+                                }
+
+                                await updateDocument('bookings', booking.id, updateData);
+
+                                // Always show the same message to the host who rejected
+                                showSuccess(
+                                  'Request Rejected',
+                                  'The booking request has been rejected.'
+                                );
+
+                                // Invalidate all relevant queries to update UI immediately
+                                queryClient.invalidateQueries({ queryKey: ['availableBookings'] });
+                                queryClient.invalidateQueries({ queryKey: ['rejectedBookings'] });
+                              } catch (error) {
+                                console.error('Error rejecting request:', error);
+                                showError('Failed to reject request', 'Please try again.');
+                              }
+                            }}
+                            variant='outline'
+                            className='border-2 border-red-300 text-red-600 hover:bg-red-50'
+                          >
+                            <X className='w-4 h-4 mr-2' />
+                            Reject
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
@@ -631,6 +796,103 @@ export default function HostDashboard() {
                           <MessageSquare className='w-4 h-4 mr-2' />
                           View Messages
                         </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value='rejected'>
+              {isLoadingRejected ? (
+                <div className='flex justify-center py-12'>
+                  <Loader2 className='w-8 h-8 animate-spin text-purple-600' />
+                </div>
+              ) : rejectedBookings.length === 0 ? (
+                <Card>
+                  <CardContent className='py-12 text-center'>
+                    <X className='w-12 h-12 mx-auto mb-4 text-gray-300' />
+                    <h3 className='text-lg font-semibold text-gray-700 mb-2'>
+                      No Rejected Requests
+                    </h3>
+                    <p className='text-gray-500'>Requests you reject will appear here</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+                  {rejectedBookings.map((booking) => (
+                    <Card key={booking.id} className='bg-red-50 border-2 border-red-200'>
+                      <CardHeader>
+                        <CardTitle className='text-lg flex items-center justify-between'>
+                          <span className='flex items-center gap-2'>
+                            {booking.city_name || booking.city}
+                            <Badge
+                              variant='outline'
+                              className='bg-red-100 text-red-700 border-red-300'
+                            >
+                              Rejected
+                            </Badge>
+                          </span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className='space-y-3'>
+                        {/* Traveler Info */}
+                        {booking.traveler_name && (
+                          <div className='flex items-center gap-2 text-sm font-semibold text-gray-700'>
+                            <User className='w-4 h-4 text-purple-600' />
+                            {booking.traveler_name}
+                          </div>
+                        )}
+
+                        <div className='flex items-center gap-2 text-sm text-gray-600'>
+                          <Calendar className='w-4 h-4' />
+                          {format(new Date(booking.start_date), 'MMM dd')} -{' '}
+                          {format(new Date(booking.end_date), 'MMM dd, yyyy')}
+                        </div>
+                        <div className='flex items-center gap-2 text-sm text-gray-600'>
+                          <Users className='w-4 h-4' />
+                          {booking.number_of_adults}{' '}
+                          {t(booking.number_of_adults === 1 ? 'common.adult' : 'common.adults')}
+                          {booking.number_of_children > 0 && (
+                            <>
+                              , {booking.number_of_children}{' '}
+                              {t(
+                                booking.number_of_children === 1
+                                  ? 'common.child'
+                                  : 'common.children'
+                              )}
+                            </>
+                          )}
+                        </div>
+
+                        {/* Requested Services */}
+                        {booking.selected_services && booking.selected_services.length > 0 && (
+                          <div className='bg-white p-3 rounded-lg border border-red-200'>
+                            <div className='flex items-center gap-2 mb-2'>
+                              <Package className='w-4 h-4 text-purple-600' />
+                              <p className='text-xs font-semibold text-gray-700'>
+                                Requested Services:
+                              </p>
+                            </div>
+                            <BookingServicesDisplay serviceIds={booking.selected_services} />
+                          </div>
+                        )}
+
+                        {booking.notes && (
+                          <div className='bg-white p-3 rounded-lg border border-red-200'>
+                            <p className='text-xs font-semibold text-gray-700 mb-1'>Notes:</p>
+                            <p className='text-sm text-gray-600'>{booking.notes}</p>
+                          </div>
+                        )}
+                        <div className='pt-3 border-t border-red-200'>
+                          <p className='text-xs text-gray-500'>
+                            Rejected on{' '}
+                            {format(
+                              new Date(booking.host_responses[user.email].rejected_date),
+                              "MMM dd, yyyy 'at' h:mm a"
+                            )}
+                          </p>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}

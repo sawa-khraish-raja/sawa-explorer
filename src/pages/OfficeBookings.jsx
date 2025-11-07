@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { Calendar, Loader2, ArrowLeft, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-import { useAppContext } from '@/components/context/AppContext';
+import { UseAppContext } from '@/components/context/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,7 +12,7 @@ import { getAllDocuments, queryDocuments } from '@/utils/firestore';
 
 export default function OfficeBookings() {
   const navigate = useNavigate();
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
 
   const { data: office } = useQuery({
     queryKey: ['office', user?.email],

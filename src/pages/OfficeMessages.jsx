@@ -1,17 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow, format } from 'date-fns';
-import {
-  MessageSquare,
-  Loader2,
-  ArrowLeft,
-  MapPin,
-  Calendar,
-  Eye,
-  DollarSign,
-} from 'lucide-react';
+import { MessageSquare, Loader2, ArrowLeft, MapPin, Calendar, Eye, DollarSign } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
 
 import { normLang } from '@/components/i18n/i18nVoice';
 import { Badge } from '@/components/ui/badge';
@@ -20,12 +11,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { createPageUrl } from '@/utils';
 import { getAllDocuments, queryDocuments, getDocument } from '@/utils/firestore';
-
+import { UseAppContext } from '../components/context/AppContext';
 import MessageBubble from '../components/chat/MessageBubble';
 import { useSawaTranslation } from '../components/chat/useSawaTranslation';
 
 export default function OfficeMessages() {
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const navigate = useNavigate();
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [showConversationDialog, setShowConversationDialog] = useState(false);
@@ -109,8 +100,7 @@ export default function OfficeMessages() {
     queryKey: ['conversationOffers', selectedConversation?.booking_id],
     queryFn: async () => {
       if (!selectedConversation?.booking_id) return [];
-      return queryDocuments('offers', [['booking_id', '==', selectedConversation.booking_id,
-      ]]);
+      return queryDocuments('offers', [['booking_id', '==', selectedConversation.booking_id]]);
     },
     enabled: !!selectedConversation?.booking_id,
   });

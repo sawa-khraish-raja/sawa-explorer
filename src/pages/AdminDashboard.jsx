@@ -26,7 +26,7 @@ import { getAllDocuments, queryDocuments } from '@/utils/firestore';
 
 import AdminLayout from '../components/admin/AdminLayout';
 import PermissionGuard from '../components/admin/PermissionGuard';
-import { useAppContext } from '../components/context/AppContext';
+import { UseAppContext } from '../components/context/AppContext';
 import { showNotification } from '../components/notifications/NotificationManager';
 
 const RevenueBreakdownDialog = lazy(() => import('../components/admin/RevenueBreakdownDialog'));
@@ -36,7 +36,7 @@ export default function AdminDashboard() {
   const [showRevenueBreakdown, setShowRevenueBreakdown] = useState(false);
 
   // Use AppContext for current user
-  const { user, userLoading: isUserLoading } = useAppContext();
+  const { user, userLoading: isUserLoading } = UseAppContext();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -517,10 +517,10 @@ const ActivityItem = React.memo(({ activity }) => {
     <div className='flex items-start gap-2 sm:gap-3 p-2 sm:p-3 bg-[#E6E6FF]/30 rounded-lg hover:bg-[#E6E6FF]/50 transition-colors'>
       <div className='w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#9933CC] mt-1.5 sm:mt-2 flex-shrink-0' />
       <div className='flex-1 min-w-0'>
-        <p className='text-xs sm:text-sm font-medium text-gray-900 break-words'>{activity.action}</p>
-        <p className='text-[10px] sm:text-xs text-gray-600 mt-0.5 sm:mt-1'>
-          {formattedDate}
+        <p className='text-xs sm:text-sm font-medium text-gray-900 break-words'>
+          {activity.action}
         </p>
+        <p className='text-[10px] sm:text-xs text-gray-600 mt-0.5 sm:mt-1'>{formattedDate}</p>
       </div>
     </div>
   );

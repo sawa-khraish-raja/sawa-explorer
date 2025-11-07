@@ -21,7 +21,7 @@ import { createPageUrl } from '@/utils';
 import { queryDocuments, getAllDocuments, addDocument } from '@/utils/firestore';
 
 import PageHeroVideo from '../common/PageHeroVideo';
-import { useAppContext } from '../context/AppContext';
+import { UseAppContext } from '../context/AppContext';
 import { useTranslation } from '../i18n/LanguageContext';
 import { showSuccess, showError } from '../utils/notifications';
 
@@ -113,7 +113,7 @@ export default function BookingCity({ cityName }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t, language } = useTranslation();
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const [eventFilters, setEventFilters] = useState({
     featured: false,
     category: 'All',

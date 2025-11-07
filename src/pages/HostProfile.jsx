@@ -32,6 +32,7 @@ import { createPageUrl } from '@/utils';
 import { queryDocuments } from '@/utils/firestore';
 
 import Lightbox from '../components/booking/Lightbox';
+import { UseAppContext } from '../components/context/AppContext';
 import ReviewsList from '../components/reviews/ReviewsList';
 import { normalizeText } from '../components/utils/textHelpers';
 import { getUserDisplayName } from '../components/utils/userHelpers';
@@ -52,7 +53,7 @@ const EXPERTISE_ICONS = {
 };
 
 export default function HostProfile() {
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -75,8 +76,11 @@ export default function HostProfile() {
   const { data: host, isLoading } = useQuery({
     queryKey: ['hostProfile', hostEmail],
     queryFn: async () => {
-      const hosts = await queryDocuments('users', ['email', '==', hostEmail],
-            ['host_approved', '==', true]);
+      const hosts = await queryDocuments(
+        'users',
+        ['email', '==', hostEmail],
+        ['host_approved', '==', true]
+      );
       if (!hosts || hosts.length === 0) {
         throw new Error('Host not found');
       }
@@ -91,7 +95,7 @@ export default function HostProfile() {
       const allReviews = await queryDocuments('reviews', [
         ['reviewed_email', '==', hostEmail],
         ['status', '==', 'published'],
-        ['review_type', '==', 'traveler_to_host']
+        ['review_type', '==', 'traveler_to_host'],
       ]);
       return allReviews.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },

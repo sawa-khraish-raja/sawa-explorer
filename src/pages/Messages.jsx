@@ -11,7 +11,7 @@ import { subscribeToConversations, getAllDocuments } from '@/utils/firestore';
 
 import ConversationList from '../components/chat/ConversationList';
 import ConversationView from '../components/chat/ConversationView';
-import { useAppContext } from '../components/context/AppContext';
+import { UseAppContext } from '../components/context/AppContext';
 
 export default function Messages() {
   const { t } = useTranslation();
@@ -23,7 +23,7 @@ export default function Messages() {
   const [selectedTab, setSelectedTab] = useState('services');
 
   //  FIXED: Use shared user from AppContext
-  const { user, userLoading: isUserLoading } = useAppContext();
+  const { user, userLoading: isUserLoading } = UseAppContext();
 
   // State for conversations (updated via real-time subscription)
   const [rawConversations, setRawConversations] = useState([]);

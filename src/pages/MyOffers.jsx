@@ -12,6 +12,7 @@ import {
   MessageSquare,
   MapPin,
   Users,
+  User,
   Package,
   FileText,
   Star,
@@ -50,7 +51,7 @@ import BookingStats from '../components/booking/BookingStats';
 import CancelBookingDialog from '../components/booking/CancelBookingDialog';
 import { BookingID } from '../components/common/BookingID';
 import PageHeroVideo from '../components/common/PageHeroVideo';
-import { useAppContext } from '../components/context/AppContext';
+import { UseAppContext } from '../components/context/AppContext';
 import { useTranslation } from '../components/i18n/LanguageContext';
 import { showSuccess, showError, showInfo } from '../components/utils/notifications';
 import { normalizeText } from '../components/utils/textHelpers';
@@ -105,7 +106,7 @@ export default function MyOffers() {
     sortBy: 'newest',
   });
 
-  const { user, userLoading: isLoadingUser } = useAppContext();
+  const { user, userLoading: isLoadingUser } = UseAppContext();
 
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
     queryKey: ['travelerBookings', user?.id],
@@ -122,8 +123,9 @@ export default function MyOffers() {
       }
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 15 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 
   const { data: adventureBookings = [] } = useQuery({
@@ -136,8 +138,9 @@ export default function MyOffers() {
       return allAdventures.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 15 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 
   const serviceBookings = bookings.filter((b) => !b.adventure_id);
@@ -153,8 +156,9 @@ export default function MyOffers() {
       return offers.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
     enabled: !!user?.email,
-    staleTime: 3 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 
   const { data: allHosts = [] } = useQuery({
@@ -252,6 +256,7 @@ export default function MyOffers() {
       confirmed: bookings.filter((b) => b.status === 'confirmed').length,
       completed: bookings.filter((b) => b.status === 'completed').length,
       cancelled: bookings.filter((b) => b.status === 'cancelled').length,
+      rejected: bookings.filter((b) => b.status === 'rejected').length,
       review_offers: bookings.filter((b) =>
         allOffers.some((o) => o.booking_id === b.id && o.status === 'pending')
       ).length,
@@ -317,8 +322,9 @@ export default function MyOffers() {
     onSuccess: (data) => {
       console.log(' Offer accepted successfully:', data);
       queryClient.invalidateQueries({
-        queryKey: ['travelerBookings', user?.email],
+        queryKey: ['travelerBookings', user?.id],
       });
+      queryClient.invalidateQueries({ queryKey: ['travelerAdventureBookings', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['myOffers', user?.email] });
 
       showSuccess(
@@ -343,17 +349,44 @@ export default function MyOffers() {
     mutationFn: async (offerId) => {
       console.log(' Declining offer:', offerId);
 
+      // Get the offer to find the booking and host
+      const offer = allOffers.find((o) => o.id === offerId);
+      if (!offer) {
+        throw new Error('Offer not found');
+      }
+
+      // Update the offer status
       await updateDocument('offers', offerId, {
         status: 'declined',
         declined_at: new Date().toISOString(),
         updated_date: new Date().toISOString(),
       });
 
+      // Update the booking's host_responses to mark this host as declined
+      const booking = await getDocument('bookings', offer.booking_id);
+      if (booking) {
+        const hostResponses = booking.host_responses || {};
+
+        // Mark this specific host's offer as declined by traveler
+        hostResponses[offer.host_email] = {
+          ...hostResponses[offer.host_email],
+          action: 'declined_by_traveler',
+          declined_by_traveler_date: new Date().toISOString(),
+          offer_id: offerId,
+        };
+
+        await updateDocument('bookings', offer.booking_id, {
+          host_responses: hostResponses,
+          updated_date: new Date().toISOString(),
+        });
+      }
+
       return offerId;
     },
     onSuccess: () => {
       console.log(' Offer declined successfully');
       queryClient.invalidateQueries({ queryKey: ['myOffers', user?.email] });
+      queryClient.invalidateQueries({ queryKey: ['travelerBookings', user?.id] });
       showInfo('ℹ️ Offer Declined', 'The offer has been declined.');
     },
     onError: (error) => {
@@ -501,6 +534,18 @@ export default function MyOffers() {
         border: 'border-gray-200',
         textColor: 'text-gray-700',
         iconColor: 'text-gray-600',
+      };
+    }
+
+    if (booking.status === 'rejected' || booking.state === 'rejected') {
+      return {
+        label: t('bookingStatus.rejected'),
+        labelAr: 'مرفوض',
+        icon: XCircle,
+        bg: 'bg-red-50',
+        border: 'border-red-200',
+        textColor: 'text-red-700',
+        iconColor: 'text-red-600',
       };
     }
 
@@ -777,6 +822,193 @@ export default function MyOffers() {
                                 </div>
                               )}
 
+                              {/* Rejection Reason */}
+                              {booking.status === 'rejected' && booking.rejection_reason && (
+                                <div className='bg-red-50 p-3 sm:p-4 rounded-lg border-2 border-red-200'>
+                                  <h4 className='font-semibold text-sm sm:text-base text-red-900 mb-2 flex items-center gap-2'>
+                                    <AlertCircle className='w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600 flex-shrink-0' />
+                                    <span className='break-words'>Request Not Available</span>
+                                  </h4>
+                                  <p className='text-xs sm:text-sm text-red-700 break-words'>
+                                    {booking.rejection_reason}
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* Host Status - Show all hosts in the city for pending/rejected bookings */}
+                              {(booking.status === 'pending' || booking.status === 'rejected') &&
+                                (() => {
+                                  const bookingCity = booking.city_name || booking.city;
+                                  const cityHosts = allHosts.filter((host) => {
+                                    return (
+                                      host.city === bookingCity ||
+                                      (Array.isArray(host.assigned_cities) &&
+                                        host.assigned_cities.includes(bookingCity))
+                                    );
+                                  });
+
+                                  if (cityHosts.length === 0) return null;
+
+                                  return (
+                                    <div className='bg-gradient-to-r from-purple-50 to-indigo-50 p-3 sm:p-4 rounded-lg border-2 border-purple-200'>
+                                      <h4 className='font-semibold text-sm sm:text-base text-purple-900 mb-3 flex items-center gap-2'>
+                                        <Users className='w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 flex-shrink-0' />
+                                        <span className='break-words'>
+                                          Available Hosts in {bookingCity} ({cityHosts.length})
+                                        </span>
+                                      </h4>
+                                      <div className='space-y-2 max-h-64 overflow-y-auto'>
+                                        {cityHosts.map((host) => {
+                                          const response = booking.host_responses?.[host.email];
+
+                                          return (
+                                            <div
+                                              key={host.email}
+                                              className='flex items-center justify-between bg-white p-2 sm:p-3 rounded-lg border border-purple-100 gap-2'
+                                            >
+                                              <div className='flex items-center gap-2 flex-1 min-w-0'>
+                                                {host.profile_photo ? (
+                                                  <img
+                                                    src={host.profile_photo}
+                                                    alt={host.full_name || host.display_name}
+                                                    className='w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-purple-200 flex-shrink-0'
+                                                  />
+                                                ) : (
+                                                  <div className='w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-purple-200 flex items-center justify-center flex-shrink-0'>
+                                                    <User className='w-4 h-4 sm:w-5 sm:h-5 text-purple-600' />
+                                                  </div>
+                                                )}
+                                                <div className='flex-1 min-w-0'>
+                                                  <p className='text-xs sm:text-sm font-medium text-gray-900 truncate'>
+                                                    {host.full_name ||
+                                                      host.display_name ||
+                                                      host.email}
+                                                  </p>
+                                                  {(response?.offered_date || response?.rejected_date || response?.declined_by_traveler_date) && (
+                                                    <p className='text-[10px] sm:text-xs text-gray-500'>
+                                                      {response.action === 'offered'
+                                                        ? 'Offered'
+                                                        : response.action === 'declined_by_traveler'
+                                                        ? 'You Declined'
+                                                        : 'Declined'}{' '}
+                                                      {format(
+                                                        new Date(
+                                                          response.offered_date ||
+                                                            response.rejected_date ||
+                                                            response.declined_by_traveler_date
+                                                        ),
+                                                        'MMM d, h:mm a'
+                                                      )}
+                                                    </p>
+                                                  )}
+                                                </div>
+                                              </div>
+                                              {response?.action === 'offered' ? (
+                                                <Badge className='bg-green-100 text-green-700 text-[10px] sm:text-xs px-2 py-1 whitespace-nowrap'>
+                                                  Sent Offer
+                                                </Badge>
+                                              ) : response?.action === 'declined_by_traveler' ? (
+                                                <Badge className='bg-orange-100 text-orange-700 text-[10px] sm:text-xs px-2 py-1 whitespace-nowrap'>
+                                                  You Declined
+                                                </Badge>
+                                              ) : response?.action === 'rejected' ? (
+                                                <Badge className='bg-red-100 text-red-700 text-[10px] sm:text-xs px-2 py-1 whitespace-nowrap'>
+                                                  Host Declined
+                                                </Badge>
+                                              ) : (
+                                                <Badge className='bg-yellow-100 text-yellow-700 text-[10px] sm:text-xs px-2 py-1 whitespace-nowrap'>
+                                                  Awaiting Response
+                                                </Badge>
+                                              )}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+
+                              {/* Host Response History - Show for confirmed/completed bookings */}
+                              {(booking.status === 'confirmed' || booking.status === 'completed') &&
+                                booking.host_responses &&
+                                Object.keys(booking.host_responses).length > 0 &&
+                                (() => {
+                                  const responses = booking.host_responses;
+                                  const responseEntries = Object.entries(responses);
+
+                                  return (
+                                    <div className='bg-gradient-to-r from-gray-50 to-slate-50 p-3 sm:p-4 rounded-lg border-2 border-gray-200'>
+                                      <h4 className='font-semibold text-sm sm:text-base text-gray-900 mb-3 flex items-center gap-2'>
+                                        <Users className='w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600 flex-shrink-0' />
+                                        <span className='break-words'>
+                                          Host Response History ({responseEntries.length})
+                                        </span>
+                                      </h4>
+                                      <div className='space-y-2 max-h-64 overflow-y-auto'>
+                                        {responseEntries.map(([hostEmail, response]) => {
+                                          const host = allHosts.find((h) => h.email === hostEmail);
+
+                                          return (
+                                            <div
+                                              key={hostEmail}
+                                              className='flex items-center justify-between bg-white p-2 sm:p-3 rounded-lg border border-gray-100 gap-2'
+                                            >
+                                              <div className='flex items-center gap-2 flex-1 min-w-0'>
+                                                {host?.profile_photo ? (
+                                                  <img
+                                                    src={host.profile_photo}
+                                                    alt={host.full_name || host.display_name}
+                                                    className='w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-gray-200 flex-shrink-0'
+                                                  />
+                                                ) : (
+                                                  <div className='w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0'>
+                                                    <User className='w-4 h-4 sm:w-5 sm:h-5 text-gray-600' />
+                                                  </div>
+                                                )}
+                                                <div className='flex-1 min-w-0'>
+                                                  <p className='text-xs sm:text-sm font-medium text-gray-900 truncate'>
+                                                    {host?.full_name || host?.display_name || hostEmail}
+                                                  </p>
+                                                  {(response.offered_date || response.rejected_date || response.declined_by_traveler_date) && (
+                                                    <p className='text-[10px] sm:text-xs text-gray-500'>
+                                                      {response.action === 'offered'
+                                                        ? 'Sent Offer'
+                                                        : response.action === 'declined_by_traveler'
+                                                        ? 'You Declined'
+                                                        : 'Declined'}{' '}
+                                                      {format(
+                                                        new Date(
+                                                          response.offered_date ||
+                                                            response.rejected_date ||
+                                                            response.declined_by_traveler_date
+                                                        ),
+                                                        'MMM d, h:mm a'
+                                                      )}
+                                                    </p>
+                                                  )}
+                                                </div>
+                                              </div>
+                                              {response.action === 'offered' ? (
+                                                <Badge className='bg-green-100 text-green-700 text-[10px] sm:text-xs px-2 py-1 whitespace-nowrap'>
+                                                  Sent Offer
+                                                </Badge>
+                                              ) : response.action === 'declined_by_traveler' ? (
+                                                <Badge className='bg-orange-100 text-orange-700 text-[10px] sm:text-xs px-2 py-1 whitespace-nowrap'>
+                                                  You Declined
+                                                </Badge>
+                                              ) : response.action === 'rejected' ? (
+                                                <Badge className='bg-red-100 text-red-700 text-[10px] sm:text-xs px-2 py-1 whitespace-nowrap'>
+                                                  Host Declined
+                                                </Badge>
+                                              ) : null}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+
                               {/* Host Info */}
                               {host && (
                                 <div className='bg-gradient-to-r from-purple-50 to-purple-100/50 p-3 sm:p-4 rounded-lg border border-purple-200'>
@@ -1052,6 +1284,107 @@ export default function MyOffers() {
                               </span>
                             </div>
                           </div>
+
+                          {/* Host Responses - Show for pending/rejected bookings */}
+                          {(booking.status === 'pending' || booking.status === 'rejected') &&
+                            (() => {
+                              const bookingCity = booking.city_name || booking.city;
+                              const cityHosts = allHosts.filter((host) => {
+                                return (
+                                  host.city === bookingCity ||
+                                  (Array.isArray(host.assigned_cities) &&
+                                    host.assigned_cities.includes(bookingCity))
+                                );
+                              });
+
+                              if (cityHosts.length === 0) return null;
+
+                              return (
+                                <div className='pt-2 border-t border-gray-100'>
+                                  <p className='text-[10px] font-semibold text-gray-700 mb-1'>
+                                    Available Hosts ({cityHosts.length}):
+                                  </p>
+                                  <div className='space-y-1 max-h-32 overflow-y-auto'>
+                                    {cityHosts.map((host) => {
+                                      const response = booking.host_responses?.[host.email];
+
+                                      return (
+                                        <div
+                                          key={host.email}
+                                          className='flex items-center justify-between text-[10px] gap-2'
+                                        >
+                                          <span className='text-gray-700 truncate flex-1 font-medium'>
+                                            {host.full_name || host.display_name || host.email}
+                                          </span>
+                                          {response?.action === 'offered' ? (
+                                            <Badge className='bg-green-100 text-green-700 text-[9px] px-1.5 py-0 whitespace-nowrap'>
+                                              Sent Offer
+                                            </Badge>
+                                          ) : response?.action === 'declined_by_traveler' ? (
+                                            <Badge className='bg-orange-100 text-orange-700 text-[9px] px-1.5 py-0 whitespace-nowrap'>
+                                              You Declined
+                                            </Badge>
+                                          ) : response?.action === 'rejected' ? (
+                                            <Badge className='bg-red-100 text-red-700 text-[9px] px-1.5 py-0 whitespace-nowrap'>
+                                              Host Declined
+                                            </Badge>
+                                          ) : (
+                                            <Badge className='bg-yellow-100 text-yellow-700 text-[9px] px-1.5 py-0 whitespace-nowrap'>
+                                              Pending
+                                            </Badge>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+
+                          {/* Host Response History - Show for confirmed/completed bookings */}
+                          {(booking.status === 'confirmed' || booking.status === 'completed') &&
+                            booking.host_responses &&
+                            Object.keys(booking.host_responses).length > 0 &&
+                            (() => {
+                              const responseEntries = Object.entries(booking.host_responses);
+
+                              return (
+                                <div className='pt-2 border-t border-gray-100'>
+                                  <p className='text-[10px] font-semibold text-gray-700 mb-1'>
+                                    Host Response History ({responseEntries.length}):
+                                  </p>
+                                  <div className='space-y-1 max-h-32 overflow-y-auto'>
+                                    {responseEntries.map(([hostEmail, response]) => {
+                                      const host = allHosts.find((h) => h.email === hostEmail);
+
+                                      return (
+                                        <div
+                                          key={hostEmail}
+                                          className='flex items-center justify-between text-[10px] gap-2'
+                                        >
+                                          <span className='text-gray-700 truncate flex-1 font-medium'>
+                                            {host?.full_name || host?.display_name || hostEmail}
+                                          </span>
+                                          {response.action === 'offered' ? (
+                                            <Badge className='bg-green-100 text-green-700 text-[9px] px-1.5 py-0 whitespace-nowrap'>
+                                              Sent Offer
+                                            </Badge>
+                                          ) : response.action === 'declined_by_traveler' ? (
+                                            <Badge className='bg-orange-100 text-orange-700 text-[9px] px-1.5 py-0 whitespace-nowrap'>
+                                              You Declined
+                                            </Badge>
+                                          ) : response.action === 'rejected' ? (
+                                            <Badge className='bg-red-100 text-red-700 text-[9px] px-1.5 py-0 whitespace-nowrap'>
+                                              Host Declined
+                                            </Badge>
+                                          ) : null}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })()}
 
                           {booking.total_price && (
                             <div className='flex items-center justify-between pt-2 border-t border-gray-100 mt-auto'>

@@ -15,7 +15,7 @@ import {
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
-import { useAppContext } from '@/components/context/AppContext';
+import { UseAppContext } from '@/components/context/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,7 +33,7 @@ export default function OfficeDashboard() {
   const [selectedHostMessages, setSelectedHostMessages] = useState(null);
 
   //  1. Load current user
-  const { user, userLoading } = useAppContext();
+  const { user, userLoading } = UseAppContext();
 
   // Redirect if not office user
   React.useEffect(() => {
