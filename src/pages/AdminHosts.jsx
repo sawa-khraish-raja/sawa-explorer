@@ -27,7 +27,7 @@ import AssignAgencyDialog from '../components/admin/AssignAgencyDialog';
 import EditHostDialog from '../components/admin/EditHostDialog';
 import HostCommissionDialog from '../components/admin/HostCommissionDialog';
 import ManageCityAccessDialog from '../components/admin/ManageCityAccessDialog'; // New import
-import { useAppContext } from '../components/context/AppContext';
+import { UseAppContext } from '../components/context/AppContext';
 import { showNotification } from '../components/notifications/NotificationManager';
 
 export default function AdminHosts() {
@@ -40,7 +40,7 @@ export default function AdminHosts() {
   const [isCityAccessDialogOpen, setIsCityAccessDialogOpen] = useState(false); // New state
   const [filterType, setFilterType] = useState('all'); // all, agency, freelancer
 
-  const { user: currentUser } = useAppContext();
+  const { user: currentUser } = UseAppContext();
 
   const { data: hosts = [], isLoading } = useQuery({
     queryKey: ['allHosts'],

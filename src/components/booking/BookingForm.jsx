@@ -7,12 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { addDocument } from '@/utils/firestore';
 
 import { trackBookingStart, trackBookingComplete } from '../analytics/GoogleAnalytics'; // New import
-import { useAppContext } from '../context/AppContext';
+import { UseAppContext } from '../context/AppContext';
 // Keeping this as per outline, though not used in the final JSX
 
 import { useTranslation } from '../i18n/LanguageContext';
 import { showSuccess, showError } from '../utils/notifications';
-
 
 export default function BookingForm({
   city,
@@ -24,7 +23,7 @@ export default function BookingForm({
   onSuccess,
 }) {
   const { t, language } = useTranslation();
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const navigate = useNavigate();
   const [notes, setNotes] = useState('');
   const [email, setEmail] = useState(''); // Keeping this as per outline, though not used in the final JSX

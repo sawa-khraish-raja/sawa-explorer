@@ -3,12 +3,12 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useAppContext } from '@/components/context/AppContext';
+import { UseAppContext } from '@/components/context/AppContext';
 
 import AITripPlannerModal from './AITripPlannerModal';
 
 export default function AIPlannerLinkCard({ city }) {
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (!user) {

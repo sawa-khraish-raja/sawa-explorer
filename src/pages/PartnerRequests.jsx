@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { queryDocuments } from '@/utils/firestore';
 
-import { useAppContext } from '../components/context/AppContext';
+import { UseAppContext } from '../components/context/AppContext';
 import PartnerLayout from '../components/partner/PartnerLayout';
 
 export default function PartnerRequests() {
@@ -17,7 +17,7 @@ export default function PartnerRequests() {
   useEffect(() => {
     async function fetchUser() {
       try {
-        const currentUser = await useAppContext().user;
+        const currentUser = await UseAppContext().user;
         setUser(currentUser);
       } catch (error) {
         console.error('Failed to fetch user');
@@ -29,7 +29,8 @@ export default function PartnerRequests() {
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['partnerRequests', user?.city],
     queryFn: () =>
-      queryDocuments('bookings', 
+      queryDocuments(
+        'bookings',
         {
           city: user?.city,
           status: 'pending',

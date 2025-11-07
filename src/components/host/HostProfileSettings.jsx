@@ -32,7 +32,7 @@ import { createPageUrl } from '@/utils';
 import { queryDocuments, addDocument, updateDocument } from '@/utils/firestore';
 import { uploadImage } from '@/utils/storage';
 
-import { useAppContext } from '../context/AppContext';
+import { UseAppContext } from '../context/AppContext';
 
 const AVAILABLE_SERVICES = [
   'Airport Transportation Service',
@@ -202,7 +202,7 @@ export default function HostProfileSettings({ user, onProfileUpdated }) {
         await updateMe(updateData);
 
         // Fetch the user again to get the latest state including admin-controlled fields
-        const freshUser = await useAppContext().user;
+        const freshUser = await UseAppContext().user;
 
         //  Update or Create HostProfile for unified display
         console.log('Syncing HostProfile...');

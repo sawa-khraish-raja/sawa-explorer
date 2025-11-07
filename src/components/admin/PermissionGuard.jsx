@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 import { createPageUrl } from '@/utils';
 
-import { useAppContext } from '../context/AppContext';
+import { UseAppContext } from '../context/AppContext';
 
 //  All available admin pages
 export const ADMIN_PAGES = {
@@ -41,7 +41,7 @@ export const ADMIN_PAGES = {
 };
 
 export function useAdminPermissions() {
-  const { user, userLoading, isAdmin } = useAppContext();
+  const { user, userLoading, isAdmin } = UseAppContext();
 
   const hasFullAccess =
     user?.role_type === 'admin' && (!user?.admin_access_type || user?.admin_access_type === 'full');

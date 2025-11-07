@@ -5,10 +5,10 @@ import { toast } from 'sonner';
 
 import { createPageUrl } from '@/utils';
 
-import { useAppContext } from '../context/AppContext';
+import { UseAppContext } from '../context/AppContext';
 
 export function useMarketingAuth() {
-  const { user, isLoading } = useAppContext();
+  const { user, isLoading } = UseAppContext();
 
   const hasAccess = user?.role_type === 'marketing' || user?.role_type === 'admin';
 

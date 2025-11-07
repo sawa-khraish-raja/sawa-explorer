@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { getAllDocuments, queryDocuments, updateDocument } from '@/utils/firestore';
 
-import { useAppContext } from '../context/AppContext';
+import { UseAppContext } from '../context/AppContext';
 import { NotificationHelpers } from '../notifications/notificationHelpers';
 
 export default function HostReelsDisplay({ hostEmail }) {
@@ -20,7 +20,7 @@ export default function HostReelsDisplay({ hostEmail }) {
   useEffect(() => {
     async function loadUser() {
       try {
-        const user = await useAppContext().user;
+        const user = await UseAppContext().user;
         console.log(' User loaded:', user?.email);
         setCurrentUser(user);
       } catch (error) {

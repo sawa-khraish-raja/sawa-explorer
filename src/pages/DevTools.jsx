@@ -1,7 +1,7 @@
 import { Database, CheckCircle, XCircle } from 'lucide-react';
 import React, { useState } from 'react';
 
-import { useAppContext } from '@/components/context/AppContext';
+import { UseAppContext } from '@/components/context/AppContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,7 +21,7 @@ import {
 } from '@/utils/seedDatabase';
 
 export default function DevTools() {
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
   const [stats, setStats] = useState(null);

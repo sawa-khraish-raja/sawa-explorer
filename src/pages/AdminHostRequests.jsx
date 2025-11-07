@@ -27,11 +27,11 @@ import { getAllDocuments, updateDocument, addDocument } from '@/utils/firestore'
 
 import AdminLayout from '../components/admin/AdminLayout';
 import HostApprovalCard from '../components/admin/HostApprovalCard';
-import { useAppContext } from '../components/context/AppContext';
+import { UseAppContext } from '../components/context/AppContext';
 
 export default function AdminHostRequests() {
   const queryClient = useQueryClient();
-  const { user: currentUser } = useAppContext();
+  const { user: currentUser } = UseAppContext();
   const [activeTab, setActiveTab] = useState('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [cityFilter, setCityFilter] = useState('all');

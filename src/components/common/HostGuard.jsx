@@ -4,12 +4,10 @@ import { useNavigate } from 'react-router-dom';
 
 import { createPageUrl } from '@/utils';
 
-import { useAppContext } from '../context/AppContext';
-
-
+import { UseAppContext } from '../context/AppContext';
 
 export default function HostGuard({ children, requireHost = true }) {
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 

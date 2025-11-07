@@ -45,7 +45,7 @@ import { queryDocuments, addDocument, updateDocument, deleteDocument } from '@/u
 
 import AdventureForm from '../components/adventures/AdventureForm';
 import { calculateAdventureCommissions } from '../components/adventures/commissionCalculator';
-import { useAppContext } from '../components/context/AppContext';
+import { UseAppContext } from '../components/context/AppContext';
 
 export default function HostAdventures() {
   const navigate = useNavigate();
@@ -56,7 +56,7 @@ export default function HostAdventures() {
   const [activeTab, setActiveTab] = useState('all');
 
   // Use AppContext for user
-  const { user, userLoading, isHost } = useAppContext();
+  const { user, userLoading, isHost } = UseAppContext();
 
   // Redirect non-hosts
   useEffect(() => {
@@ -73,13 +73,11 @@ export default function HostAdventures() {
       if (!user?.id) return [];
       // Get all adventures for this host, then filter out office adventures in JS
       // (Can't use != with orderBy without a composite index)
-      const allHostAdventures = await queryDocuments(
-        'adventures',
-        [['host_id', '==', user.id]],
-        { orderBy: { field: 'created_at', direction: 'desc' } }
-      );
+      const allHostAdventures = await queryDocuments('adventures', [['host_id', '==', user.id]], {
+        orderBy: { field: 'created_at', direction: 'desc' },
+      });
       // Filter out office-added adventures
-      return allHostAdventures.filter(a => a.added_by_type !== 'office');
+      return allHostAdventures.filter((a) => a.added_by_type !== 'office');
     },
     enabled: !!user?.id,
     refetchInterval: 10000,
@@ -123,13 +121,12 @@ export default function HostAdventures() {
           updated_at: new Date().toISOString(),
         });
         return editingAdventure.id;
-      } 
-        return addDocument('adventures', {
-          ...dataToSave,
-          created_at: new Date().toISOString(),
-          current_participants: 0,
-        });
-      
+      }
+      return addDocument('adventures', {
+        ...dataToSave,
+        created_at: new Date().toISOString(),
+        current_participants: 0,
+      });
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({ queryKey: ['hostAdventures'] });

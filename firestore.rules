@@ -111,10 +111,11 @@ service cloud.firestore {
       allow create: if isAuthenticated() &&
                       request.resource.data.user_id == request.auth.uid;
 
-      // Guest, host, or admin can update bookings
       allow update: if isAuthenticated() &&
                       (resource.data.user_id == request.auth.uid ||
                        resource.data.host_id == request.auth.uid ||
+                       (isHost() && resource.data.status == 'pending' &&
+                        (request.resource.data.status == 'pending' || request.resource.data.status == 'rejected')) ||
                        isAdmin());
 
       // Only admins can delete bookings

@@ -51,12 +51,12 @@ import { queryDocuments, addDocument, updateDocument, deleteDocument } from '@/u
 import AdminLayout from '../components/admin/AdminLayout';
 import PermissionGuard from '../components/admin/PermissionGuard';
 import AdventureForm from '../components/adventures/AdventureForm';
-import { useAppContext } from '../components/context/AppContext';
+import { UseAppContext } from '../components/context/AppContext';
 
 export default function AdminAdventures() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingAdventure, setEditingAdventure] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);

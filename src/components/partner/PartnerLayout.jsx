@@ -21,7 +21,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
 
-import { useAppContext } from '../context/AppContext';
+import { UseAppContext } from '../context/AppContext';
 
 const navItems = [
   { name: 'Overview', icon: LayoutDashboard, href: 'PartnerDashboard' },
@@ -36,7 +36,7 @@ const navItems = [
 ];
 
 export default function PartnerLayout({ children }) {
-  const { logout, user: contextUser } = useAppContext();
+  const { logout, user: contextUser } = UseAppContext();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [language, setLanguage] = useState('en');

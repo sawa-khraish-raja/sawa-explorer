@@ -49,7 +49,7 @@ import AdminPermissionsDialog from '../components/admin/AdminPermissionsDialog';
 import ApproveHostDialog from '../components/admin/ApproveHostDialog';
 import AssignOfficeDialog from '../components/admin/AssignOfficeDialog';
 import PermissionGuard from '../components/admin/PermissionGuard';
-import { useAppContext } from '../components/context/AppContext';
+import { UseAppContext } from '../components/context/AppContext';
 
 // TODO: Audit logging removed - AuditLog not yet migrated to Firestore
 // async function logAuditAction(adminEmail, action, affectedUserEmail, details = {}) {
@@ -78,7 +78,7 @@ export default function AdminUsers() {
   const [selectedUserToDelete, setSelectedUserToDelete] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const { user: currentUser } = useAppContext();
+  const { user: currentUser } = UseAppContext();
   const hasFullAccess = currentUser?.admin_access_type === 'full' || currentUser?.role === 'admin';
 
   const { data: users, isLoading } = useQuery({

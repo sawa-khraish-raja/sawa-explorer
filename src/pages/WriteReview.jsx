@@ -7,13 +7,13 @@ import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
 import { queryDocuments } from '@/utils/firestore';
 
-import { useAppContext } from '../components/context/AppContext';
+import { UseAppContext } from '../components/context/AppContext';
 import ReviewForm from '../components/reviews/ReviewForm';
 
 export default function WriteReview() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, userLoading } = useAppContext();
+  const { user, userLoading } = UseAppContext();
   const [checked, setChecked] = useState(false);
 
   const bookingId = searchParams.get('bookingId');

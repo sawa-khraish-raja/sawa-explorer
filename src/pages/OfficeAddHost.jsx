@@ -25,7 +25,7 @@ import { Label } from '@/components/ui/label';
 import { createPageUrl } from '@/utils';
 import { getAllDocuments, addDocument } from '@/utils/firestore';
 
-import { useAppContext } from '../components/context/AppContext';
+import { UseAppContext } from '../components/context/AppContext';
 
 export default function OfficeAddHost() {
   const navigate = useNavigate();
@@ -40,7 +40,7 @@ export default function OfficeAddHost() {
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: async () => {
-      const currentUser = await useAppContext().user;
+      const currentUser = await UseAppContext().user;
       if (!currentUser || (currentUser.role_type !== 'office' && currentUser.role !== 'office')) {
         toast.error('Access denied');
         navigate(createPageUrl('Home'));

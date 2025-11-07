@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { useAppContext } from '@/components/context/AppContext';
+import { UseAppContext } from '@/components/context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { createPageUrl } from '@/utils';
 import { addDocument, queryDocuments, createNotification } from '@/utils/firestore';
@@ -15,7 +15,7 @@ import TravelerInfoForm from '../components/booking/TravelerInfoForm';
 export default function CreateBooking() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const [bookingData, setBookingData] = useState(null);
   const [selectedHostId, setSelectedHostId] = useState(null);
 

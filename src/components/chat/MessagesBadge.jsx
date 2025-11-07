@@ -7,10 +7,10 @@ import { cn } from '@/lib/utils';
 import { createPageUrl } from '@/utils';
 import { subscribeToConversations } from '@/utils/firestore';
 
-import { useAppContext } from '../context/AppContext';
+import { UseAppContext } from '../context/AppContext';
 
 export default function MessagesBadge({ className }) {
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const [conversations, setConversations] = useState([]);
   const [showBadgePulse, setShowBadgePulse] = useState(false);
 
@@ -23,13 +23,9 @@ export default function MessagesBadge({ className }) {
 
     const isHost = user?.host_approved;
 
-    const unsubscribe = subscribeToConversations(
-      user.email,
-      isHost,
-      (updatedConversations) => {
-        setConversations(updatedConversations);
-      }
-    );
+    const unsubscribe = subscribeToConversations(user.email, isHost, (updatedConversations) => {
+      setConversations(updatedConversations);
+    });
 
     return () => unsubscribe();
   }, [user?.email, user?.host_approved]);

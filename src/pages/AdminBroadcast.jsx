@@ -23,11 +23,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { getAllDocuments } from '@/utils/firestore';
 import { invokeFunction } from '@/utils/functions';
-
+import { UseAppContext } from '../components/context/AppContext';
 import AdminLayout from '../components/admin/AdminLayout';
 
 export default function AdminBroadcast() {
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [link, setLink] = useState('');

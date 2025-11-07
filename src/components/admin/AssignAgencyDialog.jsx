@@ -13,14 +13,13 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { queryDocuments, addDocument, updateDocument } from '@/utils/firestore';
-
+import { UseAppContext } from '../context/AppContext';
 import { showNotification } from '../notifications/NotificationManager';
 
 export default function AssignAgencyDialog({ host, isOpen, onClose }) {
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const queryClient = useQueryClient();
   const [selectedAgencyId, setSelectedAgencyId] = useState(host?.agency_id || '');
-
 
   const { data: agencies = [] } = useQuery({
     queryKey: ['allAgencies'],
@@ -36,7 +35,7 @@ export default function AssignAgencyDialog({ host, isOpen, onClose }) {
 
       await updateDocument('users', host.id, {
         ...updates,
-        updated_date: new Date().toISOString()
+        updated_date: new Date().toISOString(),
       });
 
       // Update agency hosts count
@@ -45,11 +44,11 @@ export default function AssignAgencyDialog({ host, isOpen, onClose }) {
         if (agency) {
           const hostsInAgency = await queryDocuments('users', [
             ['agency_id', '==', selectedAgencyId],
-            ['host_approved', '==', true]
+            ['host_approved', '==', true],
           ]);
           await updateDocument('agencies', selectedAgencyId, {
             total_hosts: hostsInAgency.length + 1,
-            updated_date: new Date().toISOString()
+            updated_date: new Date().toISOString(),
           });
         }
       }
@@ -60,7 +59,7 @@ export default function AssignAgencyDialog({ host, isOpen, onClose }) {
         if (oldAgency && oldAgency.total_hosts > 0) {
           await updateDocument('agencies', host.agency_id, {
             total_hosts: oldAgency.total_hosts - 1,
-            updated_date: new Date().toISOString()
+            updated_date: new Date().toISOString(),
           });
         }
       }
@@ -76,7 +75,7 @@ export default function AssignAgencyDialog({ host, isOpen, onClose }) {
           previousType: host.host_type,
           newType: selectedAgencyId ? 'agency' : 'freelancer',
         }),
-        created_date: new Date().toISOString()
+        created_date: new Date().toISOString(),
       });
     },
     onSuccess: () => {

@@ -35,7 +35,7 @@ import { invokeLLM } from '@/utils/llm';
 
 import SimpleDatePicker from '../booking/SimpleDatePicker';
 import { isAIFeatureEnabled } from '../config/aiFlags';
-import { useAppContext } from '../context/AppContext';
+import { UseAppContext } from '../context/AppContext';
 import { useTranslation } from '../i18n/LanguageContext';
 import {
   showWarning,
@@ -354,7 +354,7 @@ export default function AITripPlanner() {
   useEffect(() => {
     async function fetchUser() {
       try {
-        const currentUser = await useAppContext().user;
+        const currentUser = await UseAppContext().user;
         setUser(currentUser);
       } catch (e) {
         setUser(null);

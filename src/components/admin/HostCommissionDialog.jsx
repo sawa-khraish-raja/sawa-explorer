@@ -15,14 +15,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { addDocument, updateDocument } from '@/utils/firestore';
 
+import { UseAppContext } from '../context/AppContext';
 import { showNotification } from '../notifications/NotificationManager';
 
 export default function HostCommissionDialog({ host, isOpen, onClose }) {
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const queryClient = useQueryClient();
   const [sawaPercent, setSawaPercent] = useState(host?.commission_overrides?.sawa || '');
   const [officePercent, setOfficePercent] = useState(host?.commission_overrides?.office || '');
-
 
   const updateCommissionMutation = useMutation({
     mutationFn: async () => {
@@ -32,12 +32,12 @@ export default function HostCommissionDialog({ host, isOpen, onClose }) {
 
       await updateDocument('users', host.id, {
         commission_overrides: Object.keys(overrides).length > 0 ? overrides : null,
-        updated_date: new Date().toISOString()
+        updated_date: new Date().toISOString(),
       });
 
       // Audit log
       await addDocument('auditlogs', {
-        admin_email: currentUser.email,
+        admin_email: user.email,
         action: 'permissions_updated',
         affected_user_email: host.email,
         details: JSON.stringify({
@@ -45,7 +45,7 @@ export default function HostCommissionDialog({ host, isOpen, onClose }) {
           overrides,
           previousOverrides: host.commission_overrides,
         }),
-        created_date: new Date().toISOString()
+        created_date: new Date().toISOString(),
       });
     },
     onSuccess: () => {

@@ -21,11 +21,11 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { queryDocuments, addDocument, updateDocument } from '@/utils/firestore';
 
-import { useAppContext } from '../context/AppContext';
+import { UseAppContext } from '../context/AppContext';
 
 export default function NotificationSettings() {
   const queryClient = useQueryClient();
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const [isSaving, setIsSaving] = useState(false);
 
   const { data: preferences, isLoading } = useQuery({

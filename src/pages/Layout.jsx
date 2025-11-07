@@ -24,7 +24,7 @@ import MessagesBadge from '@/components/chat/MessagesBadge';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import GlobalStyles from '@/components/common/GlobalStyles';
 import ResponsiveStyles from '@/components/common/ResponsiveStyles';
-import { AppProvider, useAppContext } from '@/components/context/AppContext';
+import { AppProvider, UseAppContext } from '@/components/context/AppContext';
 import { LanguageProvider, useTranslation } from '@/components/i18n/LanguageContext';
 import { FCMProvider } from '@/components/notifications/FCMProvider';
 import NotificationBell from '@/components/notifications/NotificationBell';
@@ -252,7 +252,7 @@ const AppContent = memo(({ children, currentPageName }) => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalTab, setAuthModalTab] = useState('login');
 
-  const { user, userLoading: isLoadingUser } = useAppContext();
+  const { user, userLoading: isLoadingUser } = UseAppContext();
   const { logout } = useAuth();
 
   useEffect(() => {

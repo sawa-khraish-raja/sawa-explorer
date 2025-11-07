@@ -25,7 +25,7 @@ import { createPageUrl } from '@/utils';
 import { queryDocuments, updateDocument } from '@/utils/firestore';
 import { uploadImage } from '@/utils/storage';
 
-import { useAppContext } from '../components/context/AppContext';
+import { UseAppContext } from '../components/context/AppContext';
 import NotificationSettings from '../components/notifications/NotificationSettings';
 import DeleteAccountDialog from '../components/user/DeleteAccountDialog';
 
@@ -52,7 +52,7 @@ export default function UserProfile() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   let fileInputRef = null;
 
-  const { user, userLoading: isLoadingUser, isHost } = useAppContext();
+  const { user, userLoading: isLoadingUser, isHost } = UseAppContext();
 
   useEffect(() => {
     if (user) {
@@ -87,7 +87,9 @@ export default function UserProfile() {
 
       // Update host profile if user is a host
       if (user?.host_approved && hostProfileUpdateData) {
-        const hostProfiles = await queryDocuments('host_profiles', [['user_email', '==', user.email]]);
+        const hostProfiles = await queryDocuments('host_profiles', [
+          ['user_email', '==', user.email],
+        ]);
         if (hostProfiles && hostProfiles.length > 0) {
           const hostProfileId = hostProfiles[0].id;
           await updateDocument('host_profiles', hostProfileId, {

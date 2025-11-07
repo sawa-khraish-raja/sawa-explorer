@@ -19,15 +19,14 @@ import {
   deleteDocument,
 } from '@/utils/firestore';
 
-import { useAppContext } from '../context/AppContext';
+import { UseAppContext } from '../context/AppContext';
 
 import NotificationItem from './NotificationItem';
-
 
 export default function NotificationBell({ className }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user } = useAppContext();
+  const { user } = UseAppContext();
   const [isOpen, setIsOpen] = useState(false);
   const [showBadgePulse, setShowBadgePulse] = useState(false);
 
@@ -169,7 +168,7 @@ export default function NotificationBell({ className }) {
                 size='icon'
                 className='w-8 h-8'
                 onClick={() => {
-                  navigate(`${createPageUrl('UserProfile')  }?tab=notifications`);
+                  navigate(`${createPageUrl('UserProfile')}?tab=notifications`);
                   setIsOpen(false);
                 }}
               >
@@ -219,7 +218,7 @@ export default function NotificationBell({ className }) {
               variant='ghost'
               className='w-full text-sm text-purple-600 hover:bg-purple-50'
               onClick={() => {
-                navigate(`${createPageUrl('UserProfile')  }?tab=notifications`);
+                navigate(`${createPageUrl('UserProfile')}?tab=notifications`);
                 setIsOpen(false);
               }}
             >
