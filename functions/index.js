@@ -14,7 +14,6 @@ admin.initializeApp();
 // Define OpenAI API key as a parameter
 const openaiApiKey = defineString('OPENAI_API_KEY');
 
-// Get OpenAI API key from environment variables
 const getOpenAIKey = () => {
   return openaiApiKey.value();
 };
