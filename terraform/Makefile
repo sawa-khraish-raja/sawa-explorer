@@ -1,5 +1,7 @@
 .PHONY: help init plan-dev apply-dev plan-prd apply-prd output-dev output-prd import-prd
 
+export GOOGLE_APPLICATION_CREDENTIALS := $(CURDIR)/service-account-dev.json
+
 help:
 	@echo "Firebase Terraform Management"
 	@echo ""
