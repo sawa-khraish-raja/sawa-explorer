@@ -19,7 +19,6 @@ const getOpenAIKey = () => {
   return openaiApiKey.value();
 };
 
-// Initialize OpenAI (will be instantiated per request if needed)
 let openaiInstance = null;
 const getOpenAI = () => {
   if (!openaiInstance) {
@@ -43,19 +42,11 @@ exports.invokeLLM = onCall(async (request) => {
     console.log('Received request');
 
     // Extract parameters
-    const {
-      prompt,
-      model = 'gpt-4',
-      temperature = 0.7,
-      max_tokens = 2000,
-    } = data;
+    const { prompt, model = 'gpt-4', temperature = 0.7, max_tokens = 2000 } = data;
 
     // Validate prompt
     if (!prompt) {
-      throw new functions.https.HttpsError(
-        'invalid-argument',
-        'Prompt is required'
-      );
+      throw new functions.https.HttpsError('invalid-argument', 'Prompt is required');
     }
 
     console.log('Invoking LLM with model:', model);
@@ -63,12 +54,8 @@ exports.invokeLLM = onCall(async (request) => {
     // Get OpenAI instance
     const openai = getOpenAI();
     if (!openai) {
-      throw new functions.https.HttpsError(
-        'failed-precondition',
-        'OpenAI API key not configured'
-      );
+      throw new functions.https.HttpsError('failed-precondition', 'OpenAI API key not configured');
     }
-
 
     // Call OpenAI API
     const response = await openai.chat.completions.create({
@@ -76,7 +63,8 @@ exports.invokeLLM = onCall(async (request) => {
       messages: [
         {
           role: 'system',
-          content: 'You are a helpful travel planning assistant. Provide detailed, accurate travel information in JSON format when requested.',
+          content:
+            'You are a helpful travel planning assistant. Provide detailed, accurate travel information in JSON format when requested.',
         },
         {
           role: 'user',
@@ -102,23 +90,14 @@ exports.invokeLLM = onCall(async (request) => {
 
     // Handle OpenAI errors
     if (error.code === 'insufficient_quota') {
-      throw new functions.https.HttpsError(
-        'resource-exhausted',
-        'OpenAI API quota exceeded'
-      );
+      throw new functions.https.HttpsError('resource-exhausted', 'OpenAI API quota exceeded');
     }
 
     if (error.code === 'invalid_api_key') {
-      throw new functions.https.HttpsError(
-        'unauthenticated',
-        'Invalid OpenAI API key'
-      );
+      throw new functions.https.HttpsError('unauthenticated', 'Invalid OpenAI API key');
     }
 
-    throw new functions.https.HttpsError(
-      'internal',
-      error.message || 'Failed to invoke LLM'
-    );
+    throw new functions.https.HttpsError('internal', error.message || 'Failed to invoke LLM');
   }
 });
 
@@ -134,10 +113,7 @@ exports.sendBroadcastNotification = onCall(async (request) => {
 
     // Check authentication
     if (!auth) {
-      throw new functions.https.HttpsError(
-        'unauthenticated',
-        'User must be authenticated'
-      );
+      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
     }
 
     const { title, message, link } = data;
