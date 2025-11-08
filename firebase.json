@@ -40,7 +40,7 @@
   },
   "storage": [
     {
-      "bucket": "sawa-explorer-dev.firebasestorage.app",
+      "bucket": "sawa-explorer-dev.appspot.com",
       "rules": "storage.rules"
     }
   ],
