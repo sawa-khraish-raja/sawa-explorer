@@ -1,6 +1,7 @@
 rules_version = '2';
 
 // ========== FIREBASE STORAGE RULES ==========
+// Updated for dev environment
 
 service firebase.storage {
   match /b/{bucket}/o {
