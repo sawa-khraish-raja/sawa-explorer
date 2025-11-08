@@ -8,7 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  plan:
+    name: Plan Dev Deployment
     runs-on: ubuntu-latest
 
     steps:
@@ -27,10 +28,51 @@ jobs:
       - name: Run linter
         run: npm run lint
 
+      - name: Load Dev Environment Variables
+        run: |
+          if [ -f .env.dev ]; then
+            cat .env.dev >> $GITHUB_ENV
+          fi
+
       - name: Build project
-        env:
-          NODE_ENV: dev
-          VITE_ENV: dev
+        run: npm run build
+
+      - name: Plan Summary
+        run: |
+          echo "Plan completed successfully"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Triggered by: ${{ github.actor }}"
+          echo "Ready to deploy to DEV environment"
+
+  deploy:
+    name: Deploy to Dev
+    runs-on: ubuntu-latest
+    needs: plan
+    environment:
+      name: dev
+      url: https://sawa-explorer-dev.web.app
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Load Dev Environment Variables
+        run: |
+          if [ -f .env.dev ]; then
+            cat .env.dev >> $GITHUB_ENV
+          fi
+
+      - name: Build project
         run: npm run build
 
       - name: Deploy to Firebase Hosting (Dev)
@@ -41,6 +83,18 @@ jobs:
           projectId: sawa-explorer-dev
           channelId: live
 
+      - name: Install Firebase Tools
+        run: npm install -g firebase-tools
+
+      - name: Deploy Firestore Rules and Indexes (Dev)
+        run: |
+          firebase deploy --only firestore:rules --project dev --token ${{ secrets.FIREBASE_TOKEN_DEV }}
+          firebase deploy --only firestore:indexes --project dev --token ${{ secrets.FIREBASE_TOKEN_DEV }}
+
+      - name: Deploy Storage Rules (Dev)
+        run: |
+          firebase deploy --only storage:rules --project dev --token ${{ secrets.FIREBASE_TOKEN_DEV }}
+
       - name: Install Functions dependencies
         run: cd functions && npm ci
 
@@ -50,7 +104,6 @@ jobs:
 
       - name: Deploy Functions to Firebase (Dev)
         run: |
-          npm install -g firebase-tools
           firebase deploy --only functions --project dev --token ${{ secrets.FIREBASE_TOKEN_DEV }} --force
 
       - name: Deployment Summary

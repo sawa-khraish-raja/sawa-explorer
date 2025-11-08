@@ -1,0 +1,7 @@
+project_id           = "sawa-explorer"
+environment          = "prd"
+region               = "us-central1"
+firestore_database_id = "test"
+firestore_location   = "us-central"
+storage_location     = "US"
+web_app_display_name = "Sawa Explorer"

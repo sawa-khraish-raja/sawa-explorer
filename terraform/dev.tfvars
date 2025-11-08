@@ -1,0 +1,8 @@
+credentials_file      = "./service-account-dev.json"
+project_id           = "sawa-explorer-dev"
+environment          = "dev"
+region               = "us-central1"
+firestore_database_id = "test"
+firestore_location   = "nam5"
+storage_location     = "US"
+web_app_display_name = "Sawa Explorer Dev"
