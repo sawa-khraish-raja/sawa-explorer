@@ -22,6 +22,10 @@ service cloud.firestore {
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.host_approved == true;
     }
 
+    function getUserEmail() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.email;
+    }
+
     // ========== USERS COLLECTION ==========
 
     match /users/{userId} {
@@ -167,19 +171,19 @@ service cloud.firestore {
     match /conversations/{conversationId} {
       // Travelers can read their own conversations, hosts can read conversations they're part of
       allow read: if isAuthenticated() &&
-                    (resource.data.traveler_email == request.auth.token.email ||
-                     request.auth.token.email in resource.data.host_emails ||
+                    (resource.data.traveler_email == getUserEmail() ||
+                     getUserEmail() in resource.data.host_emails ||
                      isAdmin());
 
       // Authenticated users can create conversations they're part of
       allow create: if isAuthenticated() &&
-                      (request.resource.data.traveler_email == request.auth.token.email ||
-                       request.auth.token.email in request.resource.data.host_emails);
+                      (request.resource.data.traveler_email == getUserEmail() ||
+                       getUserEmail() in request.resource.data.host_emails);
 
       // Participants can update conversations (last message, unread status)
       allow update: if isAuthenticated() &&
-                      (resource.data.traveler_email == request.auth.token.email ||
-                       request.auth.token.email in resource.data.host_emails);
+                      (resource.data.traveler_email == getUserEmail() ||
+                       getUserEmail() in resource.data.host_emails);
 
       // Only admins can delete conversations
       allow delete: if isAdmin();
@@ -189,19 +193,19 @@ service cloud.firestore {
       match /messages/{messageId} {
         // Participants can read messages
         allow read: if isAuthenticated() &&
-                      (get(/databases/$(database)/documents/conversations/$(conversationId)).data.traveler_email == request.auth.token.email ||
-                       request.auth.token.email in get(/databases/$(database)/documents/conversations/$(conversationId)).data.host_emails);
+                      (get(/databases/$(database)/documents/conversations/$(conversationId)).data.traveler_email == getUserEmail() ||
+                       getUserEmail() in get(/databases/$(database)/documents/conversations/$(conversationId)).data.host_emails);
 
         // Participants can create messages
         allow create: if isAuthenticated() &&
-                        (get(/databases/$(database)/documents/conversations/$(conversationId)).data.traveler_email == request.auth.token.email ||
-                         request.auth.token.email in get(/databases/$(database)/documents/conversations/$(conversationId)).data.host_emails) &&
-                        request.resource.data.sender_email == request.auth.token.email;
+                        (get(/databases/$(database)/documents/conversations/$(conversationId)).data.traveler_email == getUserEmail() ||
+                         getUserEmail() in get(/databases/$(database)/documents/conversations/$(conversationId)).data.host_emails) &&
+                        request.resource.data.sender_email == getUserEmail();
 
         // Participants can update messages (mark as read)
         allow update: if isAuthenticated() &&
-                        (get(/databases/$(database)/documents/conversations/$(conversationId)).data.traveler_email == request.auth.token.email ||
-                         request.auth.token.email in get(/databases/$(database)/documents/conversations/$(conversationId)).data.host_emails);
+                        (get(/databases/$(database)/documents/conversations/$(conversationId)).data.traveler_email == getUserEmail() ||
+                         getUserEmail() in get(/databases/$(database)/documents/conversations/$(conversationId)).data.host_emails);
 
         // Only admins can delete messages
         allow delete: if isAdmin();
@@ -231,18 +235,18 @@ service cloud.firestore {
     match /offers/{offerId} {
       // Hosts can read their own offers, travelers can read offers for their bookings
       allow read: if isAuthenticated() &&
-                    (resource.data.host_email == request.auth.token.email ||
-                     resource.data.traveler_email == request.auth.token.email ||
+                    (resource.data.host_email == getUserEmail() ||
+                     resource.data.traveler_email == getUserEmail() ||
                      isAdmin());
 
       // Approved hosts can create offers
       allow create: if isHost() &&
-                      request.resource.data.host_email == request.auth.token.email;
+                      request.resource.data.host_email == getUserEmail();
 
       // Host can update their offers, traveler can accept/decline offers
       allow update: if isAuthenticated() &&
-                      (resource.data.host_email == request.auth.token.email ||
-                       resource.data.traveler_email == request.auth.token.email ||
+                      (resource.data.host_email == getUserEmail() ||
+                       resource.data.traveler_email == getUserEmail() ||
                        isAdmin());
 
       // Only admins can delete offers
@@ -257,13 +261,13 @@ service cloud.firestore {
 
       // Authenticated users can create messages
       allow create: if isAuthenticated() &&
-                      request.resource.data.sender_email == request.auth.token.email;
+                      request.resource.data.sender_email == getUserEmail();
 
       // Sender can update their messages (edit, mark as delivered)
       // Recipients can also update to mark messages as read (add to read_by array)
       allow update: if isAuthenticated() &&
-                      (resource.data.sender_email == request.auth.token.email ||
-                       request.auth.token.email in request.resource.data.read_by);
+                      (resource.data.sender_email == getUserEmail() ||
+                       getUserEmail() in request.resource.data.read_by);
 
       // Only admins can delete messages
       allow delete: if isAdmin();
@@ -275,13 +279,13 @@ service cloud.firestore {
       // Users can read their own notifications, admins can read all
       allow read: if isAuthenticated() &&
                     (resource.data.user_id == request.auth.uid ||
-                     resource.data.recipient_email == request.auth.token.email ||
+                     resource.data.recipient_email == getUserEmail() ||
                      isAdmin());
 
       // Users can update their own notifications (mark as read)
       allow update: if isAuthenticated() &&
                       (resource.data.user_id == request.auth.uid ||
-                       resource.data.recipient_email == request.auth.token.email);
+                       resource.data.recipient_email == getUserEmail());
 
       // Authenticated users can create notifications (for booking requests, etc)
       allow create: if isAuthenticated();
@@ -323,18 +327,18 @@ service cloud.firestore {
       // Users can read their own device tokens, admins can read all
       allow read: if isAuthenticated() &&
                     (resource.data.user_id == request.auth.uid ||
-                     resource.data.user_email == request.auth.token.email ||
+                     resource.data.user_email == getUserEmail() ||
                      isAdmin());
 
       // Authenticated users can create/update their device tokens
       allow create, update: if isAuthenticated() &&
                               (request.resource.data.user_id == request.auth.uid ||
-                               request.resource.data.user_email == request.auth.token.email);
+                               request.resource.data.user_email == getUserEmail());
 
       // Users can delete their own tokens, admins can delete any
       allow delete: if isAuthenticated() &&
                       (resource.data.user_id == request.auth.uid ||
-                       resource.data.user_email == request.auth.token.email ||
+                       resource.data.user_email == getUserEmail() ||
                        isAdmin());
     }
 
