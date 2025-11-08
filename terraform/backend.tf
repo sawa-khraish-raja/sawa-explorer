@@ -1,5 +1,6 @@
 terraform {
-  backend "local" {
-    path = "terraform.tfstate"
+  backend "gcs" {
+    bucket = "sawa-explorer-terraform-state"
+    prefix = "dev"
   }
 }

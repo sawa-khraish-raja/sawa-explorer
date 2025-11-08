@@ -8,7 +8,7 @@ resource "google_firestore_database" "database" {
 
 resource "google_storage_bucket" "firebase_default" {
   project  = var.project_id
-  name     = "${var.project_id}.appspot.com"
+  name     = "${var.project_id}-storage"
   location = var.storage_location
 
   uniform_bucket_level_access = true
