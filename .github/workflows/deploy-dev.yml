@@ -129,9 +129,9 @@ jobs:
           firebase deploy --only firestore:rules --project dev --token ${{ secrets.FIREBASE_TOKEN_DEV }}
           firebase deploy --only firestore:indexes --project dev --token ${{ secrets.FIREBASE_TOKEN_DEV }}
 
-      # - name: Deploy Storage Rules (Dev)
-      #   run: |
-      #     firebase deploy --only storage:rules --project dev --token ${{ secrets.FIREBASE_TOKEN_DEV }}
+      - name: Deploy Storage Rules (Dev)
+        run: |
+          firebase deploy --only storage:rules --project dev --token ${{ secrets.FIREBASE_TOKEN_DEV }}
 
       - name: Install Functions dependencies
         run: cd functions && npm ci
