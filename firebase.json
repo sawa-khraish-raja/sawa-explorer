@@ -38,9 +38,12 @@
     "indexes": "firestore.indexes.json",
     "database": "dev-db"
   },
-  "storage": {
-    "rules": "storage.rules"
-  },
+  "storage": [
+    {
+      "bucket": "sawa-explorer-dev.firebasestorage.app",
+      "rules": "storage.rules"
+    }
+  ],
   "functions": {
     "source": "functions",
     "runtime": "nodejs20"
