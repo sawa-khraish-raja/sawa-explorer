@@ -48,9 +48,13 @@ jobs:
 
       - name: Terraform Init
         run: cd terraform && terraform init
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/terraform/service-account-dev.json
 
       - name: Terraform Plan
         run: cd terraform && terraform plan -var-file="dev.tfvars"
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/terraform/service-account-dev.json
 
       - name: Plan Summary
         run: |
@@ -101,9 +105,13 @@ jobs:
 
       - name: Terraform Init
         run: cd terraform && terraform init
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/terraform/service-account-dev.json
 
       - name: Terraform Apply
         run: cd terraform && terraform apply -var-file="dev.tfvars" -auto-approve
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/terraform/service-account-dev.json
 
       - name: Deploy to Firebase Hosting (Dev)
         uses: FirebaseExtended/action-hosting-deploy@v0
