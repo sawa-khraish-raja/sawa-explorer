@@ -119,7 +119,9 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
       - name: Write service account credentials
         run: |
-          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}" > terraform/dev/service-account-dev.json
+          cat <<'EOF' > terraform/dev/service-account-dev.json
+          ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}
+          EOF
       - name: Terraform init
         working-directory: terraform/dev
         env:
@@ -146,7 +148,9 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
       - name: Write service account credentials
         run: |
-          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_PRD }}" > terraform/prd/service-account-prd.json
+          cat <<'EOF' > terraform/prd/service-account-prd.json
+          ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PRD }}
+          EOF
       - name: Terraform init
         working-directory: terraform/prd
         env:
