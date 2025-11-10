@@ -109,19 +109,30 @@ jobs:
           key: deps-${{ runner.os }}-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
       - run: npm test -- --ci
 
-  # ---------- PLAN / VALIDATION (placeholders—swap with real steps if needed) ----------
+  # ---------- PLAN / VALIDATION ----------
   tf_plan_dev:
     name: TF plan (dev)
     runs-on: ubuntu-latest
     needs: [unit_test]
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
-      - run: echo "terraform plan dev (placeholder)"
+      - uses: hashicorp/setup-terraform@v3
+      - name: Write service account credentials
+        run: |
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}" > terraform/dev/service-account-dev.json
+      - name: Terraform init
+        working-directory: terraform/dev
+        run: terraform init
+      - name: Terraform plan
+        working-directory: terraform/dev
+        run: terraform plan
 
   tf_plan_prd:
     name: TF plan (prd)
     runs-on: ubuntu-latest
     needs: [unit_test]
+    continue-on-error: true
     if: >
       (github.event_name == 'pull_request' &&
        github.event.action == 'closed' &&
@@ -130,7 +141,16 @@ jobs:
       || (github.event_name == 'workflow_dispatch' && inputs.target == 'prd')
     steps:
       - uses: actions/checkout@v4
-      - run: echo "terraform plan prd (placeholder)"
+      - uses: hashicorp/setup-terraform@v3
+      - name: Write service account credentials
+        run: |
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_PRD }}" > terraform/prd/service-account-prd.json
+      - name: Terraform init
+        working-directory: terraform/prd
+        run: terraform init
+      - name: Terraform plan
+        working-directory: terraform/prd
+        run: terraform plan
 
   # ---------- BUILD ----------
   build:
@@ -171,13 +191,27 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
-      - run: npm i -g firebase-tools
+      - name: Build project
+        env:
+          NODE_ENV: dev
+          VITE_ENV: dev
+        run: npm run build
+      - name: Deploy to Firebase Hosting (Dev)
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}
+          projectId: sawa-explorer-dev
+          channelId: live
+      - name: Install Functions dependencies
+        run: cd functions && npm ci
       - name: Write .env (dev)
         run: |
           mkdir -p functions
           echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY_DEV }}" > functions/.env
-      - name: Deploy Firebase (dev)
+      - name: Deploy Firebase Functions (dev)
         run: |
+          npm i -g firebase-tools
           firebase deploy --only functions --project dev --token ${{ secrets.FIREBASE_TOKEN_DEV }} --force
 
   # ---------- DEPLOY: PRD (after merge) ----------
@@ -203,11 +237,25 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
-      - run: npm i -g firebase-tools
+      - name: Build project
+        env:
+          NODE_ENV: prd
+          VITE_ENV: prd
+        run: npm run build
+      - name: Deploy to Firebase Hosting (Prd)
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PRD }}
+          projectId: sawa-explorer
+          channelId: live
+      - name: Install Functions dependencies
+        run: cd functions && npm ci
       - name: Write .env (prd)
         run: |
           mkdir -p functions
           echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY_PRD }}" > functions/.env
-      - name: Deploy Firebase (prd)
+      - name: Deploy Firebase Functions (prd)
         run: |
+          npm i -g firebase-tools
           firebase deploy --only functions --project prd --token ${{ secrets.FIREBASE_TOKEN_PRD }} --force
