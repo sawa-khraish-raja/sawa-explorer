@@ -114,7 +114,6 @@ jobs:
     name: TF plan (dev)
     runs-on: ubuntu-latest
     needs: [unit_test]
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
@@ -123,16 +122,19 @@ jobs:
           echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}" > terraform/dev/service-account-dev.json
       - name: Terraform init
         working-directory: terraform/dev
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/terraform/dev/service-account-dev.json
         run: terraform init
       - name: Terraform plan
         working-directory: terraform/dev
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/terraform/dev/service-account-dev.json
         run: terraform plan
 
   tf_plan_prd:
     name: TF plan (prd)
     runs-on: ubuntu-latest
     needs: [unit_test]
-    continue-on-error: true
     if: >
       (github.event_name == 'pull_request' &&
        github.event.action == 'closed' &&
@@ -147,9 +149,13 @@ jobs:
           echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_PRD }}" > terraform/prd/service-account-prd.json
       - name: Terraform init
         working-directory: terraform/prd
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/terraform/prd/service-account-prd.json
         run: terraform init
       - name: Terraform plan
         working-directory: terraform/prd
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/terraform/prd/service-account-prd.json
         run: terraform plan
 
   # ---------- BUILD ----------
