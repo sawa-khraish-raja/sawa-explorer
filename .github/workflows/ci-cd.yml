@@ -131,7 +131,7 @@ jobs:
         working-directory: terraform/dev
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/terraform/dev/service-account-dev.json
-        run: terraform plan
+        run: terraform plan -lock=false
 
   tf_plan_prd:
     name: TF plan (prd)
@@ -160,7 +160,7 @@ jobs:
         working-directory: terraform/prd
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/terraform/prd/service-account-prd.json
-        run: terraform plan
+        run: terraform plan -lock=false
 
   # ---------- BUILD ----------
   build:
