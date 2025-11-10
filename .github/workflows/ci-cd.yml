@@ -204,6 +204,8 @@ jobs:
         run: npm i -g firebase-tools
       - name: Deploy to Firebase Hosting (Dev)
         run: firebase deploy --only hosting --project sawa-explorer-dev --token ${{ secrets.FIREBASE_TOKEN_DEV }}
+      - name: Deploy Firestore indexes and rules (Dev)
+        run: firebase deploy --only firestore --project sawa-explorer-dev --token ${{ secrets.FIREBASE_TOKEN_DEV }}
       - name: Install Functions dependencies
         run: cd functions && npm ci
       - name: Write .env (dev)
@@ -246,6 +248,8 @@ jobs:
         run: npm i -g firebase-tools
       - name: Deploy to Firebase Hosting (Prd)
         run: firebase deploy --only hosting --project sawa-explorer --token ${{ secrets.FIREBASE_TOKEN_PRD }}
+      - name: Deploy Firestore indexes and rules (Prd)
+        run: firebase deploy --only firestore --project sawa-explorer --token ${{ secrets.FIREBASE_TOKEN_PRD }}
       - name: Install Functions dependencies
         run: cd functions && npm ci
       - name: Write .env (prd)
