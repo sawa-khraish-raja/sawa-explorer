@@ -26,8 +26,6 @@ dist-ssr
 # Environment and secrets
 .env
 .env.local
-.env.dev
-.env.prd
 .env.*.local
 serviceAccountKey.json
 service-account-*.json
