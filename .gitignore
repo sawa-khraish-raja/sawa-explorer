@@ -30,5 +30,12 @@ dist-ssr
 .env.prd
 .env.*.local
 serviceAccountKey.json
+service-account-*.json
 firebase-debug.log
 .firebase/
+
+# Terraform
+terraform/*/.terraform/
+terraform/*/.terraform.lock.hcl
+terraform/*/terraform.tfstate
+terraform/*/terraform.tfstate.backup

@@ -8,7 +8,7 @@ resource "google_firestore_database" "database" {
 
 resource "google_storage_bucket" "firebase_default" {
   project  = var.project_id
-  name     = "${var.project_id}-storage"
+  name     = "${var.project_id}.firebasestorage.app"
   location = var.storage_location
 
   uniform_bucket_level_access = true
@@ -18,6 +18,10 @@ resource "google_storage_bucket" "firebase_default" {
     method          = ["GET", "HEAD", "PUT", "POST", "DELETE"]
     response_header = ["*"]
     max_age_seconds = 3600
+  }
+
+  lifecycle {
+    ignore_changes = [storage_class, location]
   }
 }
 
