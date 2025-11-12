@@ -113,7 +113,7 @@ export default [
       'react/jsx-no-useless-fragment': 'off',
 
       // ===== React Hooks Rules =====
-      'react-hooks/rules-of-hooks': 'off',
+      'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'off',
 
       // ===== React Refresh (for Vite HMR) =====

@@ -3,13 +3,13 @@ import { useCallback, useEffect } from 'react';
 
 
 export default function Lightbox({ photos, currentIndex, onClose, onNavigate }) {
-  if (!photos || photos.length === 0) return null;
-
   const handlePrev = () => {
+    if (!photos || photos.length === 0) return;
     onNavigate((currentIndex - 1 + photos.length) % photos.length);
   };
 
   const handleNext = () => {
+    if (!photos || photos.length === 0) return;
     onNavigate((currentIndex + 1) % photos.length);
   };
 
@@ -27,13 +27,15 @@ export default function Lightbox({ photos, currentIndex, onClose, onNavigate }) 
         onClose();
       }
     },
-    [currentIndex, photos.length, onClose, onNavigate]
+    [currentIndex, photos, onClose, onNavigate]
   );
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
+
+  if (!photos || photos.length === 0) return null;
 
   return (
     <div
