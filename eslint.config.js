@@ -123,7 +123,7 @@ export default [
       'no-console': 'off',
       'no-debugger': 'warn',
       'no-alert': 'off',
-      'no-undef': 'off',
+      'no-undef': 'error',
       'no-empty': 'off',
       'no-var': 'error',
       'prefer-const': 'error',
@@ -169,6 +169,21 @@ export default [
       'no-undef': 'off',
       'no-empty': 'off',
       'no-unused-vars': 'off',
+    },
+  },
+
+  {
+    files: ['public/**/*-sw.js', 'public/**/firebase-messaging-sw.js'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: {
+        ...globals.serviceworker,
+        firebase: 'readonly',
+      },
+      sourceType: 'script',
+    },
+    rules: {
+      'no-undef': 'error',
     },
   },
 

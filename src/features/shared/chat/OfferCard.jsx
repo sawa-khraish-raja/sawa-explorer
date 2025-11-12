@@ -16,6 +16,7 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { updateDocument } from '@/utils/firestore';
+import { confirmBooking } from '@/utils/functions';
 
 import { UseAppContext } from "@/shared/context/AppContext";
 import { showSuccess, showError } from '@/shared/utils/notifications';

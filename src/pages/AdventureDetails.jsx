@@ -101,10 +101,10 @@ export default function AdventureDetails() {
 
       console.log('Booking data to be saved:', bookingData);
 
+      let bookingId;
       try {
-        const bookingId = await addDocument('bookings', bookingData);
+        bookingId = await addDocument('bookings', bookingData);
         console.log('Booking created successfully! ID:', bookingId);
-        return bookingId;
       } catch (error) {
         console.error('Booking creation failed:', error);
         console.error('Error code:', error.code);

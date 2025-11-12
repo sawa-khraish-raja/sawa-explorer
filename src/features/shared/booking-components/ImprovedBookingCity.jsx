@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/shared/components/ui/button';
 import { createPageUrl } from '@/utils';
 import { getAllDocuments, queryDocuments, addDocument } from '@/utils/firestore';
+import { notifyHostsOfNewBooking } from '@/utils/functions';
 
 import PageHero from "@/shared/components/PageHero";
 import { UseAppContext } from "@/shared/context/AppContext";

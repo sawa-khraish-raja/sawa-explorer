@@ -8,7 +8,9 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
+import { invokeFunction } from '@/utils/functions';
 
+const sendEmail = (params) => invokeFunction('sendEmail', params);
 
 const translations = {
   en: {

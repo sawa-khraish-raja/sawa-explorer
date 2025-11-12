@@ -58,6 +58,7 @@ const AVAILABLE_LANGUAGES = [
 ];
 
 export default function HostProfileSettings({ user, onProfileUpdated }) {
+  const { updateMe } = UseAppContext();
   const queryClient = useQueryClient();
 
   const [profileData, setProfileData] = useState({

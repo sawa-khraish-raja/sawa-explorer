@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import {
+  getAllDocuments,
+  queryDocuments,
+  getDocument,
+  addDocument,
+  updateDocument,
+} from '@/utils/firestore';
 import { uploadImage, uploadVideo } from '@/utils/storage';
 import {
   Loader2,
@@ -16,8 +22,10 @@ import {
   X,
   Globe,
   Volume2,
+  Mic,
+  Square,
+  AlertTriangle,
 } from 'lucide-react';
-import { Mic, Square } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -35,10 +43,12 @@ import {
 import MessageBubble from '../chat/MessageBubble';
 import OfferCard from '../chat/OfferCard';
 import { format } from 'date-fns';
-import { NotificationHelpers, notifyNewMessage } from '@/features/shared/notifications/notificationHelpers';
+import {
+  NotificationHelpers,
+  notifyNewMessage,
+} from '@/features/shared/notifications/notificationHelpers';
 import { MessageValidator } from '../chat/MessageValidator';
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
 import { TARGET_LANGS, normLang } from '@/shared/i18n/i18nVoice';
 import { playVoice } from '@/components/voice/playVoice';
 import { useSawaTranslation } from '../chat/useSawaTranslation';
@@ -208,10 +218,13 @@ export default function HostConversationView({
 
   const createOfferMutation = useMutation({
     mutationFn: async (offerData) => {
-      const newOffer = await addDocument('offers', { ...{
-        ...offerData,
-        conversation_id: conversationId,
-      }, created_date: new Date().toISOString() });
+      const newOffer = await addDocument('offers', {
+        ...{
+          ...offerData,
+          conversation_id: conversationId,
+        },
+        created_date: new Date().toISOString(),
+      });
       return newOffer;
     },
     onSuccess: (newOffer) => {
@@ -289,7 +302,10 @@ export default function HostConversationView({
     mutationFn: async ({ offerId, bookingId }) => {
       // In a real app, this would likely update the offer status to 'accepted' and maybe link to a booking
       // For this example, we'll simulate an update and notify
-      await updateDocument('offers', offerId, { ...{ status: 'accepted' }, updated_date: new Date().toISOString() });
+      await updateDocument('offers', offerId, {
+        ...{ status: 'accepted' },
+        updated_date: new Date().toISOString(),
+      });
       // If there's a booking associated, we might update it or redirect
     },
     onSuccess: (data, variables) => {
@@ -496,7 +512,7 @@ export default function HostConversationView({
       }
     }
 
-    let uploadedUrls = [];
+    const uploadedUrls = [];
     if (imagesToSend.length > 0) {
       setUploadingImages(true);
       try {

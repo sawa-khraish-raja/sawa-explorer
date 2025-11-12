@@ -25,8 +25,12 @@ import {
 } from '@/shared/components/ui/select';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { createPageUrl } from '@/utils';
+import { deleteAccount } from '@/utils/functions';
+
+import { UseAppContext } from "@/shared/context/AppContext";
 
 export default function DeleteAccountDialog({ open, onClose, user }) {
+  const { logout } = UseAppContext();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [deletionType, setDeletionType] = useState('permanent');

@@ -7,7 +7,7 @@ import { cn } from '@/shared/utils';
 import { createPageUrl } from '@/utils';
 import { subscribeToConversations } from '@/utils/firestore';
 
-import { UseAppContext } from "@/shared/context/AppContext";
+import { UseAppContext } from '@/shared/context/AppContext';
 
 export default function MessagesBadge({ className }) {
   const { user } = UseAppContext();
@@ -42,11 +42,9 @@ export default function MessagesBadge({ className }) {
       ) {
         return count + 1;
       }
-    } else {
+    } else if (conversation.unread_by_traveler === true) {
       // Traveler: check unread_by_traveler flag
-      if (conversation.unread_by_traveler === true) {
-        return count + 1;
-      }
+      return count + 1;
     }
 
     return count;

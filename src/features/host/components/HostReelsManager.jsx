@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+import {
+  getAllDocuments,
+  queryDocuments,
+  getDocument,
+  addDocument,
+  updateDocument,
+  deleteDocument,
+} from '@/utils/firestore';
 import { uploadImage, uploadVideo } from '@/utils/storage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
@@ -37,9 +44,7 @@ export default function HostReelsManager({ user }) {
   const { data: reels = [], isLoading } = useQuery({
     queryKey: ['hostReels', user?.email],
     queryFn: async () => {
-      const allReels = await queryDocuments('host_reels', [
-        ['host_email', '==', user.email]
-      ]);
+      const allReels = await queryDocuments('host_reels', [['host_email', '==', user.email]]);
       return allReels;
     },
     enabled: !!user,
@@ -106,7 +111,7 @@ export default function HostReelsManager({ user }) {
     console.log(' File selected:', {
       name: file.name,
       type: file.type,
-      size: (file.size / 1024 / 1024).toFixed(2) + 'MB',
+      size: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
     });
   };
 
@@ -124,11 +129,8 @@ export default function HostReelsManager({ user }) {
     setUploading(true);
 
     try {
-
-
       // Upload file
-      const { file_url } = await uploadImage(selectedFile,
-       'uploads');
+      const { file_url } = await uploadImage(selectedFile, 'uploads');
 
       console.log(' File uploaded:', file_url);
 

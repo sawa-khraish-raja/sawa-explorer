@@ -18,6 +18,7 @@ import {
   seedServices,
   seedNotifications,
   seedBookingsAndOffers,
+  clearAdventures,
 } from '@/utils/seedDatabase';
 
 export default function DevTools() {

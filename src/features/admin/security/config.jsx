@@ -1,3 +1,4 @@
+/* global Deno */
 /**
  * SAWA Security Configuration
  * All security settings in one place

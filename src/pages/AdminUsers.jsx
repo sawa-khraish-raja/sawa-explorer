@@ -42,7 +42,7 @@ import {
   SelectValue,
 } from '@/shared/components/ui/select';
 import { cn } from '@/shared/utils';
-import { getAllDocuments, updateDocument, getDocument } from '@/utils/firestore';
+import { getAllDocuments, updateDocument, getDocument, addDocument } from '@/utils/firestore';
 
 import AdminLayout from '@/features/admin/components/AdminLayout';
 import AdminPermissionsDialog from '@/features/admin/components/AdminPermissionsDialog';
@@ -51,19 +51,19 @@ import AssignOfficeDialog from '@/features/admin/components/AssignOfficeDialog';
 import PermissionGuard from '@/features/admin/components/PermissionGuard';
 import { UseAppContext } from '@/shared/context/AppContext';
 
-// TODO: Audit logging removed - AuditLog not yet migrated to Firestore
-// async function logAuditAction(adminEmail, action, affectedUserEmail, details = {}) {
-//   try {
-//     await base44.entities.AuditLog.create({
-//       admin_email: adminEmail,
-//       action: action,
-//       affected_user_email: affectedUserEmail,
-//       details: JSON.stringify(details),
-//     });
-//   } catch (error) {
-//     console.error('Audit log failed:', error);
-//   }
-// }
+async function logAuditAction(adminEmail, action, affectedUserEmail, details = {}) {
+  try {
+    await addDocument('auditlogs', {
+      admin_email: adminEmail,
+      action: action,
+      affected_user_email: affectedUserEmail,
+      details: JSON.stringify(details),
+      created_date: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Audit log failed:', error);
+  }
+}
 
 export default function AdminUsers() {
   const queryClient = useQueryClient();

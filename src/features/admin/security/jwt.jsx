@@ -1,3 +1,4 @@
+/* global Deno */
 /**
  * JWT Utilities for Admin Authentication
  * Requires SAWA_JWT_SECRET in secrets

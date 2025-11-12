@@ -3,6 +3,7 @@
  * Integration with signed payment actions
  */
 
+import { verifySignature } from '@/utils/functions';
 
 /**
  * Create secure payment intent
@@ -11,7 +12,7 @@
  */
 export async function createPaymentIntent({ bookingId, amount, currency = 'USD' }) {
   try {
-    const response = await createPaymentIntent( {
+    const response = await createPaymentIntent({
       bookingId,
       amount,
       currency,
@@ -35,7 +36,7 @@ export async function createPaymentIntent({ bookingId, amount, currency = 'USD' 
  */
 export async function verifyPaymentSignature(signed) {
   try {
-    const response = await verifySignature( signed);
+    const response = await verifySignature(signed);
 
     return response.data.ok === true;
   } catch (error) {

@@ -66,7 +66,7 @@ export default function AssignAgencyDialog({ host, isOpen, onClose }) {
 
       // Audit log
       await addDocument('auditlogs', {
-        admin_email: currentUser.email,
+        admin_email: user.email,
         action: 'host_reassigned',
         affected_user_email: host.email,
         details: JSON.stringify({

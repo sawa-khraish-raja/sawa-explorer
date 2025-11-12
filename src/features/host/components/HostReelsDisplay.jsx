@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Play, Eye, Loader2 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { cn } from '@/shared/utils';
@@ -12,6 +13,7 @@ import { NotificationHelpers } from '@/features/shared/notifications/notificatio
 
 export default function HostReelsDisplay({ hostEmail }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [likeAnimation, setLikeAnimation] = useState(null);

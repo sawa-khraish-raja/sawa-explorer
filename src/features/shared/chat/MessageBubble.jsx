@@ -22,6 +22,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui
 import { cn } from '@/shared/utils';
 import { createPageUrl } from '@/utils';
 import { updateDocument } from '@/utils/firestore';
+import { messageTranslator } from '@/utils/functions';
 
 const FunctionDisplay = ({ toolCall }) => {
   const [expanded, setExpanded] = useState(false);

@@ -1,6 +1,7 @@
 import { isAIFeatureEnabled, AI_ALLOWED_CONTEXTS } from "@/features/admin/config/aiFlags";
 import { isFeatureEnabled } from "@/features/admin/config/featureFlags";
 import { normLang } from '@/shared/i18n/i18nLang';
+import { translateText } from '@/utils/functions';
 
 //  Client-side translation cache
 class TranslationCache {
