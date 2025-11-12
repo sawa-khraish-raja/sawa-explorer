@@ -1,15 +1,153 @@
 {
   "indexes": [
     {
+      "collectionGroup": "adventures",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "host_id",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "created_at",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "cities",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "is_active",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "name",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "conversations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "host_emails",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "last_message_timestamp",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "conversations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "traveler_email",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "last_message_timestamp",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "hero_slides",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "page_type",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "city_name",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "is_active",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "order",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "hero_slides",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "page_type",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "city_name",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "order",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "hero_slides",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "page_type",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "is_active",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "order",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "hero_slides",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "page_type",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "order",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "messages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "conversation_id",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "created_date",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "offers",
       "queryScope": "COLLECTION",
       "fields": [
         {
           "fieldPath": "booking_id",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "traveler_email",
           "order": "ASCENDING"
         },
         {
@@ -37,87 +175,47 @@
       ]
     },
     {
-      "collectionGroup": "messages",
+      "collectionGroup": "offers",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "conversation_id",
+          "fieldPath": "booking_id",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "traveler_email",
           "order": "ASCENDING"
         },
         {
           "fieldPath": "created_date",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "reviews",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "booking_id",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "reviewer_id",
           "order": "ASCENDING"
         }
       ]
     },
     {
-      "collectionGroup": "hero_slides",
+      "collectionGroup": "reviews",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "page_type",
+          "fieldPath": "reviewed_user_id",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "order",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "hero_slides",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "page_type",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "city_name",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "order",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "hero_slides",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "page_type",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "is_active",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "order",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "hero_slides",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "page_type",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "city_name",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "is_active",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "order",
+          "fieldPath": "status",
           "order": "ASCENDING"
         }
       ]

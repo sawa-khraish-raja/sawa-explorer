@@ -1,0 +1,8 @@
+credentials_file      = "./service-account-prd.json"
+project_id           = "sawa-explorer"
+environment          = "prd"
+region               = "us-central1"
+firestore_database_id = "test"
+firestore_location   = "europe-west4"
+storage_location     = "US"
+web_app_display_name = "Sawa Explorer"
