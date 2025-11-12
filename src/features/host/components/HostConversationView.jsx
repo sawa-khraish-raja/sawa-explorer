@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getAllDocuments,
@@ -7,7 +7,7 @@ import {
   addDocument,
   updateDocument,
 } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
+import { uploadImage } from '@/utils/storage';
 import {
   Loader2,
   Send,
@@ -21,12 +21,10 @@ import {
   Image as ImageIcon,
   X,
   Globe,
-  Volume2,
   Mic,
   Square,
   AlertTriangle,
 } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
@@ -44,12 +42,11 @@ import MessageBubble from '../chat/MessageBubble';
 import OfferCard from '../chat/OfferCard';
 import { format } from 'date-fns';
 import {
-  NotificationHelpers,
   notifyNewMessage,
 } from '@/features/shared/notifications/notificationHelpers';
 import { MessageValidator } from '../chat/MessageValidator';
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
-import { TARGET_LANGS, normLang } from '@/shared/i18n/i18nVoice';
+import { normLang } from '@/shared/i18n/i18nVoice';
 import { playVoice } from '@/components/voice/playVoice';
 import { useSawaTranslation } from '../chat/useSawaTranslation';
 import { getUserDisplayName } from '@/shared/utils/userHelpers'; // Added import

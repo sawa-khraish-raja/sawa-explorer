@@ -48,7 +48,7 @@ import BookingServicesDisplay from '@/features/shared/booking-components/Booking
 import { UseAppContext } from '@/shared/context/AppContext';
 import HostProfileSettings from '@/features/host/components/HostProfileSettings';
 import { useTranslation } from '@/shared/i18n/LanguageContext';
-import { showSuccess, showError, showInfo } from '@/shared/utils/notifications';
+import { showSuccess, showError } from '@/shared/utils/notifications';
 import { getUserDisplayName } from '@/shared/utils/userHelpers';
 
 export default function HostDashboard() {

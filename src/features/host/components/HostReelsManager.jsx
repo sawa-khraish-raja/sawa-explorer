@@ -1,17 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  getAllDocuments,
   queryDocuments,
-  getDocument,
   addDocument,
-  updateDocument,
   deleteDocument,
 } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { uploadImage } from '@/utils/storage';
+import { Card, CardContent } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { Label } from '@/shared/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog';
@@ -29,7 +25,6 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Badge } from '@/shared/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function HostReelsManager({ user }) {

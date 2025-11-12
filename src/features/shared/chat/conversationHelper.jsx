@@ -1,5 +1,4 @@
-import { getAllDocuments, queryDocuments, getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
+import { queryDocuments, addDocument } from '@/utils/firestore';
 
 /**
  * Creates or retrieves an existing conversation between host and traveler

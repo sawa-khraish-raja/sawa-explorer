@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { useBookings, useCancelBooking } from '../hooks';
 import { BookingList } from '../components';
-import { Button } from '@/shared/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { BookingStatus } from '@/domains/booking';
 

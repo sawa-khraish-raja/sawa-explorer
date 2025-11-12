@@ -1,15 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { UseAppContext } from "@/shared/context/AppContext";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  getAllDocuments,
   queryDocuments,
-  getDocument,
   addDocument,
-  updateDocument,
-  deleteDocument,
 } from '@/utils/firestore';
-import { uploadImage, uploadVideo } from '@/utils/storage';
 import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
@@ -34,15 +29,9 @@ import {
   Loader2,
   Sparkles,
   Wand2,
-  Calendar,
-  Users,
-  Languages,
-  DollarSign,
   ArrowRight,
-  ArrowLeft,
   Download,
   MessageSquare,
-  Trash2,
   ShieldCheck,
   Star,
 } from 'lucide-react';
