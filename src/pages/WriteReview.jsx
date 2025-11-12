@@ -3,12 +3,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { createPageUrl } from '@/utils';
 import { queryDocuments } from '@/utils/firestore';
 
-import { UseAppContext } from '../components/context/AppContext';
-import ReviewForm from '../components/reviews/ReviewForm';
+import { UseAppContext } from '@/shared/context/AppContext';
+import ReviewForm from '@/features/traveler/reviews/components/ReviewForm';
 
 export default function WriteReview() {
   const [searchParams] = useSearchParams();

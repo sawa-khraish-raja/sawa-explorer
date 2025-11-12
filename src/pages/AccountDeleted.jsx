@@ -1,8 +1,8 @@
 import { CheckCircle, Home, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent } from '@/shared/components/ui/card';
 import { createPageUrl } from '@/utils';
 
 export default function AccountDeleted() {

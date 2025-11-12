@@ -17,29 +17,29 @@ import { useEffect, useCallback, useState, useMemo, memo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 
-import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
-import { AuthModal } from '@/components/auth/AuthModal';
-import ChatLauncher from '@/components/chat/ChatLauncher';
-import MessagesBadge from '@/components/chat/MessagesBadge';
-import ErrorBoundary from '@/components/common/ErrorBoundary';
-import GlobalStyles from '@/components/common/GlobalStyles';
-import ResponsiveStyles from '@/components/common/ResponsiveStyles';
-import { AppProvider, UseAppContext } from '@/components/context/AppContext';
-import { LanguageProvider, useTranslation } from '@/components/i18n/LanguageContext';
-import { FCMProvider } from '@/components/notifications/FCMProvider';
-import NotificationBell from '@/components/notifications/NotificationBell';
-import NotificationPrompt from '@/components/notifications/NotificationPrompt';
-import NotificationWelcomePrompt from '@/components/notifications/NotificationWelcomePrompt';
-import { Button } from '@/components/ui/button';
+import GoogleAnalytics from '@/features/admin/components/GoogleAnalytics';
+import { AuthModal } from '@/features/auth/components/AuthModal';
+import ChatLauncher from '@/features/shared/chat/ChatLauncher';
+import MessagesBadge from '@/features/shared/chat/MessagesBadge';
+import ErrorBoundary from '@/shared/components/ErrorBoundary';
+import GlobalStyles from '@/shared/components/GlobalStyles';
+import ResponsiveStyles from '@/shared/components/ResponsiveStyles';
+import { AppProvider, UseAppContext } from '@/shared/context/AppContext';
+import { LanguageProvider, useTranslation } from '@/shared/i18n/LanguageContext';
+import { FCMProvider } from '@/features/shared/notifications/FCMProvider';
+import NotificationBell from '@/features/shared/notifications/NotificationBell';
+import NotificationPrompt from '@/features/shared/notifications/NotificationPrompt';
+import NotificationWelcomePrompt from '@/features/shared/notifications/NotificationWelcomePrompt';
+import { Button } from '@/shared/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/contexts/AuthContext';
-import { cn } from '@/lib/utils';
+} from '@/shared/components/ui/dropdown-menu';
+import { useAuth } from '@/app/providers/AuthProvider';
+import { cn } from '@/shared/utils';
 import { AUTH_MODAL_EVENT } from '@/services/firebaseAuthAdapter';
 import { createPageUrl } from '@/utils';
 

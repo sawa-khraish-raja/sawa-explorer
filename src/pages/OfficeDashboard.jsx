@@ -15,13 +15,13 @@ import {
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
-import { UseAppContext } from '@/components/context/AppContext';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { cn } from '@/lib/utils';
+import { UseAppContext } from '@/shared/context/AppContext';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
+import { cn } from '@/shared/utils';
 // Added Dialog components
 import { createPageUrl } from '@/utils';
 import { queryDocuments, getDocument } from '@/utils/firestore';

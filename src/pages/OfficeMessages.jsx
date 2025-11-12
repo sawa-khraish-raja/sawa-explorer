@@ -4,16 +4,16 @@ import { MessageSquare, Loader2, ArrowLeft, MapPin, Calendar, Eye, DollarSign } 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { normLang } from '@/components/i18n/i18nVoice';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { normLang } from '@/shared/i18n/i18nVoice';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent } from '@/shared/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog';
 import { createPageUrl } from '@/utils';
 import { getAllDocuments, queryDocuments, getDocument } from '@/utils/firestore';
-import { UseAppContext } from '../components/context/AppContext';
-import MessageBubble from '../components/chat/MessageBubble';
-import { useSawaTranslation } from '../components/chat/useSawaTranslation';
+import { UseAppContext } from '@/shared/context/AppContext';
+import MessageBubble from '@/features/shared/chat/MessageBubble';
+import { useSawaTranslation } from '@/features/shared/chat/useSawaTranslation';
 
 export default function OfficeMessages() {
   const { user } = UseAppContext();

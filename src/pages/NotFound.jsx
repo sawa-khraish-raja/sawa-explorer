@@ -1,7 +1,7 @@
 import { Home, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { createPageUrl } from '@/utils';
 
 export default function NotFound() {

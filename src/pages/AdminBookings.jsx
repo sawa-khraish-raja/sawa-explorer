@@ -3,17 +3,17 @@ import { format } from 'date-fns';
 import { Search, MapPin, Loader2, Eye, Briefcase, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent } from '@/shared/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog';
+import { Input } from '@/shared/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { getAllDocuments } from '@/utils/firestore';
 
-import AdminLayout from '../components/admin/AdminLayout';
-import PermissionGuard from '../components/admin/PermissionGuard';
-import { BookingID } from '../components/common/BookingID';
+import AdminLayout from '@/features/admin/components/AdminLayout';
+import PermissionGuard from '@/features/admin/components/PermissionGuard';
+import { BookingID } from '@/shared/components/BookingID';
 
 export default function AdminBookings() {
   const [searchQuery, setSearchQuery] = useState('');

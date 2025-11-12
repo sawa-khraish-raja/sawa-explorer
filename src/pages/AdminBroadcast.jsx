@@ -15,16 +15,16 @@ import {
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui/card';
+import { Input } from '@/shared/components/ui/input';
+import { Label } from '@/shared/components/ui/label';
+import { Textarea } from '@/shared/components/ui/textarea';
 import { getAllDocuments } from '@/utils/firestore';
 import { invokeFunction } from '@/utils/functions';
-import { UseAppContext } from '../components/context/AppContext';
-import AdminLayout from '../components/admin/AdminLayout';
+import { UseAppContext } from '@/shared/context/AppContext';
+import AdminLayout from '@/features/admin/components/AdminLayout';
 
 export default function AdminBroadcast() {
   const { user } = UseAppContext();

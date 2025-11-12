@@ -1,4 +1,4 @@
-import BookingPageTemplate from '../components/booking/BookingPageTemplate';
+import BookingPageTemplate from '@/features/shared/booking-components/BookingPageTemplate';
 
 export default function BookingDamascus() {
   const damascus = {

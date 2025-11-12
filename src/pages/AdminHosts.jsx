@@ -16,19 +16,19 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Input } from '@/shared/components/ui/input';
 import { getAllDocuments, updateDocument } from '@/utils/firestore';
 
-import AdminLayout from '../components/admin/AdminLayout';
-import AssignAgencyDialog from '../components/admin/AssignAgencyDialog';
-import EditHostDialog from '../components/admin/EditHostDialog';
-import HostCommissionDialog from '../components/admin/HostCommissionDialog';
-import ManageCityAccessDialog from '../components/admin/ManageCityAccessDialog'; // New import
-import { UseAppContext } from '../components/context/AppContext';
-import { showNotification } from '../components/notifications/NotificationManager';
+import AdminLayout from '@/features/admin/components/AdminLayout';
+import AssignAgencyDialog from '@/features/admin/components/AssignAgencyDialog';
+import EditHostDialog from '@/features/admin/components/EditHostDialog';
+import HostCommissionDialog from '@/features/admin/components/HostCommissionDialog';
+import ManageCityAccessDialog from '@/features/admin/components/ManageCityAccessDialog'; // New import
+import { UseAppContext } from '@/shared/context/AppContext';
+import { showNotification } from '@/features/shared/notifications/NotificationManager';
 
 export default function AdminHosts() {
   const queryClient = useQueryClient();

@@ -14,16 +14,16 @@ import {
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { createNotification } from '@/components/notifications/notificationHelpers';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { useAuth } from '@/contexts/AuthContext';
+import { createNotification } from '@/features/shared/notifications/notificationHelpers';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent } from '@/shared/components/ui/card';
+import { useAuth } from '@/app/providers/AuthProvider';
 import { createPageUrl } from '@/utils';
 import { getDocument, addDocument } from '@/utils/firestore';
 
-import { trackAdventureView, trackEvent } from '../components/analytics/GoogleAnalytics';
-import { showSuccess, showError } from '../components/utils/notifications';
+import { trackAdventureView, trackEvent } from '@/features/admin/components/GoogleAnalytics';
+import { showSuccess, showError } from '@/shared/utils/notifications';
 
 export default function AdventureDetails() {
   const navigate = useNavigate();

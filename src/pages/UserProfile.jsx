@@ -15,19 +15,19 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Input } from '@/shared/components/ui/input';
+import { Label } from '@/shared/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
+import { Textarea } from '@/shared/components/ui/textarea';
 import { createPageUrl } from '@/utils';
 import { queryDocuments, updateDocument } from '@/utils/firestore';
 import { uploadImage } from '@/utils/storage';
 
-import { UseAppContext } from '../components/context/AppContext';
-import NotificationSettings from '../components/notifications/NotificationSettings';
-import DeleteAccountDialog from '../components/user/DeleteAccountDialog';
+import { UseAppContext } from '@/shared/context/AppContext';
+import NotificationSettings from '@/features/shared/notifications/NotificationSettings';
+import DeleteAccountDialog from '@/features/traveler/components/DeleteAccountDialog';
 
 export default function UserProfile() {
   const queryClient = useQueryClient();

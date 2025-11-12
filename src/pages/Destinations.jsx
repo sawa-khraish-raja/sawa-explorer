@@ -3,14 +3,14 @@ import { MapPin, ArrowRight, Loader2, Globe, Star, Compass } from 'lucide-react'
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent } from '@/shared/components/ui/card';
+import { cn } from '@/shared/utils';
 import { createPageUrl } from '@/utils';
 import { queryDocuments } from '@/utils/firestore';
 
-import PageHeroVideo from '../components/common/PageHeroVideo';
+import PageHeroVideo from '@/shared/components/PageHeroVideo';
 
 export default function Destinations() {
   const navigate = useNavigate();

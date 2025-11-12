@@ -12,22 +12,22 @@ import {
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Badge } from '@/shared/components/ui/badge';
+import { Card, CardContent } from '@/shared/components/ui/card';
+import { Input } from '@/shared/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from '@/shared/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { getAllDocuments, updateDocument, addDocument } from '@/utils/firestore';
 
-import AdminLayout from '../components/admin/AdminLayout';
-import HostApprovalCard from '../components/admin/HostApprovalCard';
-import { UseAppContext } from '../components/context/AppContext';
+import AdminLayout from '@/features/admin/components/AdminLayout';
+import HostApprovalCard from '@/features/admin/components/HostApprovalCard';
+import { UseAppContext } from '@/shared/context/AppContext';
 
 export default function AdminHostRequests() {
   const queryClient = useQueryClient();

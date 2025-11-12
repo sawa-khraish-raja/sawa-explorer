@@ -18,14 +18,14 @@ import {
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { getAllDocuments } from '@/utils/firestore';
 import { invokeFunction } from '@/utils/functions';
 
-import MarketingGuard from '../components/marketing/MarketingGuard';
-import MarketingLayout from '../components/marketing/MarketingLayout';
+import MarketingGuard from '@/shared/components/marketing/MarketingGuard';
+import MarketingLayout from '@/shared/components/marketing/MarketingLayout';
 
 
 

@@ -3,10 +3,10 @@ import { format } from 'date-fns';
 import { Calendar, Loader2, ArrowLeft, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-import { UseAppContext } from '@/components/context/AppContext';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { UseAppContext } from '@/shared/context/AppContext';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent } from '@/shared/components/ui/card';
 import { createPageUrl } from '@/utils';
 import { getAllDocuments, queryDocuments } from '@/utils/firestore';
 

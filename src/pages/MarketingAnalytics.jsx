@@ -25,12 +25,12 @@ import {
   Legend,
 } from 'recharts';
 
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/shared/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { getAllDocuments } from '@/utils/firestore';
 
-import MarketingGuard from '../components/marketing/MarketingGuard';
-import MarketingLayout from '../components/marketing/MarketingLayout';
+import MarketingGuard from '@/shared/components/marketing/MarketingGuard';
+import MarketingLayout from '@/shared/components/marketing/MarketingLayout';
 
 const COLORS = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#6366F1'];
 

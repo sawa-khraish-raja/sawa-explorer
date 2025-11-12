@@ -29,24 +29,24 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+} from '@/shared/components/ui/alert-dialog';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent } from '@/shared/components/ui/card';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from '@/shared/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { createPageUrl } from '@/utils';
 import { getAllDocuments, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
 
-import AdventureForm from '../components/adventures/AdventureForm';
-import { calculateAdventureCommissions } from '../components/adventures/commissionCalculator';
-import { UseAppContext } from '../components/context/AppContext';
+import AdventureForm from '@/features/traveler/adventures/components/AdventureForm';
+import { calculateAdventureCommissions } from '@/features/traveler/adventures/components/commissionCalculator';
+import { UseAppContext } from '@/shared/context/AppContext';
 
 export default function OfficeAdventures() {
   const navigate = useNavigate();

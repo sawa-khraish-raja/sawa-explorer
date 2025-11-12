@@ -11,12 +11,12 @@ import {
   List,
 } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { Badge } from '@/shared/components/ui/badge';
+import { Card, CardContent } from '@/shared/components/ui/card';
+import { cn } from '@/shared/utils';
 import { getAllDocuments } from '@/utils/firestore';
 
-import AdminLayout from '../components/admin/AdminLayout';
+import AdminLayout from '@/features/admin/components/AdminLayout';
 
 
 export default function AdminCancellations() {

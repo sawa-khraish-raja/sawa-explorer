@@ -1,10 +1,10 @@
 import { Database, CheckCircle, XCircle } from 'lucide-react';
 import React, { useState } from 'react';
 
-import { UseAppContext } from '@/components/context/AppContext';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { UseAppContext } from '@/shared/context/AppContext';
+import { Alert, AlertDescription } from '@/shared/components/ui/alert';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import {
   getAllDocuments,
   queryDocuments,

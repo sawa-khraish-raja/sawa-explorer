@@ -3,14 +3,14 @@ import { Loader2, Building2, Plus, Search, Users, Calendar, DollarSign, Eye } fr
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Added useNavigate
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Input } from '@/shared/components/ui/input';
 import { createPageUrl } from '@/utils'; // Added createPageUrl
 import { getAllDocuments } from '@/utils/firestore';
 
-import AdminLayout from '../components/admin/AdminLayout';
-import CreateOfficeDialog from '../components/admin/CreateOfficeDialog';
+import AdminLayout from '@/features/admin/components/AdminLayout';
+import CreateOfficeDialog from '@/features/admin/components/CreateOfficeDialog';
 
 
 

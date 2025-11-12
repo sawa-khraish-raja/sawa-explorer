@@ -17,19 +17,19 @@ import {
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui/card';
+import { cn } from '@/shared/utils';
 import { createPageUrl } from '@/utils';
 import { getAllDocuments, queryDocuments } from '@/utils/firestore';
 
-import AdminLayout from '../components/admin/AdminLayout';
-import PermissionGuard from '../components/admin/PermissionGuard';
-import { UseAppContext } from '../components/context/AppContext';
-import { showNotification } from '../components/notifications/NotificationManager';
+import AdminLayout from '@/features/admin/components/AdminLayout';
+import PermissionGuard from '@/features/admin/components/PermissionGuard';
+import { UseAppContext } from '@/shared/context/AppContext';
+import { showNotification } from '@/features/shared/notifications/NotificationManager';
 
-const RevenueBreakdownDialog = lazy(() => import('../components/admin/RevenueBreakdownDialog'));
+const RevenueBreakdownDialog = lazy(() => import('@/features/admin/components/RevenueBreakdownDialog'));
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
