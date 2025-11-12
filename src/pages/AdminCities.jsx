@@ -12,7 +12,7 @@ import {
   Star,
   CheckCircle,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/shared/components/ui/badge';
@@ -34,7 +34,7 @@ import AdminLayout from '@/features/admin/components/AdminLayout';
 const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityMutation }) => {
   const queryClient = useQueryClient();
 
-  const initialFormData = {
+  const initialFormData = useMemo(() => ({
     name: '',
     country: '',
     description: '',
@@ -51,7 +51,7 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
     population: null,
     page_slug: '',
     coordinates: { lat: null, lng: null },
-  };
+  }), []);
 
   const [formData, setFormData] = useState(initialFormData);
   const [activeTab, setActiveTab] = useState('general');
@@ -70,7 +70,7 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
       setFormData(initialFormData);
     }
     setActiveTab('general');
-  }, [city, isOpen]);
+  }, [city, isOpen, initialFormData]);
 
   const handleImageUpload = async (e, type = 'card') => {
     const file = e.target.files?.[0];

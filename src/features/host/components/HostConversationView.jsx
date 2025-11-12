@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getAllDocuments,
@@ -182,11 +182,11 @@ export default function HostConversationView({
   }, [processedMessages, allOffers]);
 
   // Handle pagination for messages
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
-  };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const totalMessages = messages?.pages?.[0]?.total || 0; // Assuming total messages count is available in the first page
   const visibleCount = allMessages.length;
@@ -266,7 +266,7 @@ export default function HostConversationView({
   const hasAcceptedServiceOffer = acceptedOffers.some((offer) => offer.offer_type === 'service');
   const hasAcceptedRentalOffer = acceptedOffers.some((offer) => offer.offer_type === 'rental');
 
-  const calculatePricing = (price) => {
+  const calculatePricing = useCallback((price) => {
     const basePrice = parseFloat(price);
     const isIndependent = currentUser?.is_independent_host;
     const SAWA_COMMISSION_RATE = isIndependent ? 0.35 : 0.28; // 35% for independent, 28% for office hosts
@@ -283,11 +283,11 @@ export default function HostConversationView({
       totalPrice,
       isIndependent,
     };
-  };
+  }, [currentUser?.is_independent_host]);
 
   const pricing = useMemo(
     () => calculatePricing(offerPrice),
-    [offerPrice, currentUser?.is_independent_host]
+    [offerPrice, calculatePricing]
   );
 
   const toggleAutoVoice = () => {
@@ -429,7 +429,7 @@ export default function HostConversationView({
         unsubscribe();
       }
     };
-  }, [conversation?.id, currentUser?.email, queryClient]);
+  }, [conversation?.id, currentUser, queryClient]);
 
   const handleImageSelect = (e) => {
     const files = Array.from(e.target.files || []);

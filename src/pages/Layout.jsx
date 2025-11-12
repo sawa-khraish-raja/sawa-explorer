@@ -344,7 +344,7 @@ const AppContent = memo(({ children, currentPageName }) => {
       isHost: !!user.host_approved,
       isMarketing: user.role_type === 'marketing',
     };
-  }, [user?.id, user?.role_type, user?.role, user?.host_approved]);
+  }, [user]);
 
   const { hasAdminRole, hasOfficeRole, isHost, isMarketing } = userRoles;
   const isOfficeOnly = hasOfficeRole && !isHost && !hasAdminRole;
@@ -392,7 +392,7 @@ const AppContent = memo(({ children, currentPageName }) => {
         navigate(createPageUrl('Home'));
       }
     },
-    [navigate, createPageUrl]
+    [navigate]
   );
 
   const showLoadingSkeleton = isLoadingUser && !user;

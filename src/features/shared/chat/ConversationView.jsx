@@ -238,7 +238,7 @@ export default function ConversationView({ conversationId, currentUser, onBack }
       }
     }
     setLastMessageCount(fetchedMessages.length);
-  }, [fetchedMessages.length, lastMessageCount, currentUser.email, playNotificationSound]);
+  }, [fetchedMessages, lastMessageCount, currentUser.email, playNotificationSound]);
 
   useEffect(() => {
     if (fetchedMessages) {
@@ -263,7 +263,7 @@ export default function ConversationView({ conversationId, currentUser, onBack }
       );
       setLocalMessages(newLocalState);
     }
-  }, [fetchedMessages]);
+  }, [fetchedMessages, localMessages]);
 
   useEffect(() => {
     if (localMessages.length > 0) {
@@ -479,7 +479,6 @@ export default function ConversationView({ conversationId, currentUser, onBack }
     conversation,
     currentUser,
     isSendingMessage,
-    conversationId,
     userPreferredLang,
     queryClient,
     canSendMessages,

@@ -192,7 +192,7 @@ export default function AdminDashboard() {
       sawaRevenue: sawaRevenue.total.toFixed(0),
       sawaRevenueDetails: sawaRevenue,
     };
-  }, [users, bookings, hosts, offers, adventures]);
+  }, [users, bookings, hosts, offers]);
 
   const recentActivity = React.useMemo(() => {
     const activities = [

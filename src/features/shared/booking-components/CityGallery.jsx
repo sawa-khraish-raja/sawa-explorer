@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import { Button } from '@/shared/components/ui/button';
 
@@ -18,19 +18,19 @@ export default function CityGallery({ images = [], cityName }) {
     setSelectedImage(null);
   };
 
-  const goToNext = () => {
+  const goToNext = useCallback(() => {
     const nextIndex = (selectedIndex + 1) % images.length;
     setSelectedIndex(nextIndex);
     setSelectedImage(images[nextIndex]);
-  };
+  }, [selectedIndex, images]);
 
-  const goToPrevious = () => {
+  const goToPrevious = useCallback(() => {
     const prevIndex = (selectedIndex - 1 + images.length) % images.length;
     setSelectedIndex(prevIndex);
     setSelectedImage(images[prevIndex]);
-  };
+  }, [selectedIndex, images]);
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = useCallback((e) => {
     if (!selectedImage) return;
 
     if (e.key === 'ArrowRight') {
@@ -42,7 +42,7 @@ export default function CityGallery({ images = [], cityName }) {
     } else if (e.key === 'Escape') {
       closeLightbox();
     }
-  };
+  }, [selectedImage, goToNext, goToPrevious]);
 
   useEffect(() => {
     if (selectedImage) {
@@ -56,7 +56,7 @@ export default function CityGallery({ images = [], cityName }) {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'unset';
     };
-  }, [selectedImage, selectedIndex]);
+  }, [selectedImage, handleKeyDown]);
 
   return (
     <>

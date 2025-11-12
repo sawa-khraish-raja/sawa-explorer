@@ -11,7 +11,7 @@ import {
   DollarSign,
   AlertTriangle,
 } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -174,59 +174,7 @@ export default function MessageBubble({
 
   const cachedTranslation = message.translations?.[normalizedDisplayLang];
 
-  const displayText = useMemo(() => {
-    if (!message.original_text) return '';
-
-    if (isUser) {
-      return message.original_text;
-    }
-
-    if (showOriginal) {
-      return message.original_text;
-    }
-
-    if (!needsTranslation) {
-      return message.original_text;
-    }
-
-    if (cachedTranslation) {
-      return cachedTranslation;
-    }
-
-    if (translatedTextState) {
-      return translatedTextState;
-    }
-
-    return message.original_text;
-  }, [
-    message,
-    normalizedDisplayLang,
-    needsTranslation,
-    showOriginal,
-    translatedTextState,
-    cachedTranslation,
-    isUser,
-  ]);
-
-  useEffect(() => {
-    const shouldTranslate =
-      needsTranslation && !cachedTranslation && !translatedTextState && !showOriginal && !isUser;
-
-    if (shouldTranslate) {
-      translateMessage();
-    }
-  }, [
-    message.id,
-    normalizedDisplayLang,
-    needsTranslation,
-    isUser,
-    cachedTranslation,
-    translatedTextState,
-    showOriginal,
-    message.original_text,
-  ]);
-
-  const translateMessage = async () => {
+  const translateMessage = useCallback(async () => {
     if (isTranslating || !message.original_text || isUser) return;
 
     setIsTranslating(true);
@@ -267,7 +215,59 @@ export default function MessageBubble({
     } finally {
       setIsTranslating(false);
     }
-  };
+  }, [isTranslating, message.original_text, message.id, message.translations, isUser, normalizedDisplayLang]);
+
+  const displayText = useMemo(() => {
+    if (!message.original_text) return '';
+
+    if (isUser) {
+      return message.original_text;
+    }
+
+    if (showOriginal) {
+      return message.original_text;
+    }
+
+    if (!needsTranslation) {
+      return message.original_text;
+    }
+
+    if (cachedTranslation) {
+      return cachedTranslation;
+    }
+
+    if (translatedTextState) {
+      return translatedTextState;
+    }
+
+    return message.original_text;
+  }, [
+    message,
+    needsTranslation,
+    showOriginal,
+    translatedTextState,
+    cachedTranslation,
+    isUser,
+  ]);
+
+  useEffect(() => {
+    const shouldTranslate =
+      needsTranslation && !cachedTranslation && !translatedTextState && !showOriginal && !isUser;
+
+    if (shouldTranslate) {
+      translateMessage();
+    }
+  }, [
+    message.id,
+    normalizedDisplayLang,
+    needsTranslation,
+    isUser,
+    cachedTranslation,
+    translatedTextState,
+    showOriginal,
+    message.original_text,
+    translateMessage,
+  ]);
 
   const translatedText = (english, arabic) => {
     if (normalizedDisplayLang === 'ar') {

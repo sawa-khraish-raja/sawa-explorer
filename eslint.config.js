@@ -114,7 +114,7 @@ export default [
 
       // ===== React Hooks Rules =====
       'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'off',
+      'react-hooks/exhaustive-deps': 'error',
 
       // ===== React Refresh (for Vite HMR) =====
       'react-refresh/only-export-components': 'off',

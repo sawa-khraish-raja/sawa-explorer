@@ -1,6 +1,6 @@
 import { signOut, updateProfile } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { createContext, useContext, useMemo, useEffect, useState } from 'react';
+import { createContext, useContext, useMemo, useEffect, useState, useCallback } from 'react';
 
 import { db, auth } from '@/config/firebase';
 import { useAuth } from '@/app/providers/AuthProvider';
@@ -60,7 +60,7 @@ export const AppProvider = ({ children }) => {
   }, [firebaseUser, authLoading]);
 
   // Logout function
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await signOut(auth);
       setUser(null);
@@ -69,10 +69,10 @@ export const AppProvider = ({ children }) => {
       console.error('Error logging out:', error);
       throw error;
     }
-  };
+  }, []);
 
   // Update current user function
-  const updateMe = async (updateData) => {
+  const updateMe = useCallback(async (updateData) => {
     if (!user) throw new Error('No user logged in');
 
     try {
@@ -101,7 +101,7 @@ export const AppProvider = ({ children }) => {
       console.error('Error updating user:', error);
       throw error;
     }
-  };
+  }, [user]);
 
   const value = useMemo(
     () => ({
@@ -113,7 +113,7 @@ export const AppProvider = ({ children }) => {
       logout,
       updateMe,
     }),
-    [user, userLoading, authLoading]
+    [user, userLoading, authLoading, logout, updateMe]
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

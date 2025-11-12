@@ -86,7 +86,7 @@ export function FCMProvider({ children }) {
       isMounted = false;
       unsubscribeOnMessage();
     };
-  }, [user?.id]);
+  }, [user]);
 
   return <>{children}</>;
 }
