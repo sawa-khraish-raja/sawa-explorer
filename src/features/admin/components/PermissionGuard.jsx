@@ -66,7 +66,7 @@ export function useAdminPermissions() {
 
 export default function PermissionGuard({ pageId, children }) {
   const navigate = useNavigate();
-  const { user, hasFullAccess, hasPageAccess, isLoading, isAdmin } = useAdminPermissions();
+  const { user, hasPageAccess, isLoading, isAdmin } = useAdminPermissions();
 
   useEffect(() => {
     // Only check permissions after loading is complete AND we have a definitive answer

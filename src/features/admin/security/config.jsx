@@ -50,7 +50,7 @@ function getDLPPatterns() {
     try {
       return JSON.parse(envPatterns);
     } catch (e) {
-      console.warn('[SECURITY] Invalid DLP_REGEX_JSON, using defaults');
+      console.warn('[SECURITY] Invalid DLP_REGEX_JSON, using defaults', e);
     }
   }
 

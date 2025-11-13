@@ -94,7 +94,7 @@ export default function CreateAdventureBooking() {
 
       return { id: bookingId };
     },
-    onSuccess: async (booking) => {
+    onSuccess: async () => {
       await queryClient.refetchQueries({ queryKey: ['myBookings'] });
       await queryClient.refetchQueries({ queryKey: ['adventure', adventureId] });
       await queryClient.refetchQueries({ queryKey: ['adventures'] });

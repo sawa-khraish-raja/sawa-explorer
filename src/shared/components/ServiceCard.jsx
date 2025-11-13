@@ -13,7 +13,7 @@ const ICON_MAP = {
   ShieldAlert,
 };
 
-export default function ServiceCard({ service, isSelected, onToggle, showBadge = true }) {
+export default function ServiceCard({ service, isSelected, onToggle }) {
   const IconComponent = ICON_MAP[service.icon] || Package;
 
   return (

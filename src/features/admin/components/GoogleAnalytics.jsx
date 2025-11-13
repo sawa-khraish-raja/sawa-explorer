@@ -191,10 +191,10 @@ export function getUTMParameters() {
 }
 
 //  Track conversion to backend
-async function trackConversionBackend(data) {
+async function trackConversionBackend(_data) {
   try {
-    const sessionId = getSessionId();
-    const utm = getUTMParameters();
+    const _sessionId = getSessionId();
+    const _utm = getUTMParameters();
 
     // TODO: Migrate conversion tracking to Firestore
     // Previously used Base44 function 'Track_Conversion'

@@ -26,9 +26,6 @@ import { invokeFunction } from '@/utils/functions';
 import MarketingGuard from '@/shared/components/marketing/MarketingGuard';
 import MarketingLayout from '@/shared/components/marketing/MarketingLayout';
 
-
-
-
 export default function MarketingReports() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -55,13 +52,12 @@ export default function MarketingReports() {
     queryKey: ['marketing_sync_reports'],
     queryFn: async () => {
       try {
-        const meta = await queryDocuments('systemmetas', [['key', '==', 'marketing_last_sync',
-        ]]);
+        const meta = await queryDocuments('systemmetas', [['key', '==', 'marketing_last_sync']]);
         if (meta && meta.length > 0) {
           return JSON.parse(meta[0].value);
         }
         return null;
-      } catch (error) {
+      } catch {
         return null;
       }
     },
@@ -93,7 +89,7 @@ export default function MarketingReports() {
         duration: 4000,
       });
     },
-    onError: (error, reportType) => {
+    onError: (error) => {
       console.error('Report generation error:', error);
       toast.error('Generation Failed', {
         description: error.message || 'Please try again',
@@ -163,7 +159,7 @@ export default function MarketingReports() {
 
   //  View Report
   const viewReport = (report) => {
-    navigate(`${createPageUrl('ReportView')  }?id=${report.id}`);
+    navigate(`${createPageUrl('ReportView')}?id=${report.id}`);
   };
 
   if (reportsLoading) {

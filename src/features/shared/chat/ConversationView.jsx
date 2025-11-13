@@ -18,7 +18,7 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { Badge } from '@/shared/components/ui/badge';
@@ -52,7 +52,7 @@ import {
   addDocument,
 } from '@/utils/firestore';
 
-import BookingServicesDisplay from "@/features/shared/booking-components/BookingServicesDisplay";
+import BookingServicesDisplay from '@/features/shared/booking-components/BookingServicesDisplay';
 import { getUserDisplayName } from '@/shared/utils/userHelpers';
 
 import MessageBubble from './MessageBubble';
@@ -90,7 +90,6 @@ const detectBrowserLanguage = () => {
 export default function ConversationView({ conversationId, currentUser, onBack }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const location = useLocation();
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const messagesContainerRef = useRef(null);
@@ -109,7 +108,7 @@ export default function ConversationView({ conversationId, currentUser, onBack }
   const [translationVersion, setTranslationVersion] = useState(0);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [otherUserTyping, setOtherUserTyping] = useState(false);
+  const [otherUserTyping] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   const [displayLanguage, setDisplayLanguage] = useState(() => {
@@ -796,7 +795,6 @@ export default function ConversationView({ conversationId, currentUser, onBack }
     );
   }
 
-  const isTraveler = conversation.traveler_email === currentUser.email;
   const acceptedOffer = offers.find((o) => o.status === 'accepted');
   const myServiceOffer = offers.find(
     (o) => o.host_email === currentUser.email && o.offer_type === 'service'
@@ -809,7 +807,6 @@ export default function ConversationView({ conversationId, currentUser, onBack }
     canSendMessages;
   const canSendRentalOffer = isHost && canSendMessages;
 
-  const currentLang = SUPPORTED_LANGUAGES.find((l) => l.code === displayLanguage);
   const isRTL = displayLanguage === 'ar' || displayLanguage === 'he';
 
   const getStatusBadge = (status) => {

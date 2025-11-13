@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Loader2, ArrowLeft, Search, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -21,7 +21,6 @@ import { getAllDocuments, queryDocuments } from '@/utils/firestore';
 
 export default function OfficeHosts() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const { user } = UseAppContext();
 

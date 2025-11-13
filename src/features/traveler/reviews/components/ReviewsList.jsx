@@ -3,8 +3,7 @@ import { Star, ThumbsUp } from 'lucide-react';
 
 import { Card, CardContent } from '@/shared/components/ui/card';
 
-
-export default function ReviewsList({ reviews, hostEmail }) {
+export default function ReviewsList({ reviews }) {
   if (!reviews || reviews.length === 0) {
     return (
       <Card>

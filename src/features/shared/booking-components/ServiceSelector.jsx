@@ -1,20 +1,18 @@
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 
-import ServiceCard from "@/shared/components/ServiceCard";
+import ServiceCard from '@/shared/components/ServiceCard';
 import {
   SAWA_SERVICES,
   getConflictingServices,
   isFlexibleDurationService,
-} from "@/features/admin/config/sawaServices";
-
+} from '@/features/admin/config/sawaServices';
 
 export default function ServiceSelector({
   selectedServices,
   onServicesChange,
   serviceDurations = {},
   onServiceDurationChange,
-  language = 'en',
 }) {
   const handleServiceToggle = (serviceId) => {
     const isCurrentlySelected = selectedServices.includes(serviceId);

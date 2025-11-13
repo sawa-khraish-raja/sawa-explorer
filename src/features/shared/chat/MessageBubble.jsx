@@ -128,18 +128,6 @@ const FunctionDisplay = ({ toolCall }) => {
   );
 };
 
-const LANGUAGE_NAMES = {
-  en: 'English',
-  ar: 'العربية',
-  de: 'Deutsch',
-  fr: 'Français',
-  es: 'Español',
-  it: 'Italiano',
-  nl: 'Nederlands',
-  sv: 'Svenska',
-  da: 'Dansk',
-};
-
 const normalizeLangCode = (lang) => {
   if (!lang) return null;
   return lang.toLowerCase().split('-')[0].split('_')[0];
@@ -153,16 +141,15 @@ export default function MessageBubble({
   offers = [],
   onAcceptOffer,
   onDeclineOffer,
-  hasAcceptedOffer = false, // Keep for potential external usage, not used internally for offer logic anymore
   isAcceptingOffer = false,
   isDecliningOffer = false,
   isBookingCancelled = false,
 }) {
   const isUser = message.role === 'user' || message.sender_email === currentUserEmail;
   const [isTranslating, setIsTranslating] = useState(false);
-  const [showOriginal, setShowOriginal] = useState(false);
+  const [showOriginal] = useState(false);
   const [translatedTextState, setTranslatedTextState] = useState(null);
-  const [translationError, setTranslationError] = useState(false);
+  const [, setTranslationError] = useState(false);
 
   const normalizedSourceLang = normalizeLangCode(message.source_lang);
   const normalizedDisplayLang = normalizeLangCode(displayLanguage);
@@ -215,7 +202,14 @@ export default function MessageBubble({
     } finally {
       setIsTranslating(false);
     }
-  }, [isTranslating, message.original_text, message.id, message.translations, isUser, normalizedDisplayLang]);
+  }, [
+    isTranslating,
+    message.original_text,
+    message.id,
+    message.translations,
+    isUser,
+    normalizedDisplayLang,
+  ]);
 
   const displayText = useMemo(() => {
     if (!message.original_text) return '';
@@ -241,14 +235,7 @@ export default function MessageBubble({
     }
 
     return message.original_text;
-  }, [
-    message,
-    needsTranslation,
-    showOriginal,
-    translatedTextState,
-    cachedTranslation,
-    isUser,
-  ]);
+  }, [message, needsTranslation, showOriginal, translatedTextState, cachedTranslation, isUser]);
 
   useEffect(() => {
     const shouldTranslate =

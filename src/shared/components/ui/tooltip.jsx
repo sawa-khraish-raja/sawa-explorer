@@ -18,7 +18,7 @@ export const Tooltip = ({ children }) => {
   });
 };
 
-export const TooltipTrigger = ({ children, isVisible, setIsVisible, asChild, ...props }) => {
+export const TooltipTrigger = ({ children, _isVisible, setIsVisible, asChild, ...props }) => {
   const childElement = asChild ? children : <div>{children}</div>;
 
   return React.cloneElement(childElement, {

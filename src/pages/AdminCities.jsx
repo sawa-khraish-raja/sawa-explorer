@@ -28,30 +28,28 @@ import { uploadImage } from '@/utils/storage';
 
 import AdminLayout from '@/features/admin/components/AdminLayout';
 
-
-
-
 const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityMutation }) => {
-  const queryClient = useQueryClient();
-
-  const initialFormData = useMemo(() => ({
-    name: '',
-    country: '',
-    description: '',
-    card_image: '',
-    gallery_images: [],
-    is_active: true,
-    is_featured: false,
-    timezone: '',
-    currency: 'USD',
-    languages: [],
-    highlights: [],
-    best_time_to_visit: '',
-    average_temp: '',
-    population: null,
-    page_slug: '',
-    coordinates: { lat: null, lng: null },
-  }), []);
+  const initialFormData = useMemo(
+    () => ({
+      name: '',
+      country: '',
+      description: '',
+      card_image: '',
+      gallery_images: [],
+      is_active: true,
+      is_featured: false,
+      timezone: '',
+      currency: 'USD',
+      languages: [],
+      highlights: [],
+      best_time_to_visit: '',
+      average_temp: '',
+      population: null,
+      page_slug: '',
+      coordinates: { lat: null, lng: null },
+    }),
+    []
+  );
 
   const [formData, setFormData] = useState(initialFormData);
   const [activeTab, setActiveTab] = useState('general');
@@ -94,7 +92,7 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
 
       toast.success('Image uploaded successfully!');
     } catch (error) {
-      toast.error('Failed to upload image');
+      toast.error('Failed to upload image', error);
     }
     setIsUploadingImage(false);
   };

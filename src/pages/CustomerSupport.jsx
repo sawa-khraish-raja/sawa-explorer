@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import {
   MessageSquare,
@@ -36,9 +36,8 @@ import { getAllDocuments } from '@/utils/firestore';
 import AdminLayout from '@/features/admin/components/AdminLayout';
 
 export default function CustomerSupport() {
-  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('overview');
+  const [,] = useState('overview');
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
 

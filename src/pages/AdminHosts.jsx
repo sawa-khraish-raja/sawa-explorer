@@ -26,21 +26,18 @@ import AdminLayout from '@/features/admin/components/AdminLayout';
 import AssignAgencyDialog from '@/features/admin/components/AssignAgencyDialog';
 import EditHostDialog from '@/features/admin/components/EditHostDialog';
 import HostCommissionDialog from '@/features/admin/components/HostCommissionDialog';
-import ManageCityAccessDialog from '@/features/admin/components/ManageCityAccessDialog'; // New import
-import { UseAppContext } from '@/shared/context/AppContext';
+import ManageCityAccessDialog from '@/features/admin/components/ManageCityAccessDialog';
 import { showNotification } from '@/features/shared/notifications/NotificationManager';
 
 export default function AdminHosts() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedHost, setSelectedHost] = useState(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [, setIsEditDialogOpen] = useState(false);
   const [isAgencyDialogOpen, setIsAgencyDialogOpen] = useState(false);
   const [isCommissionDialogOpen, setIsCommissionDialogOpen] = useState(false);
-  const [isCityAccessDialogOpen, setIsCityAccessDialogOpen] = useState(false); // New state
-  const [filterType, setFilterType] = useState('all'); // all, agency, freelancer
-
-  const { user: currentUser } = UseAppContext();
+  const [isCityAccessDialogOpen, setIsCityAccessDialogOpen] = useState(false);
+  const [filterType, setFilterType] = useState('all');
 
   const { data: hosts = [], isLoading } = useQuery({
     queryKey: ['allHosts'],

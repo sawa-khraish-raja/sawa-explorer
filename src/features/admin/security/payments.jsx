@@ -50,7 +50,7 @@ export async function verifyPaymentSignature(signed) {
  * @param {Object} params - Payment params
  * @returns {Promise<Object>} Payment result
  */
-export async function securePaymentFlow({ bookingId, amount, currency, cardElement }) {
+export async function securePaymentFlow({ bookingId, amount, currency, _cardElement }) {
   // Step 1: Create intent with signed payload
   const { paymentIntent, signed } = await createPaymentIntent({
     bookingId,

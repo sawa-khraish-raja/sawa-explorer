@@ -83,7 +83,15 @@ export default [
       // ===== Unused Imports =====
       'no-unused-vars': 'off', // Turned off in favor of unused-imports
       'unused-imports/no-unused-imports': 'error',
-      'unused-imports/no-unused-vars': 'off',
+      'unused-imports/no-unused-vars': [
+        'error',
+        {
+          vars: 'all',
+          varsIgnorePattern: '^_',
+          args: 'after-used',
+          argsIgnorePattern: '^_',
+        },
+      ],
 
       // ===== React Rules =====
       ...react.configs.recommended.rules,

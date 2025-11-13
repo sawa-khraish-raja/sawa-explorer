@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { updateDocument } from '@/utils/firestore';
 import { confirmBooking } from '@/utils/functions';
 
-import { UseAppContext } from "@/shared/context/AppContext";
+import { UseAppContext } from '@/shared/context/AppContext';
 import { showSuccess, showError } from '@/shared/utils/notifications';
 
 export default function OfferCard({
@@ -59,7 +59,7 @@ export default function OfferCard({
 
       return response.data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       console.log(' [OfferCard] Offer accepted successfully');
 
       showSuccess(

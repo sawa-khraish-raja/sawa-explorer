@@ -8,11 +8,10 @@ export default function PageHero({
   backgroundImage,
   gradient = true,
   size = 'medium',
-  align = 'left',
   badge,
   actions,
   overlay = 'dark',
-  pageName, //  pageName to load correct videos
+  pageName,
 }) {
   const sizeClasses = {
     small: 'py-12 sm:py-16 lg:py-20',

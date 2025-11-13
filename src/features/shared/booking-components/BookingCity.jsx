@@ -112,9 +112,9 @@ const AIPlannerLinkCard = ({ cityName, navigate, createPageUrl }) => {
 export default function BookingCity({ cityName }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { t, language } = useTranslation();
+  const { language } = useTranslation();
   const { user } = UseAppContext();
-  const [eventFilters, setEventFilters] = useState({
+  const [eventFilters] = useState({
     featured: false,
     category: 'All',
     priceRange: null,
@@ -172,7 +172,6 @@ export default function BookingCity({ cityName }) {
   const {
     data: hosts = [],
     isLoading: areHostsLoading,
-    error: hostsError,
   } = useQuery({
     queryKey: ['cityHosts', cityName],
     queryFn: async () => {
@@ -246,7 +245,7 @@ export default function BookingCity({ cityName }) {
 
       return { id: bookingId, ...bookingData };
     },
-    onSuccess: (booking) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myBookings'] });
 
       showSuccess(

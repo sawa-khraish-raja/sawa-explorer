@@ -26,7 +26,7 @@ import { UseAppContext } from "@/shared/context/AppContext";
 export default function NotificationSettings() {
   const queryClient = useQueryClient();
   const { user } = UseAppContext();
-  const [isSaving, setIsSaving] = useState(false);
+  const [, setIsSaving] = useState(false);
 
   const { data: preferences, isLoading } = useQuery({
     queryKey: ['notificationPreferences', user?.email],

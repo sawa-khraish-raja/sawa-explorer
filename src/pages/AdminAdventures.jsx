@@ -58,7 +58,7 @@ export default function AdminAdventures() {
   const queryClient = useQueryClient();
   const { user } = UseAppContext();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [editingAdventure, setEditingAdventure] = useState(null);
+  const [, setEditingAdventure] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [activeTab, setActiveTab] = useState('pending');
   const [searchTerm, setSearchTerm] = useState('');

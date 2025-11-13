@@ -19,7 +19,7 @@ export default function PartnerRequests() {
       try {
         const currentUser = await UseAppContext().user;
         setUser(currentUser);
-      } catch (error) {
+      } catch {
         console.error('Failed to fetch user');
       }
     }

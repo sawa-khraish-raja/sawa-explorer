@@ -1,11 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { UseAppContext } from "@/shared/context/AppContext";
+import { UseAppContext } from '@/shared/context/AppContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  queryDocuments,
-  addDocument,
-} from '@/utils/firestore';
-import { useNavigate } from 'react-router-dom';
+import { queryDocuments, addDocument } from '@/utils/firestore';
+
 import {
   Dialog,
   DialogContent,
@@ -217,13 +214,11 @@ const PlanPreview = ({ planText, onNext, onBack, isLoading, onRegenerate }) => (
 );
 
 const PlanResult = ({ plan, onBack, hosts }) => {
-  const { t, language } = useTranslation();
-  const navigate = useNavigate();
+  const { language } = useTranslation();
 
-  const handleMessageHost = (hostEmail) => {
+  const handleMessageHost = () => {
     // This would navigate to the messaging page, which needs to be implemented
     toast.info('Messaging feature coming soon!');
-    // navigate(createPageUrl(`Messages?host=${hostEmail}&context=plan`));
   };
 
   return (
@@ -305,7 +300,7 @@ export default function AITripPlannerModal({ isOpen, onClose, city }) {
   const [step, setStep] = useState(0);
   const [request, setRequest] = useState({ city });
   const [plan, setPlan] = useState(null);
-  const [regenerationCount, setRegenerationCount] = useState(0);
+  const [, setRegenerationCount] = useState(0);
 
   const cacheKey = useMemo(() => {
     if (!request.city || !request.interests) return null;
@@ -329,7 +324,7 @@ export default function AITripPlannerModal({ isOpen, onClose, city }) {
     enabled: step === 1,
   });
 
-  const { data: hosts, isLoading: areHostsLoading } = useQuery({
+  const { data: hosts } = useQuery({
     queryKey: ['suggestedHosts', city],
     queryFn: () =>
       queryDocuments('host_profiles', [

@@ -70,7 +70,6 @@ const DesktopNav = memo(
     t,
     location,
     officeDashboardBaseUrl,
-    adminDashboardBaseUrl,
   }) => {
     if (isOfficeOnly) {
       return (
@@ -243,7 +242,7 @@ const DesktopNav = memo(
 
 DesktopNav.displayName = 'DesktopNav';
 
-const AppContent = memo(({ children, currentPageName }) => {
+const AppContent = memo(({ children }) => {
   const { t, language } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();

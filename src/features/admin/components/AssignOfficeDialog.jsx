@@ -22,7 +22,7 @@ import {
 } from '@/shared/components/ui/select';
 import { getAllDocuments, updateDocument } from '@/utils/firestore';
 
-export default function AssignOfficeDialog({ user, isOpen, onClose, onConfirm }) {
+export default function AssignOfficeDialog({ user, isOpen, onClose }) {
   const queryClient = useQueryClient();
   const [selectedOfficeId, setSelectedOfficeId] = useState('');
 

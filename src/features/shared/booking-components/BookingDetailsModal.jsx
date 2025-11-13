@@ -47,7 +47,6 @@ export default function BookingDetailsModal({
   booking,
   open,
   onOpenChange,
-  viewerType = 'traveler',
 }) {
   const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
@@ -157,32 +156,6 @@ export default function BookingDetailsModal({
     () => booking?.status === 'confirmed' || booking?.state === 'confirmed' || !!acceptedOffer,
     [booking?.status, booking?.state, acceptedOffer]
   );
-
-  // Get ALL hosts who sent offers (not just pending) - Original logic kept here for `offers` tab
-  const hostsWithOffers = useMemo(() => {
-    const hostMap = new Map();
-
-    offers.forEach((offer) => {
-      if (!hostMap.has(offer.host_email)) {
-        const hostUser = allOfferHostsData.find((u) => u.email === offer.host_email);
-        const conversation = conversations.find(
-          (c) =>
-            c.booking_id === booking?.id &&
-            c.host_emails &&
-            c.host_emails.includes(offer.host_email)
-        );
-
-        hostMap.set(offer.host_email, {
-          email: offer.host_email,
-          user: hostUser,
-          offer: offer,
-          conversation: conversation,
-        });
-      }
-    });
-
-    return Array.from(hostMap.values());
-  }, [offers, allOfferHostsData, conversations, booking?.id]);
 
   // Get ONLY hosts who have active conversations (accepted the request)
   const hostsWithConversations = useMemo(() => {

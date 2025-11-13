@@ -97,10 +97,9 @@ export const SAWA_VALIDATION = {
   htmlSafe: (v) => {
     if (!v || typeof v !== 'string') return v;
 
-    const allowedTags = ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li'];
     let safe = v;
 
-    // Remove all tags except allowed ones
+    // Remove all tags except allowed ones (p, br, strong, em, u, a, ul, ol, li)
     safe = safe.replace(/<(?!\/?(?:p|br|strong|em|u|a|ul|ol|li)\b)[^>]+>/gi, '');
 
     // Remove dangerous attributes
@@ -191,8 +190,8 @@ export function checkRateLimit(identifier, maxAttempts = 50, windowMs = 60000) {
   rateLimitStore.set(key, current + 1);
 
   // Cleanup old entries
-  for (const [k, v] of rateLimitStore.entries()) {
-    const [id, time] = k.split(':');
+  for (const [k, _v] of rateLimitStore.entries()) {
+    const [_id, time] = k.split(':');
     if (parseInt(time) * windowMs < now - windowMs * 2) {
       rateLimitStore.delete(k);
     }

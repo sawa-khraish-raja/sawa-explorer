@@ -129,7 +129,7 @@ export default function AdminAuditLogs() {
             let details = null;
             try {
               details = log.details ? JSON.parse(log.details) : null;
-            } catch (e) {
+            } catch {
               details = null;
             }
 

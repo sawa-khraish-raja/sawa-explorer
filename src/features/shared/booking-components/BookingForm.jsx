@@ -26,7 +26,6 @@ export default function BookingForm({
   const { user } = UseAppContext();
   const navigate = useNavigate();
   const [notes, setNotes] = useState('');
-  const [email, setEmail] = useState(''); // Keeping this as per outline, though not used in the final JSX
   const queryClient = useQueryClient();
 
   const createBookingMutation = useMutation({

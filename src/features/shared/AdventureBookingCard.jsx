@@ -93,7 +93,6 @@ export default function AdventureBookingCard({ booking }) {
   };
 
   const statusStyle = getStatusStyle(booking.status);
-  const StatusIcon = statusStyle.icon;
 
   const handleCardClick = () => {
     if (booking.status === 'confirmed' && conversation && conversation.id) {

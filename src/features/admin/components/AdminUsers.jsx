@@ -58,7 +58,7 @@ export default function AdminUsers() {
     hostStatus: 'all',
     city: 'all',
   });
-  const [sort, setSort] = useState({ by: 'created_date', dir: 'desc' });
+  const [sort] = useState({ by: 'created_date', dir: 'desc' });
 
   const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
   const [selectedUserForPermissions, setSelectedUserForPermissions] = useState(null);

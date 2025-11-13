@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { cn } from '@/shared/utils';
 
 export default function DesignAudit() {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [, ] = useState('overview');
 
   // Design System Analysis
   const audit = {

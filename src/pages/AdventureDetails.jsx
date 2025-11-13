@@ -268,7 +268,7 @@ export default function AdventureDetails() {
                       src={img}
                       alt={`${adventure.title} - Image ${idx + 2}`}
                       className='w-full h-full object-cover hover:scale-110 transition-transform cursor-pointer'
-                      onClick={(e) => {
+                      onClick={() => {
                         // Show full image in main view
                         const mainImg = document.querySelector('.main-adventure-image');
                         if (mainImg) mainImg.src = img;

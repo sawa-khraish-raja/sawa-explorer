@@ -106,7 +106,7 @@ export default function HostConversationView({
   const {
     data: booking,
     isLoading: isLoadingBooking,
-    error: bookingError,
+    error: _bookingError,
   } = useQuery({
     queryKey: ['hostBooking', conversation?.booking_id],
     queryFn: () => getDocument('bookings', conversation.booking_id),
@@ -137,7 +137,7 @@ export default function HostConversationView({
     isLoading: isLoadingMessages,
   } = useQuery({
     queryKey: ['hostMessages', conversationId],
-    queryFn: async ({ pageParam = 0 }) => {
+    queryFn: async ({ pageParam: _pageParam = 0 }) => {
       const response = await queryDocuments('messages', []);
       // Messages should be ordered oldest to newest from API for chat display
       return response.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
@@ -224,7 +224,7 @@ export default function HostConversationView({
       });
       return newOffer;
     },
-    onSuccess: (newOffer) => {
+    onSuccess: (_newOffer) => {
       queryClient.invalidateQueries({
         queryKey: ['hostConversation', conversationId],
       });
@@ -296,7 +296,7 @@ export default function HostConversationView({
   };
 
   const acceptOfferMutation = useMutation({
-    mutationFn: async ({ offerId, bookingId }) => {
+    mutationFn: async ({ offerId, _bookingId }) => {
       // In a real app, this would likely update the offer status to 'accepted' and maybe link to a booking
       // For this example, we'll simulate an update and notify
       await updateDocument('offers', offerId, {
@@ -305,7 +305,7 @@ export default function HostConversationView({
       });
       // If there's a booking associated, we might update it or redirect
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, _variables) => {
       queryClient.invalidateQueries({
         queryKey: ['hostConversation', conversationId],
       });
@@ -386,7 +386,7 @@ export default function HostConversationView({
   useEffect(() => {
     if (!conversation?.id || !currentUser) return;
 
-    const handleNewMessage = (data) => {
+    const _handleNewMessage = (data) => {
       // Ensure it's for this conversation and not sent by the current user
       if (data.conversation_id !== conversation.id) return;
       if (data.sender_email === currentUser.email) return;
@@ -517,7 +517,7 @@ export default function HostConversationView({
           const { file_url } = await uploadImage(imageObj.file, 'uploads');
           uploadedUrls.push(file_url);
         }
-      } catch (error) {
+      } catch {
         showNotification({
           title: 'Failed to upload images',
           type: 'error',

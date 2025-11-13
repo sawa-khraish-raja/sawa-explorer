@@ -64,7 +64,6 @@ export default function MarketingDashboard() {
   const { data: performance = [] } = useQuery({
     queryKey: ['campaignPerformance'],
     queryFn: async () => {
-      const today = new Date().toISOString().split('T')[0];
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       return queryDocuments('campaign_performance', {
         date: { $gte: weekAgo },

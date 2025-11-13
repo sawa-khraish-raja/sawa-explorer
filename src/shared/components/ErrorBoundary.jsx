@@ -30,7 +30,7 @@ class ErrorBoundary extends React.Component {
         //   }),
         // }).catch(() => {});
       }
-    } catch (e) {}
+    } catch {}
   }
 
   handleReset = () => {

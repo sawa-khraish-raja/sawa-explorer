@@ -56,7 +56,7 @@ export default function ReviewCard({ review, currentUser, onUpdate }) {
 
       toast.success(hasHelpful ? 'Removed from helpful' : 'Marked as helpful');
       if (onUpdate) onUpdate();
-    } catch (error) {
+    } catch {
       toast.error('Failed to update');
     }
   };
@@ -75,7 +75,7 @@ export default function ReviewCard({ review, currentUser, onUpdate }) {
       setShowResponse(false);
       setResponse('');
       if (onUpdate) onUpdate();
-    } catch (error) {
+    } catch {
       toast.error('Failed to submit response');
     } finally {
       setIsSubmitting(false);

@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { format, subDays } from 'date-fns';
 import {
   Users,
@@ -15,15 +15,8 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-} from 'recharts';
+
+import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 import { Badge } from '@/shared/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
@@ -35,9 +28,7 @@ import MarketingLayout from '@/shared/components/marketing/MarketingLayout';
 const COLORS = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#6366F1'];
 
 export default function MarketingAnalytics() {
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const [dateRange, setDateRange] = useState('7days');
+  const [,] = useState('7days');
 
   //  Fetch admin analytics data (same as AdminAnalytics)
   const { data: users = [], isLoading: usersLoading } = useQuery({

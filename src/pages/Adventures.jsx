@@ -15,7 +15,6 @@ import { useNavigate } from 'react-router-dom';
 
 import { queryDocuments } from '@/utils/firestore';
 
-import { useTranslation } from '@/shared/i18n/LanguageContext';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
@@ -30,7 +29,6 @@ import {
 
 export default function Adventures() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
 
   useEffect(() => {
     window.scrollTo(0, 0);

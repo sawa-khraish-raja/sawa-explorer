@@ -30,7 +30,7 @@ export default function ImprovedBookingCity({ cityName }) {
   const { user } = UseAppContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { t, language } = useTranslation();
+  const { language } = useTranslation();
   const [searchParams, setSearchParams] = useState(null);
 
   //  Optimized: Read URL params once
@@ -81,7 +81,7 @@ export default function ImprovedBookingCity({ cityName }) {
   });
 
   //  FIXED: Direct query instead of function call
-  const { data: hosts = [], isLoading: areHostsLoading } = useQuery({
+  const { data: hosts = [] } = useQuery({
     queryKey: ['cityHosts', cityName],
     queryFn: async () => {
       if (!cityName) return [];

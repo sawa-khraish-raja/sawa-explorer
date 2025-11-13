@@ -10,11 +10,9 @@ import { batchTranslateMessages } from './translationHelper';
  *
  * @param {Array} messages - Raw messages from the database
  * @param {string} displayLanguage - Current display language
- * @param {string} bookingId - Optional booking ID for context
- * @param {string} city - Optional city for context
  * @returns {Object} { processedMessages, isTranslating, loadMore, hasMore }
  */
-export function useSawaTranslation(messages, displayLanguage, bookingId = null, city = null) {
+export function useSawaTranslation(messages, displayLanguage) {
   const [processedMessages, setProcessedMessages] = useState([]);
   const [isTranslating, setIsTranslating] = useState(false);
   const [visibleCount, setVisibleCount] = useState(20); // Show last 20 initially

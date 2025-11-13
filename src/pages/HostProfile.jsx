@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   MapPin,
   Star,
@@ -55,7 +55,6 @@ const EXPERTISE_ICONS = {
 export default function HostProfile() {
   const { user } = UseAppContext();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 

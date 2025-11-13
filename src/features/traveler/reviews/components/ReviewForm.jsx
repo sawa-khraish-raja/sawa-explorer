@@ -96,7 +96,7 @@ export default function ReviewForm({
       //   ...prev,
       //   photos: [...prev.photos, ...urls],
       // }));
-    } catch (error) {
+    } catch {
       toast.error('Failed to upload photos');
     } finally {
       setIsSubmitting(false);

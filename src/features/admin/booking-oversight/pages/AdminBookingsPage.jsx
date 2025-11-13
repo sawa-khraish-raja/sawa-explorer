@@ -1,19 +1,14 @@
 import { useState } from 'react';
-import { useAllBookings, useBookingStats, useConfirmBooking } from '../hooks';
+import { useAllBookings, useBookingStats } from '../hooks';
 import { BookingStatsCards } from '../components';
 import { BookingList } from '@/features/traveler/bookings';
 import { useCancelBooking } from '@/features/traveler/bookings/hooks';
 
 export const AdminBookingsPage = () => {
-  const [filters, setFilters] = useState({});
+  const [filters] = useState({});
   const { data: bookings, isLoading: bookingsLoading } = useAllBookings(filters);
   const { data: stats, isLoading: statsLoading } = useBookingStats(filters);
-  const confirmBooking = useConfirmBooking();
   const cancelBooking = useCancelBooking();
-
-  const handleConfirm = async (bookingId) => {
-    await confirmBooking.mutateAsync(bookingId);
-  };
 
   const handleCancel = async (bookingId) => {
     if (confirm('Are you sure you want to cancel this booking?')) {

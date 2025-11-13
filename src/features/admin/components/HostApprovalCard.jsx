@@ -78,7 +78,7 @@ const priorityConfig = {
   urgent: { label: 'Urgent', color: 'bg-red-100 text-red-700' },
 };
 
-export default function HostApprovalCard({ request, onApprove, onReject, onUpdate }) {
+export default function HostApprovalCard({ request, onApprove, onReject }) {
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);

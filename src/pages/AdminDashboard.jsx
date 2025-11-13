@@ -29,7 +29,9 @@ import PermissionGuard from '@/features/admin/components/PermissionGuard';
 import { UseAppContext } from '@/shared/context/AppContext';
 import { showNotification } from '@/features/shared/notifications/NotificationManager';
 
-const RevenueBreakdownDialog = lazy(() => import('@/features/admin/components/RevenueBreakdownDialog'));
+const RevenueBreakdownDialog = lazy(
+  () => import('@/features/admin/components/RevenueBreakdownDialog')
+);
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -103,16 +105,6 @@ export default function AdminDashboard() {
     queryFn: async () => {
       // Get all users where host_approved is true
       return queryDocuments('users', [['host_approved', '==', true]]);
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const { data: adventures = [] } = useQuery({
-    queryKey: ['allAdventures'],
-    queryFn: async () => {
-      // Adventures not migrated yet - return empty array for now
-      // TODO: Migrate adventures collection
-      return [];
     },
     staleTime: 5 * 60 * 1000,
   });

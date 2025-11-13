@@ -22,7 +22,7 @@ const RadioGroup = React.forwardRef(
 RadioGroup.displayName = 'RadioGroup';
 
 const RadioGroupItem = React.forwardRef(
-  ({ className, value, checked, onChange, ...props }, ref) => {
+  ({ className, checked, onChange, ...props }, ref) => {
     return (
       <button
         ref={ref}

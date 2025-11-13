@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Loader2, Building2, Plus, Search, Users, Calendar, DollarSign, Eye } from 'lucide-react'; // Added Eye
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Added useNavigate
@@ -12,10 +12,7 @@ import { getAllDocuments } from '@/utils/firestore';
 import AdminLayout from '@/features/admin/components/AdminLayout';
 import CreateOfficeDialog from '@/features/admin/components/CreateOfficeDialog';
 
-
-
 export default function AdminOffices() {
-  const queryClient = useQueryClient();
   const navigate = useNavigate(); // Added navigate hook
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreateOfficeOpen, setCreateOfficeOpen] = useState(false);

@@ -27,8 +27,6 @@ import { invokeFunction } from '@/utils/functions';
 import MarketingGuard from '@/shared/components/marketing/MarketingGuard';
 import MarketingLayout from '@/shared/components/marketing/MarketingLayout';
 
-
-
 export default function MarketingAIInsights() {
   const queryClient = useQueryClient();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -49,21 +47,6 @@ export default function MarketingAIInsights() {
     retry: 1,
   });
 
-  const { data: audienceAnalytics = [] } = useQuery({
-    queryKey: ['audience_analytics'],
-    queryFn: async () => {
-      try {
-        const analytics = await getAllDocuments('audience_analytics', '-updated_date', 100);
-        return analytics || [];
-      } catch (error) {
-        console.error('Failed to fetch audience analytics:', error);
-        return [];
-      }
-    },
-    refetchInterval: 30000,
-    retry: 1,
-  });
-
   const { data: personas = [] } = useQuery({
     queryKey: ['marketing_personas'],
     queryFn: async () => {
@@ -77,7 +60,7 @@ export default function MarketingAIInsights() {
     },
     refetchInterval: 30000,
     retry: 1,
-  })
+  });
 
   const { data: jobLogs = [] } = useQuery({
     queryKey: ['ai_jobs_log'],

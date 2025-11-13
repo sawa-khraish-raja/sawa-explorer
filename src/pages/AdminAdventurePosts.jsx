@@ -28,7 +28,7 @@ export default function AdminAdventurePosts() {
   const [action, setAction] = useState(null);
   const [adminNotes, setAdminNotes] = useState('');
 
-  const { data: posts = [], isLoading } = useQuery({
+  const { data: posts = [] } = useQuery({
     queryKey: ['allAdventurePosts'],
     queryFn: () => getAllDocuments('adventureposts'),
   });

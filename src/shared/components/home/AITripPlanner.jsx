@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
 import { format, addDays } from 'date-fns';
 import {
   Sparkles,
@@ -30,7 +29,6 @@ import {
   SelectValue,
 } from '@/shared/components/ui/select';
 import { cn } from '@/shared/utils';
-import { queryDocuments } from '@/utils/firestore';
 import { invokeLLM } from '@/utils/llm';
 
 import SimpleDatePicker from "@/features/shared/booking-components/SimpleDatePicker";
@@ -336,7 +334,7 @@ function generateFallbackPlan(destination, days, totalBudget, currency, allDates
 }
 
 export default function AITripPlanner() {
-  const { t, language } = useTranslation();
+  const { language } = useTranslation();
 
   const [user, setUser] = useState(null);
   const [destination, setDestination] = useState('');
@@ -356,22 +354,12 @@ export default function AITripPlanner() {
       try {
         const currentUser = await UseAppContext().user;
         setUser(currentUser);
-      } catch (e) {
+      } catch {
         setUser(null);
       }
     }
     fetchUser();
   }, []);
-
-  const { data: cityEvents = [] } = useQuery({
-    queryKey: ['cityEventsForPlanner', destination],
-    queryFn: async () => {
-      if (!destination) return [];
-      const events = await queryDocuments('events', [['city', '==', destination]]);
-      return events.filter((e) => new Date(e.start_datetime) >= new Date());
-    },
-    enabled: !!destination,
-  });
 
   const toggleCategory = (categoryName) => {
     setSelectedCategories((prev) =>

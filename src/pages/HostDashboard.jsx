@@ -16,7 +16,7 @@ import {
   Package,
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { Badge } from '@/shared/components/ui/badge';
@@ -53,7 +53,6 @@ import { getUserDisplayName } from '@/shared/utils/userHelpers';
 
 export default function HostDashboard() {
   const navigate = useNavigate();
-  const location = useLocation();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('requests');
@@ -356,9 +355,6 @@ export default function HostDashboard() {
     refetchOnMount: true, // Refetch when component mounts
     refetchOnWindowFocus: false,
   });
-
-  const conversations = [];
-  const unreadCount = 0;
 
   const stats = useMemo(() => {
     const confirmed = myBookings.filter(

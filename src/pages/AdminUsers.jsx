@@ -95,7 +95,7 @@ export default function AdminUsers() {
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: async ({ userId, updates, city, officeData, action, affectedUserEmail }) => {
+    mutationFn: async ({ userId, updates, city, officeData, _action, _affectedUserEmail }) => {
       const finalUpdates = { ...updates };
 
       // TODO: Office updates removed - Offices collection not yet migrated to Firestore

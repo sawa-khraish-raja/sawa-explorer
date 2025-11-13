@@ -32,7 +32,7 @@ import { queryDocuments } from '@/utils/firestore';
 
 import { useAdminPermissions } from './PermissionGuard';
 
-export default function AdminLayout({ children, currentPage = '' }) {
+export default function AdminLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

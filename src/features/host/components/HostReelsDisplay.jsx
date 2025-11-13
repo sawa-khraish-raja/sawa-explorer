@@ -25,7 +25,7 @@ export default function HostReelsDisplay({ hostEmail }) {
         const user = await UseAppContext().user;
         console.log(' User loaded:', user?.email);
         setCurrentUser(user);
-      } catch (error) {
+      } catch {
         console.log(' No user logged in');
         setCurrentUser(null);
       } finally {
@@ -103,7 +103,7 @@ export default function HostReelsDisplay({ hostEmail }) {
       if (currentUser.email !== reel.host_email) {
         try {
           await NotificationHelpers.onReelLiked(reelId, reel.host_email);
-        } catch (notifError) {}
+        } catch {}
       } else {
         console.log(' User is the host, skipping notification');
       }

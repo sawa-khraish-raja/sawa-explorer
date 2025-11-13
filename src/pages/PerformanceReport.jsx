@@ -55,12 +55,6 @@ export default function PerformanceReport() {
     return 'text-red-600 bg-red-50';
   };
 
-  const getScoreIcon = (score) => {
-    if (score >= 90) return <CheckCircle className='w-5 h-5 text-green-600' />;
-    if (score >= 70) return <AlertCircle className='w-5 h-5 text-yellow-600' />;
-    return <AlertCircle className='w-5 h-5 text-red-600' />;
-  };
-
   // Performance Analysis
   const analysis = {
     // 1. Database Queries

@@ -24,7 +24,7 @@ export default function HeroPerformanceAudit() {
   const [performanceMetrics, setPerformanceMetrics] = useState(null);
   const [videoSizes, setVideoSizes] = useState({});
 
-  const { data: slides = [], isLoading } = useQuery({
+  const { data: slides = [] } = useQuery({
     queryKey: ['heroSlides', 'home'],
     queryFn: async () => {
       const allSlides = await queryDocuments(

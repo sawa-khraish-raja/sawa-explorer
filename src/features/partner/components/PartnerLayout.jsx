@@ -62,7 +62,7 @@ export default function PartnerLayout({ children }) {
           return;
         }
         setUser(contextUser);
-      } catch (error) {
+      } catch {
         navigate('/login');
       } finally {
         setLoading(false);

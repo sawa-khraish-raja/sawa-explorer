@@ -8,7 +8,7 @@ import ChatPanel from './ChatPanel';
 
 export default function ChatLauncher() {
   const [isOpen, setIsOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadCount] = useState(0);
   const location = useLocation();
 
   //  Hide in Messages page
