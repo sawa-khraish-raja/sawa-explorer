@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { cn } from '@/shared/utils';
 import { getAllDocuments, queryDocuments, updateDocument } from '@/utils/firestore';
 
-import { UseAppContext } from "@/shared/context/AppContext";
+import { UseAppContext } from '@/shared/context/AppContext';
 import { NotificationHelpers } from '@/features/shared/notifications/notificationHelpers';
 
 export default function HostReelsDisplay({ hostEmail }) {
@@ -103,7 +103,9 @@ export default function HostReelsDisplay({ hostEmail }) {
       if (currentUser.email !== reel.host_email) {
         try {
           await NotificationHelpers.onReelLiked(reelId, reel.host_email);
-        } catch {}
+        } catch (error) {
+          console.error(' Failed to send notification:', error);
+        }
       } else {
         console.log(' User is the host, skipping notification');
       }

@@ -129,10 +129,10 @@ export default [
 
       // ===== General JavaScript Rules =====
       'no-console': 'off',
-      'no-debugger': 'warn',
+      'no-debugger': 'error',
       'no-alert': 'off',
       'no-undef': 'error',
-      'no-empty': 'off',
+      'no-empty': 'error',
       'no-var': 'error',
       'prefer-const': 'error',
       'prefer-arrow-callback': 'warn',

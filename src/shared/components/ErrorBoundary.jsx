@@ -30,7 +30,9 @@ class ErrorBoundary extends React.Component {
         //   }),
         // }).catch(() => {});
       }
-    } catch {}
+    } catch (error) {
+      console.error(' Failed to log error to backend:', error);
+    }
   }
 
   handleReset = () => {
