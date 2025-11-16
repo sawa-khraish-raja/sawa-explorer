@@ -174,8 +174,7 @@ function CityCard({ city, featured = false, index = 0 }) {
   const tagline =
     city.description || cityTaglines[city.name] || 'Discover authentic local experiences';
 
-  // Create page slug from city name if not available
-  const pageSlug = city.page_slug || city.name.toLowerCase().replace(/\s+/g, '-');
+  const pageSlug = city.page_slug || city.name.trim().toLowerCase().replace(/\s+/g, '-').replace(/^-+|-+$/g, '');
 
   return (
     <Card
