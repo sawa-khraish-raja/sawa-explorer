@@ -31,6 +31,7 @@ import BookingCairo from './BookingCairo';
 import BookingDamascus from './BookingDamascus';
 import BookingIstanbul from './BookingIstanbul';
 import BookingTunis from './BookingTunis';
+import CityDetail from './CityDetail';
 import CommunityGuidelines from './CommunityGuidelines';
 import CookiePolicy from './CookiePolicy';
 import CreateAdventureBooking from './CreateAdventureBooking';
@@ -201,6 +202,8 @@ const PAGES = {
   AdminAuditLogs: AdminAuditLogs,
 
   NotFound: NotFound,
+
+  CityDetail: CityDetail,
 
   AdminAdventures: AdminAdventures,
 
@@ -453,6 +456,8 @@ function PagesContent() {
         <Route path='/SmartGrowthPlan' element={<SmartGrowthPlan />} />
 
         <Route path='/DevTools' element={<DevTools />} />
+
+        <Route path='/:citySlug' element={<CityDetail />} />
       </Routes>
     </Layout>
   );

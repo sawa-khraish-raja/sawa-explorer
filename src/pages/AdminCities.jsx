@@ -76,7 +76,11 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
 
     setIsUploadingImage(true);
     try {
-      const { file_url } = await uploadImage(file);
+      const file_url = await uploadImage(file);
+
+      if (!file_url) {
+        throw new Error('No URL returned from upload');
+      }
 
       if (type === 'card') {
         setFormData((prev) => ({
@@ -92,9 +96,14 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
 
       toast.success('Image uploaded successfully!');
     } catch (error) {
-      toast.error('Failed to upload image', error);
+      console.error('Image upload error:', error);
+      toast.error('Failed to upload image: ' + (error.message || 'Unknown error'));
+    } finally {
+      setIsUploadingImage(false);
+      if (e.target) {
+        e.target.value = '';
+      }
     }
-    setIsUploadingImage(false);
   };
 
   const handleRemoveGalleryImage = (index) => {
@@ -124,7 +133,7 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
   };
 
   const handleSubmit = () => {
-    if (!formData.name || !formData.country) {
+    if (!formData.name?.trim() || !formData.country?.trim()) {
       toast.error('City name and country are required');
       return;
     }
@@ -136,6 +145,10 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
 
     const dataToSave = {
       ...formData,
+      name: formData.name.trim(),
+      country: formData.country.trim(),
+      description: formData.description?.trim() || '',
+      page_slug: formData.page_slug?.trim() || '',
       population: formData.population ? Number(formData.population) : null,
       coordinates: {
         lat: formData.coordinates.lat ? Number(formData.coordinates.lat) : null,
