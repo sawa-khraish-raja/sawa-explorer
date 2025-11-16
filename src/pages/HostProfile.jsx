@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   MapPin,
   Star,
@@ -24,18 +24,18 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { createPageUrl } from '@/utils';
 import { queryDocuments } from '@/utils/firestore';
 
-import Lightbox from '../components/booking/Lightbox';
-import { UseAppContext } from '../components/context/AppContext';
-import ReviewsList from '../components/reviews/ReviewsList';
-import { normalizeText } from '../components/utils/textHelpers';
-import { getUserDisplayName } from '../components/utils/userHelpers';
+import Lightbox from '@/features/shared/booking-components/Lightbox';
+import { UseAppContext } from '@/shared/context/AppContext';
+import ReviewsList from '@/features/traveler/reviews/components/ReviewsList';
+import { normalizeText } from '@/shared/utils/textHelpers';
+import { getUserDisplayName } from '@/shared/utils/userHelpers';
 
 const EXPERTISE_ICONS = {
   Photography: Camera,
@@ -55,7 +55,6 @@ const EXPERTISE_ICONS = {
 export default function HostProfile() {
   const { user } = UseAppContext();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 

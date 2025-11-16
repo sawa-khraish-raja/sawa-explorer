@@ -30,35 +30,35 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+} from '@/shared/components/ui/alert-dialog';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
+} from '@/shared/components/ui/dialog';
+import { Input } from '@/shared/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
+import { Textarea } from '@/shared/components/ui/textarea';
+import { cn } from '@/shared/utils';
 import { createPageUrl } from '@/utils';
 import { queryDocuments, addDocument, updateDocument, deleteDocument } from '@/utils/firestore';
 
-import AdminLayout from '../components/admin/AdminLayout';
-import PermissionGuard from '../components/admin/PermissionGuard';
-import AdventureForm from '../components/adventures/AdventureForm';
-import { UseAppContext } from '../components/context/AppContext';
+import AdminLayout from '@/features/admin/components/AdminLayout';
+import PermissionGuard from '@/features/admin/components/PermissionGuard';
+import AdventureForm from '@/features/traveler/adventures/components/AdventureForm';
+import { UseAppContext } from '@/shared/context/AppContext';
 
 export default function AdminAdventures() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = UseAppContext();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [editingAdventure, setEditingAdventure] = useState(null);
+  const [, setEditingAdventure] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [activeTab, setActiveTab] = useState('pending');
   const [searchTerm, setSearchTerm] = useState('');

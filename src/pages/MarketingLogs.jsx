@@ -2,11 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ScrollText, Loader2, Eye } from 'lucide-react';
 
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/shared/components/ui/card';
 import { queryDocuments } from '@/utils/firestore';
 
-import MarketingGuard from '../components/marketing/MarketingGuard';
-import MarketingLayout from '../components/marketing/MarketingLayout';
+import MarketingGuard from '@/shared/components/marketing/MarketingGuard';
+import MarketingLayout from '@/shared/components/marketing/MarketingLayout';
 
 export default function MarketingLogs() {
   const { data: logs = [], isLoading } = useQuery({

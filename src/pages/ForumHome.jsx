@@ -3,14 +3,14 @@ import { MessageSquare, Compass, Plus, Sparkles } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Button } from '@/shared/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/shared/components/ui/tabs';
 
-import PageHeroVideo from '../components/common/PageHeroVideo';
-import { UseAppContext } from '../components/context/AppContext';
-import AdventuresList from '../components/forum/AdventuresList';
-import CreatePostModal from '../components/forum/CreatePostModal';
-import ForumPostsList from '../components/forum/ForumPostsList';
+import PageHeroVideo from '@/shared/components/PageHeroVideo';
+import { UseAppContext } from '@/shared/context/AppContext';
+import AdventuresList from '@/features/shared/forum/AdventuresList';
+import CreatePostModal from '@/features/shared/forum/CreatePostModal';
+import ForumPostsList from '@/features/shared/forum/ForumPostsList';
 
 export default function ForumHome() {
   const { user } = UseAppContext();

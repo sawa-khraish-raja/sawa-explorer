@@ -18,15 +18,15 @@ import ReactMarkdown from 'react-markdown';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { getUserDisplayName } from '@/components/utils/userHelpers';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent } from '@/shared/components/ui/card';
+import { Textarea } from '@/shared/components/ui/textarea';
+import { getUserDisplayName } from '@/shared/utils/userHelpers';
 import { createPageUrl } from '@/utils';
 import { getDocument, updateDocument, queryDocuments, addDocument } from '@/utils/firestore';
 
-import { UseAppContext } from '../components/context/AppContext';
+import { UseAppContext } from '@/shared/context/AppContext';
 
 export default function ForumPostDetail() {
   const navigate = useNavigate();

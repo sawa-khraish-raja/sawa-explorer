@@ -18,16 +18,14 @@ import {
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { getAllDocuments } from '@/utils/firestore';
 import { invokeFunction } from '@/utils/functions';
 
-import MarketingGuard from '../components/marketing/MarketingGuard';
-import MarketingLayout from '../components/marketing/MarketingLayout';
-
-
+import MarketingGuard from '@/shared/components/marketing/MarketingGuard';
+import MarketingLayout from '@/shared/components/marketing/MarketingLayout';
 
 export default function MarketingAIInsights() {
   const queryClient = useQueryClient();
@@ -49,21 +47,6 @@ export default function MarketingAIInsights() {
     retry: 1,
   });
 
-  const { data: audienceAnalytics = [] } = useQuery({
-    queryKey: ['audience_analytics'],
-    queryFn: async () => {
-      try {
-        const analytics = await getAllDocuments('audience_analytics', '-updated_date', 100);
-        return analytics || [];
-      } catch (error) {
-        console.error('Failed to fetch audience analytics:', error);
-        return [];
-      }
-    },
-    refetchInterval: 30000,
-    retry: 1,
-  });
-
   const { data: personas = [] } = useQuery({
     queryKey: ['marketing_personas'],
     queryFn: async () => {
@@ -77,7 +60,7 @@ export default function MarketingAIInsights() {
     },
     refetchInterval: 30000,
     retry: 1,
-  })
+  });
 
   const { data: jobLogs = [] } = useQuery({
     queryKey: ['ai_jobs_log'],

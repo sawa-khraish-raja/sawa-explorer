@@ -17,12 +17,12 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent } from '@/shared/components/ui/card';
 import { createPageUrl } from '@/utils';
 import { getAllDocuments } from '@/utils/firestore';
 
-import PageHeroVideo from '../components/common/PageHeroVideo';
+import PageHeroVideo from '@/shared/components/PageHeroVideo';
 
 export default function About() {
   const navigate = useNavigate();

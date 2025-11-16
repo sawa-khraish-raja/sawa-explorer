@@ -14,9 +14,9 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { queryDocuments } from '@/utils/firestore';
 
 export default function HeroPerformanceAudit() {
@@ -24,7 +24,7 @@ export default function HeroPerformanceAudit() {
   const [performanceMetrics, setPerformanceMetrics] = useState(null);
   const [videoSizes, setVideoSizes] = useState({});
 
-  const { data: slides = [], isLoading } = useQuery({
+  const { data: slides = [] } = useQuery({
     queryKey: ['heroSlides', 'home'],
     queryFn: async () => {
       const allSlides = await queryDocuments(

@@ -16,12 +16,12 @@ import {
   Package,
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -29,12 +29,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
+} from '@/shared/components/ui/dialog';
+import { Input } from '@/shared/components/ui/input';
+import { Label } from '@/shared/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
+import { Textarea } from '@/shared/components/ui/textarea';
+import { cn } from '@/shared/utils';
 import { createPageUrl } from '@/utils';
 import {
   queryDocuments,
@@ -44,16 +44,15 @@ import {
   updateDocument,
 } from '@/utils/firestore';
 
-import BookingServicesDisplay from '../components/booking/BookingServicesDisplay';
-import { UseAppContext } from '../components/context/AppContext';
-import HostProfileSettings from '../components/host/HostProfileSettings';
-import { useTranslation } from '../components/i18n/LanguageContext';
-import { showSuccess, showError, showInfo } from '../components/utils/notifications';
-import { getUserDisplayName } from '../components/utils/userHelpers';
+import BookingServicesDisplay from '@/features/shared/booking-components/BookingServicesDisplay';
+import { UseAppContext } from '@/shared/context/AppContext';
+import HostProfileSettings from '@/features/host/components/HostProfileSettings';
+import { useTranslation } from '@/shared/i18n/LanguageContext';
+import { showSuccess, showError } from '@/shared/utils/notifications';
+import { getUserDisplayName } from '@/shared/utils/userHelpers';
 
 export default function HostDashboard() {
   const navigate = useNavigate();
-  const location = useLocation();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('requests');
@@ -356,9 +355,6 @@ export default function HostDashboard() {
     refetchOnMount: true, // Refetch when component mounts
     refetchOnWindowFocus: false,
   });
-
-  const conversations = [];
-  const unreadCount = 0;
 
   const stats = useMemo(() => {
     const confirmed = myBookings.filter(

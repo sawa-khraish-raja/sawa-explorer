@@ -1,9 +1,9 @@
 import { Package, Inbox, Send, Calendar, DollarSign } from 'lucide-react';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 
 
-import PartnerLayout from '../components/partner/PartnerLayout';
+import PartnerLayout from '@/features/partner/components/PartnerLayout';
 
 export default function PartnerDashboard() {
   const kpis = [

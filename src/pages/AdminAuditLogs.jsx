@@ -3,12 +3,12 @@ import { format } from 'date-fns';
 import { Search, FileText, Calendar, User, Loader2, Filter } from 'lucide-react';
 import { useState } from 'react';
 
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Badge } from '@/shared/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Input } from '@/shared/components/ui/input';
 import { getAllDocuments } from '@/utils/firestore';
 
-import AdminLayout from '../components/admin/AdminLayout';
+import AdminLayout from '@/features/admin/components/AdminLayout';
 
 export default function AdminAuditLogs() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -129,7 +129,7 @@ export default function AdminAuditLogs() {
             let details = null;
             try {
               details = log.details ? JSON.parse(log.details) : null;
-            } catch (e) {
+            } catch {
               details = null;
             }
 

@@ -3,22 +3,22 @@ import { Send, Loader2, CheckCircle, Home, Star  } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Input } from '@/shared/components/ui/input';
+import { Label } from '@/shared/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+} from '@/shared/components/ui/select';
+import { Textarea } from '@/shared/components/ui/textarea';
 import { addDocument } from '@/utils/firestore';
 
 
-import PageHero from '../components/common/PageHero';
+import PageHero from '@/shared/components/PageHero';
 
 export default function BecomeAHost() {
   const [formData, setFormData] = useState({

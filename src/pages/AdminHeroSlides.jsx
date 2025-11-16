@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, Save, Upload, Eye, EyeOff, Film, Loader2 } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -13,15 +13,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+} from '@/shared/components/ui/dialog';
+import { Input } from '@/shared/components/ui/input';
+import { Label } from '@/shared/components/ui/label';
+import { Switch } from '@/shared/components/ui/switch';
 import { addDocument, updateDocument, deleteDocument, queryDocuments } from '@/utils/firestore';
 import { uploadImage, uploadVideo } from '@/utils/storage';
 
-import AdminLayout from '../components/admin/AdminLayout';
-import { showSuccess, showError } from '../components/utils/notifications';
+import AdminLayout from '@/features/admin/components/AdminLayout';
+import { showSuccess, showError } from '@/shared/utils/notifications';
 
 const PAGE_TYPES = [
   { value: 'home', label: 'Home Page', icon: '🏠' },

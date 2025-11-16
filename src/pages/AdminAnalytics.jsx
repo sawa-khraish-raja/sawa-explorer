@@ -12,10 +12,10 @@ import {
   UserCheck,
 } from 'lucide-react';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { getAllDocuments } from '@/utils/firestore';
 
-import AdminLayout from '../components/admin/AdminLayout';
+import AdminLayout from '@/features/admin/components/AdminLayout';
 
 
 export default function AdminAnalytics() {

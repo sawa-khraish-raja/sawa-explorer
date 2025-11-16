@@ -13,9 +13,9 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { Badge } from '@/shared/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { cn } from '@/shared/utils';
 
 export default function PerformanceReport() {
   const [metrics, setMetrics] = useState({
@@ -53,12 +53,6 @@ export default function PerformanceReport() {
     if (score >= 90) return 'text-green-600 bg-green-50';
     if (score >= 70) return 'text-yellow-600 bg-yellow-50';
     return 'text-red-600 bg-red-50';
-  };
-
-  const getScoreIcon = (score) => {
-    if (score >= 90) return <CheckCircle className='w-5 h-5 text-green-600' />;
-    if (score >= 70) return <AlertCircle className='w-5 h-5 text-yellow-600' />;
-    return <AlertCircle className='w-5 h-5 text-red-600' />;
   };
 
   // Performance Analysis

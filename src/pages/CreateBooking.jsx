@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { UseAppContext } from '@/components/context/AppContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { UseAppContext } from '@/shared/context/AppContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { createPageUrl } from '@/utils';
 import { addDocument, queryDocuments, createNotification } from '@/utils/firestore';
 
-import ProgressBar from '../components/booking/ProgressBar';
-import TravelerInfoForm from '../components/booking/TravelerInfoForm';
+import ProgressBar from '@/features/shared/booking-components/ProgressBar';
+import TravelerInfoForm from '@/features/shared/booking-components/TravelerInfoForm';
 
 export default function CreateBooking() {
   const navigate = useNavigate();

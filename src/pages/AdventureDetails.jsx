@@ -14,16 +14,16 @@ import {
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { createNotification } from '@/components/notifications/notificationHelpers';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { useAuth } from '@/contexts/AuthContext';
+import { createNotification } from '@/features/shared/notifications/notificationHelpers';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent } from '@/shared/components/ui/card';
+import { useAuth } from '@/app/providers/AuthProvider';
 import { createPageUrl } from '@/utils';
 import { getDocument, addDocument } from '@/utils/firestore';
 
-import { trackAdventureView, trackEvent } from '../components/analytics/GoogleAnalytics';
-import { showSuccess, showError } from '../components/utils/notifications';
+import { trackAdventureView, trackEvent } from '@/features/admin/components/GoogleAnalytics';
+import { showSuccess, showError } from '@/shared/utils/notifications';
 
 export default function AdventureDetails() {
   const navigate = useNavigate();
@@ -101,10 +101,10 @@ export default function AdventureDetails() {
 
       console.log('Booking data to be saved:', bookingData);
 
+      let bookingId;
       try {
-        const bookingId = await addDocument('bookings', bookingData);
+        bookingId = await addDocument('bookings', bookingData);
         console.log('Booking created successfully! ID:', bookingId);
-        return bookingId;
       } catch (error) {
         console.error('Booking creation failed:', error);
         console.error('Error code:', error.code);
@@ -268,7 +268,7 @@ export default function AdventureDetails() {
                       src={img}
                       alt={`${adventure.title} - Image ${idx + 2}`}
                       className='w-full h-full object-cover hover:scale-110 transition-transform cursor-pointer'
-                      onClick={(e) => {
+                      onClick={() => {
                         // Show full image in main view
                         const mainImg = document.querySelector('.main-adventure-image');
                         if (mainImg) mainImg.src = img;

@@ -86,7 +86,7 @@ const cities = [
 ];
 
 // Sample Adventures/Experiences Data (will be enriched with city_id after cities are created)
-const getAdventures = (cityIds, cityMap) => {
+const getAdventures = (cityIds) => {
   // Helper to get a future date
   const getFutureDate = (daysFromNow) => {
     const date = new Date();

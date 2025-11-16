@@ -17,14 +17,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Label } from '@/shared/components/ui/label';
+import { Textarea } from '@/shared/components/ui/textarea';
 import { createPageUrl } from '@/utils';
 import { getDocument, addDocument, updateDocument } from '@/utils/firestore';
 
-import { UseAppContext } from '../components/context/AppContext';
+import { UseAppContext } from '@/shared/context/AppContext';
 
 export default function CreateAdventureBooking() {
   const navigate = useNavigate();
@@ -94,7 +94,7 @@ export default function CreateAdventureBooking() {
 
       return { id: bookingId };
     },
-    onSuccess: async (booking) => {
+    onSuccess: async () => {
       await queryClient.refetchQueries({ queryKey: ['myBookings'] });
       await queryClient.refetchQueries({ queryKey: ['adventure', adventureId] });
       await queryClient.refetchQueries({ queryKey: ['adventures'] });

@@ -14,12 +14,13 @@ import {
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import MarketingLayout from '@/components/marketing/MarketingLayout';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import MarketingLayout from '@/shared/components/marketing/MarketingLayout';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card';
+import { cn } from '@/shared/utils';
 import { getAllDocuments } from '@/utils/firestore';
+import { invokeFunction } from '@/utils/functions';
 
 const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English', flag: '🇺🇸' },

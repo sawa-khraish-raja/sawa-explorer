@@ -1,12 +1,12 @@
 
 import { Settings, Shield, Bell, Database } from 'lucide-react';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Label } from '@/shared/components/ui/label';
+import { Switch } from '@/shared/components/ui/switch';
 
-import MarketingGuard from '../components/marketing/MarketingGuard';
-import MarketingLayout from '../components/marketing/MarketingLayout';
+import MarketingGuard from '@/shared/components/marketing/MarketingGuard';
+import MarketingLayout from '@/shared/components/marketing/MarketingLayout';
 
 export default function MarketingSettings() {
   return (

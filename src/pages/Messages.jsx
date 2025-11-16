@@ -1,23 +1,20 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Loader2, MessageSquare, Search, Briefcase, Sparkles } from 'lucide-react';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { useTranslation } from '@/components/i18n/LanguageContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import { cn } from '@/shared/utils';
 import { subscribeToConversations, getAllDocuments } from '@/utils/firestore';
 
-import ConversationList from '../components/chat/ConversationList';
-import ConversationView from '../components/chat/ConversationView';
-import { UseAppContext } from '../components/context/AppContext';
+import ConversationList from '@/features/shared/chat/ConversationList';
+import ConversationView from '@/features/shared/chat/ConversationView';
+import { UseAppContext } from '@/shared/context/AppContext';
 
 export default function Messages() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const queryClient = useQueryClient();
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTab, setSelectedTab] = useState('services');
@@ -51,12 +48,6 @@ export default function Messages() {
       unsubscribe();
     };
   }, [user?.email, user?.host_approved]);
-
-  // Refetch function for compatibility
-  const refetchConversations = useCallback(() => {
-    // Real-time subscription handles updates automatically
-    console.log('Refetch requested (handled by real-time subscription)');
-  }, []);
 
   //  Load users
   const userEmails = useMemo(() => {

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Users, DollarSign, Star, TrendingUp, Loader2 } from 'lucide-react';
 
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui/card';
 import { queryDocuments } from '@/utils/firestore';
 
 export default function OfficeOverview({ office }) {

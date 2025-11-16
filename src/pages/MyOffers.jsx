@@ -10,7 +10,6 @@ import {
   DollarSign,
   Briefcase,
   MessageSquare,
-  MapPin,
   Users,
   User,
   Package,
@@ -19,7 +18,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Sparkles,
-  Zap,
   List,
   XCircle,
   CheckCircle,
@@ -29,9 +27,9 @@ import {
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -39,49 +37,23 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
+} from '@/shared/components/ui/dialog';
+import { cn } from '@/shared/utils';
 import { createPageUrl } from '@/utils';
 import { updateDocument, getDocument, queryDocuments, getAllDocuments } from '@/utils/firestore';
 
-import BookingDetailsModal from '../components/booking/BookingDetailsModal';
-import BookingFilters from '../components/booking/BookingFilters';
-import BookingServicesDisplay from '../components/booking/BookingServicesDisplay';
-import BookingStats from '../components/booking/BookingStats';
-import CancelBookingDialog from '../components/booking/CancelBookingDialog';
-import { BookingID } from '../components/common/BookingID';
-import PageHeroVideo from '../components/common/PageHeroVideo';
-import { UseAppContext } from '../components/context/AppContext';
-import { useTranslation } from '../components/i18n/LanguageContext';
-import { showSuccess, showError, showInfo } from '../components/utils/notifications';
-import { normalizeText } from '../components/utils/textHelpers';
-import { getUserDisplayName } from '../components/utils/userHelpers';
-
-// Map icon names to LucideReact components
-const iconMap = {
-  briefcase: Briefcase,
-  sparkles: Sparkles,
-  zap: Zap,
-  list: List,
-  package: Package,
-  users: Users,
-  calendar: Calendar,
-  'dollar-sign': DollarSign,
-  'message-square': MessageSquare,
-  'map-pin': MapPin,
-  'file-text': FileText,
-  star: Star,
-  'check-circle': CheckCircle,
-  'alert-circle': AlertCircle,
-  'x-circle': XCircle,
-  'alert-triangle': AlertTriangle,
-  clock: Clock,
-  'loader-2': Loader2,
-  check: Check,
-  x: X,
-  compass: Compass,
-  // Add more as needed based on actual service icons you might store in your backend
-};
+import BookingDetailsModal from '@/features/shared/booking-components/BookingDetailsModal';
+import BookingFilters from '@/features/shared/booking-components/BookingFilters';
+import BookingServicesDisplay from '@/features/shared/booking-components/BookingServicesDisplay';
+import BookingStats from '@/features/shared/booking-components/BookingStats';
+import CancelBookingDialog from '@/features/shared/booking-components/CancelBookingDialog';
+import { BookingID } from '@/shared/components/BookingID';
+import PageHeroVideo from '@/shared/components/PageHeroVideo';
+import { UseAppContext } from '@/shared/context/AppContext';
+import { useTranslation } from '@/shared/i18n/LanguageContext';
+import { showSuccess, showError, showInfo } from '@/shared/utils/notifications';
+import { normalizeText } from '@/shared/utils/textHelpers';
+import { getUserDisplayName } from '@/shared/utils/userHelpers';
 
 export default function MyOffers() {
   const { t } = useTranslation();
@@ -127,23 +99,6 @@ export default function MyOffers() {
     refetchOnMount: true,
     refetchOnWindowFocus: false,
   });
-
-  const { data: adventureBookings = [] } = useQuery({
-    queryKey: ['travelerAdventureBookings', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      const allBookings = await queryDocuments('bookings', [['user_id', '==', user.id]]);
-      // Filter for adventure bookings (has adventure_id)
-      const allAdventures = allBookings.filter((b) => b.adventure_id);
-      return allAdventures.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
-    },
-    enabled: !!user?.id,
-    staleTime: 30 * 1000,
-    refetchOnMount: true,
-    refetchOnWindowFocus: false,
-  });
-
-  const serviceBookings = bookings.filter((b) => !b.adventure_id);
 
   const { data: allOffers = [], isLoading: offersLoading } = useQuery({
     queryKey: ['myOffers', user?.email],
@@ -394,12 +349,6 @@ export default function MyOffers() {
       showError(' Failed to Decline Offer', 'Could not decline the offer. Please try again.');
     },
   });
-
-  const handleAcceptOffer = () => {
-    if (selectedOffer) {
-      acceptOfferMutation.mutate(selectedOffer.id);
-    }
-  };
 
   //  UPDATED: Cancel Booking Mutation - Direct cancellation (using Firestore)
   const cancelBookingMutation = useMutation({
@@ -884,13 +833,15 @@ export default function MyOffers() {
                                                       host.display_name ||
                                                       host.email}
                                                   </p>
-                                                  {(response?.offered_date || response?.rejected_date || response?.declined_by_traveler_date) && (
+                                                  {(response?.offered_date ||
+                                                    response?.rejected_date ||
+                                                    response?.declined_by_traveler_date) && (
                                                     <p className='text-[10px] sm:text-xs text-gray-500'>
                                                       {response.action === 'offered'
                                                         ? 'Offered'
                                                         : response.action === 'declined_by_traveler'
-                                                        ? 'You Declined'
-                                                        : 'Declined'}{' '}
+                                                          ? 'You Declined'
+                                                          : 'Declined'}{' '}
                                                       {format(
                                                         new Date(
                                                           response.offered_date ||
@@ -967,15 +918,19 @@ export default function MyOffers() {
                                                 )}
                                                 <div className='flex-1 min-w-0'>
                                                   <p className='text-xs sm:text-sm font-medium text-gray-900 truncate'>
-                                                    {host?.full_name || host?.display_name || hostEmail}
+                                                    {host?.full_name ||
+                                                      host?.display_name ||
+                                                      hostEmail}
                                                   </p>
-                                                  {(response.offered_date || response.rejected_date || response.declined_by_traveler_date) && (
+                                                  {(response.offered_date ||
+                                                    response.rejected_date ||
+                                                    response.declined_by_traveler_date) && (
                                                     <p className='text-[10px] sm:text-xs text-gray-500'>
                                                       {response.action === 'offered'
                                                         ? 'Sent Offer'
                                                         : response.action === 'declined_by_traveler'
-                                                        ? 'You Declined'
-                                                        : 'Declined'}{' '}
+                                                          ? 'You Declined'
+                                                          : 'Declined'}{' '}
                                                       {format(
                                                         new Date(
                                                           response.offered_date ||

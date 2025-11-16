@@ -1,4 +1,4 @@
-import PartnerLayout from '../components/partner/PartnerLayout';
+import PartnerLayout from '@/features/partner/components/PartnerLayout';
 
 export default function PartnerInventory() {
   return (

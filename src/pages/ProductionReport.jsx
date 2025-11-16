@@ -1,4 +1,4 @@
-import ProductionAudit from '../components/common/ProductionAudit';
+import ProductionAudit from '@/shared/components/ProductionAudit';
 
 export default function ProductionReport() {
   return <ProductionAudit />;

@@ -1,17 +1,17 @@
 import { Database, CheckCircle, XCircle } from 'lucide-react';
 import React, { useState } from 'react';
 
-import { UseAppContext } from '@/components/context/AppContext';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { UseAppContext } from '@/shared/context/AppContext';
+import { Alert, AlertDescription } from '@/shared/components/ui/alert';
+import { Button } from '@/shared/components/ui/button';
 import {
-  getAllDocuments,
-  queryDocuments,
-  updateDocument,
-  setDocument,
-  getDocument,
-} from '@/utils/firestore';
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card';
+import { getAllDocuments, updateDocument, setDocument, getDocument } from '@/utils/firestore';
 import {
   seedCities,
   seedAdventures,
@@ -99,28 +99,6 @@ export default function DevTools() {
     }
   };
 
-  const handleClearAndReseedAdventures = async () => {
-    setLoading(true);
-    setStatus(null);
-    try {
-      // First, clear existing adventures
-      const deletedCount = await clearAdventures();
-
-      // Then seed new ones
-      await seedAdventures();
-      setStatus({
-        type: 'success',
-        message: `Cleared ${deletedCount} old adventures and seeded 5 new ones!`,
-      });
-      loadStats();
-    } catch (error) {
-      console.error('Clear & reseed error:', error);
-      setStatus({ type: 'error', message: error.message });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSeedBookingsAndOffers = async () => {
     setLoading(true);
     setStatus(null);
@@ -139,42 +117,6 @@ export default function DevTools() {
       loadStats();
     } catch (error) {
       console.error('Seed bookings/offers error:', error);
-      setStatus({ type: 'error', message: error.message });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDebugMyBookings = async () => {
-    setLoading(true);
-    setStatus(null);
-    try {
-      if (!user?.email) {
-        setStatus({ type: 'error', message: 'Please login first!' });
-        setLoading(false);
-        return;
-      }
-
-      // Check all bookings in database
-      const allBookings = await getAllDocuments('bookings');
-
-      // Filter bookings by user email
-      const myBookings = await queryDocuments('bookings', [['traveler_email', '==', user.email]]);
-
-      // Check if there's a mismatch in email casing or whitespace
-      const manualFilter = allBookings.filter(
-        (b) => b.traveler_email?.toLowerCase().trim() === user.email?.toLowerCase().trim()
-      );
-
-      // Check offers
-      const allOffers = await getAllDocuments('offers');
-
-      setStatus({
-        type: 'success',
-        message: `Found ${myBookings.length} booking(s) for ${user.email}. Check console for details.`,
-      });
-    } catch (error) {
-      console.error('Debug error:', error);
       setStatus({ type: 'error', message: error.message });
     } finally {
       setLoading(false);

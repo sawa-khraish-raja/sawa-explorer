@@ -1,19 +1,19 @@
 import { Loader2 } from 'lucide-react';
 import { lazy, Suspense, useEffect } from 'react';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 
-import PageHeroVideo from '../components/common/PageHeroVideo';
-import SearchBar from '../components/home/SearchBar';
-import { useTranslation } from '../components/i18n/LanguageContext';
-import { normalizeText } from '../components/utils/textHelpers';
+import PageHeroVideo from '@/shared/components/PageHeroVideo';
+import SearchBar from '@/shared/components/home/SearchBar';
+import { useTranslation } from '@/shared/i18n/LanguageContext';
+import { normalizeText } from '@/shared/utils/textHelpers';
 
 
-const DestinationIcons = lazy(() => import('../components/home/DestinationIcons'));
-const AITripPlanner = lazy(() => import('../components/home/AITripPlanner'));
-const WhyChooseSawa = lazy(() => import('../components/home/WhyChooseSawa'));
-const ServicesSection = lazy(() => import('../components/home/ServicesSection'));
-const AdventuresHomeSection = lazy(() => import('../components/home/AdventuresHomeSection'));
+const DestinationIcons = lazy(() => import('@/shared/components/home/DestinationIcons'));
+const AITripPlanner = lazy(() => import('@/shared/components/home/AITripPlanner'));
+const WhyChooseSawa = lazy(() => import('@/shared/components/home/WhyChooseSawa'));
+const ServicesSection = lazy(() => import('@/shared/components/home/ServicesSection'));
+const AdventuresHomeSection = lazy(() => import('@/shared/components/home/AdventuresHomeSection'));
 
 const LoadingFallback = () => (
   <div className='flex items-center justify-center py-12'>

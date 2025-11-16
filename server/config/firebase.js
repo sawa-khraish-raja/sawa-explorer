@@ -20,7 +20,7 @@ const initializeFirebase = () => {
       const serviceAccountPath = join(__dirname, 'serviceAccountKey.json');
       const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
       credential = admin.credential.cert(serviceAccount);
-    } catch (fileError) {
+    } catch {
       // File not found, try other methods
 
       // Option 2: Using environment variable with full JSON

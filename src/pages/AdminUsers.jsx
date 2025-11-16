@@ -29,41 +29,41 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+} from '@/shared/components/ui/alert-dialog';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui/card';
+import { Input } from '@/shared/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { cn } from '@/lib/utils';
-import { getAllDocuments, updateDocument, getDocument } from '@/utils/firestore';
+} from '@/shared/components/ui/select';
+import { cn } from '@/shared/utils';
+import { getAllDocuments, updateDocument, getDocument, addDocument } from '@/utils/firestore';
 
-import AdminLayout from '../components/admin/AdminLayout';
-import AdminPermissionsDialog from '../components/admin/AdminPermissionsDialog';
-import ApproveHostDialog from '../components/admin/ApproveHostDialog';
-import AssignOfficeDialog from '../components/admin/AssignOfficeDialog';
-import PermissionGuard from '../components/admin/PermissionGuard';
-import { UseAppContext } from '../components/context/AppContext';
+import AdminLayout from '@/features/admin/components/AdminLayout';
+import AdminPermissionsDialog from '@/features/admin/components/AdminPermissionsDialog';
+import ApproveHostDialog from '@/features/admin/components/ApproveHostDialog';
+import AssignOfficeDialog from '@/features/admin/components/AssignOfficeDialog';
+import PermissionGuard from '@/features/admin/components/PermissionGuard';
+import { UseAppContext } from '@/shared/context/AppContext';
 
-// TODO: Audit logging removed - AuditLog not yet migrated to Firestore
-// async function logAuditAction(adminEmail, action, affectedUserEmail, details = {}) {
-//   try {
-//     await base44.entities.AuditLog.create({
-//       admin_email: adminEmail,
-//       action: action,
-//       affected_user_email: affectedUserEmail,
-//       details: JSON.stringify(details),
-//     });
-//   } catch (error) {
-//     console.error('Audit log failed:', error);
-//   }
-// }
+async function logAuditAction(adminEmail, action, affectedUserEmail, details = {}) {
+  try {
+    await addDocument('auditlogs', {
+      admin_email: adminEmail,
+      action: action,
+      affected_user_email: affectedUserEmail,
+      details: JSON.stringify(details),
+      created_date: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Audit log failed:', error);
+  }
+}
 
 export default function AdminUsers() {
   const queryClient = useQueryClient();
@@ -95,7 +95,7 @@ export default function AdminUsers() {
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: async ({ userId, updates, city, officeData, action, affectedUserEmail }) => {
+    mutationFn: async ({ userId, updates, city, officeData, _action, _affectedUserEmail }) => {
       const finalUpdates = { ...updates };
 
       // TODO: Office updates removed - Offices collection not yet migrated to Firestore

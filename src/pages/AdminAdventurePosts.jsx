@@ -3,21 +3,21 @@ import { Check, X, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent } from '@/shared/components/ui/card';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
+} from '@/shared/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
+import { Textarea } from '@/shared/components/ui/textarea';
 import { getAllDocuments, addDocument, updateDocument } from '@/utils/firestore';
 
-import AdminLayout from '../components/admin/AdminLayout';
+import AdminLayout from '@/features/admin/components/AdminLayout';
 
 
 
@@ -28,7 +28,7 @@ export default function AdminAdventurePosts() {
   const [action, setAction] = useState(null);
   const [adminNotes, setAdminNotes] = useState('');
 
-  const { data: posts = [], isLoading } = useQuery({
+  const { data: posts = [] } = useQuery({
     queryKey: ['allAdventurePosts'],
     queryFn: () => getAllDocuments('adventureposts'),
   });
