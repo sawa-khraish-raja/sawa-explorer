@@ -341,6 +341,8 @@ function PagesContent() {
 
         <Route path='/HostProfile' element={<HostProfile />} />
 
+        <Route path='/host-profile' element={<HostProfile />} />
+
         <Route path='/AdminEvents' element={<AdminEvents />} />
 
         <Route path='/Messages' element={<Messages />} />

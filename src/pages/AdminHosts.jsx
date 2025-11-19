@@ -21,6 +21,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Input } from '@/shared/components/ui/input';
 import { getAllDocuments, updateDocument } from '@/utils/firestore';
+import { createPageUrl } from '@/utils';
 
 import AdminLayout from '@/features/admin/components/AdminLayout';
 import AssignAgencyDialog from '@/features/admin/components/AssignAgencyDialog';
@@ -452,7 +453,18 @@ export default function AdminHosts() {
 
                     {/* Actions */}
                     <div className='flex flex-col gap-2 lg:w-48'>
-                      {/* Manage Cities button */}
+                      <Button
+                        variant='default'
+                        size='sm'
+                        onClick={() => {
+                          window.open(createPageUrl(`HostProfile?email=${host.email}`), '_blank');
+                        }}
+                        className='w-full'
+                      >
+                        <Eye className='w-4 h-4 mr-2' />
+                        View Profile
+                      </Button>
+
                       <Button
                         variant='outline'
                         size='sm'
@@ -501,7 +513,7 @@ export default function AdminHosts() {
                         }}
                         className='w-full'
                       >
-                        <Eye className='w-4 h-4 mr-2' />
+                        <Settings className='w-4 h-4 mr-2' />
                         Edit Details
                       </Button>
 
