@@ -75,11 +75,10 @@ export default function HostProfile() {
   const { data: host, isLoading } = useQuery({
     queryKey: ['hostProfile', hostEmail],
     queryFn: async () => {
-      const hosts = await queryDocuments(
-        'users',
+      const hosts = await queryDocuments('users', [
         ['email', '==', hostEmail],
-        ['host_approved', '==', true]
-      );
+        ['host_approved', '==', true],
+      ]);
       if (!hosts || hosts.length === 0) {
         throw new Error('Host not found');
       }
