@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { Calendar, Send, MessageSquare, Loader2 } from 'lucide-react';
+import { Calendar, Send, MessageSquare, Loader2, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { queryDocuments } from '@/utils/firestore';
+import { getServiceById } from '@/features/admin/config/sawaServices';
 
 import { UseAppContext } from '@/shared/context/AppContext';
 import PartnerLayout from '@/features/partner/components/PartnerLayout';
@@ -61,7 +62,12 @@ export default function PartnerRequests() {
                 <div className='grid md:grid-cols-3 gap-6'>
                   <div className='space-y-4'>
                     <h3 className='font-semibold text-lg text-gray-900'>Traveler Request</h3>
-                    <p className='text-sm text-gray-600'>From: {booking.traveler_email}</p>
+                    {booking.traveler_first_name && (
+                      <p className='text-sm font-medium text-gray-900'>
+                        From: {booking.traveler_first_name}
+                      </p>
+                    )}
+                    <p className='text-sm text-gray-600'>{booking.traveler_email}</p>
                     <div className='flex items-center gap-2 text-sm'>
                       <Calendar className='w-4 h-4 text-gray-500' />
                       <span>
@@ -69,16 +75,26 @@ export default function PartnerRequests() {
                         {format(new Date(booking.end_date), 'MMM d, yyyy')}
                       </span>
                     </div>
+                    <div className='flex items-center gap-2 text-sm'>
+                      <Users className='w-4 h-4 text-gray-500' />
+                      <span>
+                        {booking.number_of_adults || 1} adult{(booking.number_of_adults || 1) !== 1 ? 's' : ''}
+                        {booking.number_of_children > 0 && `, ${booking.number_of_children} child${booking.number_of_children !== 1 ? 'ren' : ''}`}
+                      </span>
+                    </div>
                   </div>
                   <div className='space-y-3'>
                     <h3 className='font-semibold text-lg text-gray-900'>Requested Services</h3>
                     {booking.selected_services && booking.selected_services.length > 0 ? (
                       <div className='flex flex-wrap gap-2'>
-                        {booking.selected_services.map((service) => (
-                          <Badge key={service} variant='outline'>
-                            {service}
-                          </Badge>
-                        ))}
+                        {booking.selected_services.map((serviceId) => {
+                          const service = getServiceById(serviceId);
+                          return (
+                            <Badge key={serviceId} variant='outline' className='bg-purple-50 border-purple-200'>
+                              {service ? service.label : serviceId}
+                            </Badge>
+                          );
+                        })}
                       </div>
                     ) : (
                       <p className='text-sm text-gray-500'>No specific services requested.</p>
