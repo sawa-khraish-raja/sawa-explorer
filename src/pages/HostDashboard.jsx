@@ -381,8 +381,16 @@ export default function HostDashboard() {
     );
   }
 
+  if (userLoading) {
+    return (
+      <div className='flex justify-center items-center min-h-screen'>
+        <Loader2 className='w-8 h-8 animate-spin text-purple-600' />
+      </div>
+    );
+  }
+
   if (!user) {
-    return null; // Should be handled by useEffect redirect, but good as a fallback
+    return null;
   }
 
   return (
@@ -562,7 +570,12 @@ export default function HostDashboard() {
                       <CardHeader className='pb-3'>
                         <div className='flex items-start justify-between'>
                           <div>
-                            <CardTitle className='text-lg'>{booking.city}</CardTitle>
+                            <CardTitle className='text-lg'>{booking.city_name || booking.city}</CardTitle>
+                            {booking.traveler_first_name && (
+                              <p className='text-sm font-medium text-gray-700 mt-1'>
+                                From: {booking.traveler_first_name}
+                              </p>
+                            )}
                             <p className='text-sm text-gray-500 mt-1'>
                               {format(new Date(booking.created_date), 'MMM d, yyyy')}
                             </p>
@@ -590,6 +603,21 @@ export default function HostDashboard() {
                               }`}
                           </span>
                         </div>
+
+                        {booking.selected_services && booking.selected_services.length > 0 && (
+                          <div className='bg-purple-50 p-3 rounded-lg border border-purple-200'>
+                            <div className='flex items-center gap-2 mb-2'>
+                              <Package className='w-4 h-4 text-purple-600' />
+                              <p className='text-xs font-semibold text-purple-900'>
+                                Requested Services
+                              </p>
+                            </div>
+                            <BookingServicesDisplay
+                              serviceIds={booking.selected_services}
+                              language='en'
+                            />
+                          </div>
+                        )}
 
                         {booking.notes && (
                           <div className='bg-blue-50 p-3 rounded-lg'>
@@ -737,7 +765,12 @@ export default function HostDashboard() {
                       <CardHeader className='pb-3'>
                         <div className='flex items-start justify-between'>
                           <div>
-                            <CardTitle className='text-lg'>{booking.city}</CardTitle>
+                            <CardTitle className='text-lg'>{booking.city_name || booking.city}</CardTitle>
+                            {booking.traveler_first_name && (
+                              <p className='text-sm font-medium text-gray-700 mt-1'>
+                                Traveler: {booking.traveler_first_name}
+                              </p>
+                            )}
                             <p className='text-sm text-gray-500 mt-1'>
                               {format(new Date(booking.start_date), 'MMM d')} -{' '}
                               {format(new Date(booking.end_date), 'MMM d, yyyy')}
@@ -769,6 +802,19 @@ export default function HostDashboard() {
                           </span>
                         </div>
 
+                        {booking.selected_services && booking.selected_services.length > 0 && (
+                          <div className='bg-purple-50 p-2 rounded-lg border border-purple-200'>
+                            <div className='flex items-center gap-2 mb-1'>
+                              <Package className='w-3 h-3 text-purple-600' />
+                              <p className='text-xs font-semibold text-purple-900'>Services</p>
+                            </div>
+                            <BookingServicesDisplay
+                              serviceIds={booking.selected_services}
+                              language='en'
+                            />
+                          </div>
+                        )}
+
                         {booking.total_price && (
                           <div className='flex items-center gap-2 text-sm font-semibold text-green-600'>
                             <DollarSign className='w-4 h-4' />
@@ -777,13 +823,20 @@ export default function HostDashboard() {
                         )}
 
                         <Button
-                          onClick={() => {
-                            if (booking.conversation_id) {
+                          onClick={async () => {
+                            try {
+                              const conversation = await getOrCreateConversation({
+                                id: booking.id,
+                                traveler_email: booking.traveler_email,
+                                host_email: user.email,
+                                city_name: booking.city_name || booking.city,
+                              });
                               navigate(
-                                createPageUrl(`Messages?conversation_id=${booking.conversation_id}`)
+                                createPageUrl(`Messages?conversation_id=${conversation.id}`)
                               );
-                            } else {
-                              toast.error('Conversation not found');
+                            } catch (error) {
+                              console.error('Error opening chat:', error);
+                              toast.error('Failed to open chat. Please try again.');
                             }
                           }}
                           variant='outline'
@@ -832,11 +885,10 @@ export default function HostDashboard() {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className='space-y-3'>
-                        {/* Traveler Info */}
-                        {booking.traveler_name && (
+                        {booking.traveler_first_name && (
                           <div className='flex items-center gap-2 text-sm font-semibold text-gray-700'>
                             <User className='w-4 h-4 text-purple-600' />
-                            {booking.traveler_name}
+                            {booking.traveler_first_name}
                           </div>
                         )}
 

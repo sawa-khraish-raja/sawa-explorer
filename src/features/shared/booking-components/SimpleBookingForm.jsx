@@ -11,9 +11,9 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { createPageUrl } from '@/utils';
 import { addDocument, queryDocuments } from '@/utils/firestore';
 
-import ServiceCard from "@/shared/components/ServiceCard";
-import { SAWA_SERVICES } from "@/features/admin/config/sawaServices";
-import { UseAppContext } from "@/shared/context/AppContext";
+import ServiceCard from '@/shared/components/ServiceCard';
+import { SAWA_SERVICES } from '@/features/admin/config/sawaServices';
+import { UseAppContext } from '@/shared/context/AppContext';
 
 import SimpleDatePicker from './SimpleDatePicker';
 
@@ -68,12 +68,14 @@ export default function SimpleBookingForm({ city, onSuccess }) {
 
       const formattedStartDate = formatDate(startDate);
       const formattedEndDate = formatDate(endDate);
+      const firstName = user?.full_name ? user.full_name.split(' ')[0] : 'Traveler';
 
       console.log('Booking data:', {
-        user_id: user.id, // ← Added for Firestore rules
+        user_id: user.id,
         user_email: user.email,
         traveler_email: user.email,
         traveler_id: user.id,
+        traveler_first_name: firstName,
         city_name: city.name,
         start_date: formattedStartDate,
         end_date: formattedEndDate,
@@ -83,12 +85,12 @@ export default function SimpleBookingForm({ city, onSuccess }) {
         notes: notes || '',
       });
 
-      //  Create booking in Firestore
       const bookingId = await addDocument('bookings', {
         user_id: user.id,
         user_email: user.email,
         traveler_email: user.email,
         traveler_id: user.id,
+        traveler_first_name: firstName,
         city_name: city.name,
         start_date: formattedStartDate,
         end_date: formattedEndDate,
@@ -103,21 +105,18 @@ export default function SimpleBookingForm({ city, onSuccess }) {
 
       console.log(' Booking created with ID:', bookingId);
 
-      // Send notifications to hosts in this city
-      // Wrapped in try-catch because notification creation requires admin permissions
       try {
         for (const host of cityHosts) {
           const notificationData = {
             recipient_email: host.email,
             type: 'booking_request',
             title: 'New Booking Request',
-            message: `New booking request for ${city.name} from ${formattedStartDate} to ${formattedEndDate}`,
+            message: `${firstName} requested a booking in ${city.name}`,
             booking_id: bookingId,
             read: false,
             created_date: new Date().toISOString(),
           };
 
-          // Only add user_id if it exists
           if (host.id) {
             notificationData.user_id = host.id;
           }
@@ -127,7 +126,6 @@ export default function SimpleBookingForm({ city, onSuccess }) {
         console.log(` Sent notifications to ${cityHosts.length} host(s)`);
       } catch (error) {
         console.warn(' Could not send notifications (requires admin permissions):', error.message);
-        // Don't throw - booking was already created successfully
       }
 
       return { id: bookingId };

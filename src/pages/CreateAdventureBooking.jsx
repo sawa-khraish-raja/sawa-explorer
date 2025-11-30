@@ -53,11 +53,13 @@ export default function CreateAdventureBooking() {
         throw new Error('Please login to book this adventure');
       }
 
-      // Create booking in Firestore
+      const firstName = user?.full_name ? user.full_name.split(' ')[0] : 'Traveler';
+
       const bookingId = await addDocument('bookings', {
         ...bookingData,
         user_id: user.id,
         traveler_email: user.email,
+        traveler_first_name: firstName,
         adventure_id: adventureId,
         start_date: adventure.date,
         end_date: adventure.date,
@@ -73,19 +75,17 @@ export default function CreateAdventureBooking() {
         created_at: new Date().toISOString(),
       });
 
-      // Update adventure participants count
       await updateDocument('adventures', adventureId, {
         current_participants: (adventure.current_participants || 0) + numberOfGuests,
       });
 
-      // Send notification to host
       await addDocument('notifications', {
         user_id: adventure.host_id,
         recipient_email: adventure.host_email,
         recipient_type: 'host',
         type: 'booking_request',
         title: 'New Adventure Booking!',
-        message: `${user.full_name || user.email} booked your adventure: ${adventure.title}`,
+        message: `${firstName} booked your adventure: ${adventure.title}`,
         link: `/HostAdventures?tab=bookings`,
         related_booking_id: bookingId,
         is_read: false,

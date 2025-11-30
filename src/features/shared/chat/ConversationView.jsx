@@ -10,6 +10,7 @@ import {
   MapPin,
   Calendar,
   Users,
+  User,
   Package,
   ChevronDown,
   ChevronUp,
@@ -896,6 +897,18 @@ export default function ConversationView({ conversationId, currentUser, onBack }
 
         {booking && (
           <div className='flex-1 overflow-y-auto p-4 space-y-4'>
+            {booking.traveler_first_name && (
+              <Card>
+                <CardContent className='p-4'>
+                  <div className='flex items-center gap-2 text-gray-700 mb-2'>
+                    <User className='w-4 h-4 text-[#9933CC]' />
+                    <span className='text-sm font-semibold'>Traveler</span>
+                  </div>
+                  <p className='text-sm font-medium text-gray-900'>{booking.traveler_first_name}</p>
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
               <CardContent className='p-4'>
                 <div className='flex items-center gap-2 text-gray-700 mb-2'>
@@ -1135,6 +1148,16 @@ export default function ConversationView({ conversationId, currentUser, onBack }
                           </span>
                         </div>
                       </div>
+
+                      {booking.traveler_first_name && (
+                        <div className='flex items-center gap-3 mb-3 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/20'>
+                          <User className='w-5 h-5 text-purple-300 flex-shrink-0' />
+                          <div>
+                            <p className='text-xs text-white/70 font-medium'>Traveler</p>
+                            <p className='text-sm font-bold'>{booking.traveler_first_name}</p>
+                          </div>
+                        </div>
+                      )}
 
                       <div className='flex items-center gap-3 mb-3 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/20'>
                         <Calendar className='w-5 h-5 text-purple-300 flex-shrink-0' />

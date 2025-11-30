@@ -61,10 +61,14 @@ export default function CreateBooking() {
     mutationFn: async (bookingPayload) => {
       console.log('📦 Creating booking:', bookingPayload);
 
-      // Create booking in Firestore
+      const firstName =
+        bookingPayload.traveler_first_name ||
+        (user?.full_name ? user.full_name.split(' ')[0] : 'Traveler');
+
       const bookingId = await addDocument('bookings', {
         traveler_email: bookingPayload.traveler_email,
         traveler_id: bookingPayload.traveler_id,
+        traveler_first_name: firstName,
         city_name: bookingPayload.city,
         start_date: bookingPayload.start_date,
         end_date: bookingPayload.end_date,
@@ -79,7 +83,7 @@ export default function CreateBooking() {
       });
 
       console.log(' Booking created with ID:', bookingId);
-      return { id: bookingId, ...bookingPayload };
+      return { id: bookingId, ...bookingPayload, traveler_first_name: firstName };
     },
     onSuccess: async (newBooking) => {
       console.log(' Booking created successfully:', newBooking);
@@ -91,24 +95,21 @@ export default function CreateBooking() {
       toast.success(message, { duration: 5000 });
 
       try {
-        // Determine which hosts to notify
         const hostsToNotify = selectedHostId
           ? availableHosts.filter((h) => h.id === selectedHostId)
           : availableHosts;
 
-        // Send notifications to hosts
         for (const host of hostsToNotify) {
           const notificationData = {
             recipient_email: host.email,
             type: 'booking_request',
             title: 'New Booking Request',
-            message: `New booking request for ${newBooking.city} from ${newBooking.start_date} to ${newBooking.end_date}`,
+            message: `${newBooking.traveler_first_name} requested a booking in ${newBooking.city}`,
             booking_id: newBooking.id,
             read: false,
             created_date: new Date().toISOString(),
           };
 
-          // Only add user_id if it exists
           if (host.id) {
             notificationData.user_id = host.id;
           }
@@ -119,7 +120,6 @@ export default function CreateBooking() {
         console.log(` Sent ${hostsToNotify.length} notification(s)`);
       } catch (error) {
         console.error('Failed to send booking request notifications:', error);
-        // Don't block user flow, but log the error
       }
 
       // Redirect to MyOffers page to see status

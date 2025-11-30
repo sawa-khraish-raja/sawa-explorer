@@ -11,8 +11,9 @@ import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@/shared/components/ui/button';
 import { createPageUrl } from '@/utils';
-import { getAllDocuments, queryDocuments, addDocument } from '@/utils/firestore';
+import { getAllDocuments, queryDocuments, addDocument, createNotification } from '@/utils/firestore';
 import { notifyHostsOfNewBooking } from '@/utils/functions';
+import { getServiceById } from '@/features/admin/config/sawaServices';
 
 import PageHero from "@/shared/components/PageHero";
 import { UseAppContext } from "@/shared/context/AppContext";
@@ -123,34 +124,51 @@ export default function ImprovedBookingCity({ cityName }) {
     staleTime: 10 * 60 * 1000,
   });
 
-  //  Booking submission
   const createBookingMutation = useMutation({
     mutationFn: async (bookingData) => {
-      return addDocument('bookings', {
-        ...{
-          traveler_email: user.email,
-          city: bookingData.city,
-          start_date: bookingData.start_date,
-          end_date: bookingData.end_date,
-          number_of_adults: bookingData.number_of_adults,
-          number_of_children: bookingData.number_of_children,
-          selected_services: bookingData.selected_services,
-          service_durations: bookingData.service_durations,
-          notes: bookingData.notes,
-          state: 'open',
-          status: 'pending',
-        },
+      const firstName = user?.full_name ? user.full_name.split(' ')[0] : 'Traveler';
+
+      const bookingId = await addDocument('bookings', {
+        traveler_email: user.email,
+        traveler_first_name: firstName,
+        city: bookingData.city,
+        start_date: bookingData.start_date,
+        end_date: bookingData.end_date,
+        number_of_adults: bookingData.number_of_adults,
+        number_of_children: bookingData.number_of_children,
+        selected_services: bookingData.selected_services,
+        service_durations: bookingData.service_durations,
+        notes: bookingData.notes,
+        state: 'open',
+        status: 'pending',
         created_date: new Date().toISOString(),
       });
+
+      return { id: bookingId, ...bookingData, traveler_first_name: firstName };
     },
     onSuccess: async (booking) => {
       queryClient.invalidateQueries({ queryKey: ['myBookings'] });
 
-      // Notify hosts
       try {
-        await notifyHostsOfNewBooking({
-          bookingId: booking.id,
-        });
+        for (const host of hosts) {
+          const notificationData = {
+            recipient_email: host.email,
+            type: 'booking_request',
+            title: 'New Booking Request',
+            message: `${booking.traveler_first_name} requested a booking in ${booking.city}`,
+            booking_id: booking.id,
+            read: false,
+            created_date: new Date().toISOString(),
+          };
+
+          if (host.id) {
+            notificationData.user_id = host.id;
+          }
+
+          await createNotification(notificationData);
+        }
+
+        console.log(` Sent ${hosts.length} notification(s)`);
       } catch (error) {
         console.error(' Failed to notify hosts:', error);
       }

@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   Calendar,
   Users,
+  User,
   MapPin,
   CheckCircle,
   DollarSign,
@@ -49,7 +50,8 @@ import { Alert, AlertDescription } from '@/shared/components/ui/alert';
 import { normLang } from '@/shared/i18n/i18nVoice';
 import { playVoice } from '@/components/voice/playVoice';
 import { useSawaTranslation } from '../chat/useSawaTranslation';
-import { getUserDisplayName } from '@/shared/utils/userHelpers'; // Added import
+import { getUserDisplayName } from '@/shared/utils/userHelpers';
+import { getServiceById } from '@/features/admin/config/sawaServices';
 
 export default function HostConversationView({
   conversationId,
@@ -783,7 +785,7 @@ export default function HostConversationView({
               <div className='flex items-center gap-1 min-w-0 flex-1'>
                 <MapPin className='w-2.5 h-2.5 text-[var(--brand-primary)] flex-shrink-0' />
                 <span className='font-semibold text-[11px] text-gray-900 truncate'>
-                  {booking.city}
+                  {booking.city_name || booking.city}
                 </span>
               </div>
               <Badge
@@ -796,6 +798,12 @@ export default function HostConversationView({
             </div>
 
             <div className='flex flex-wrap gap-1 text-[9px] text-gray-600 mb-0.5'>
+              {booking.traveler_first_name && (
+                <div className='flex items-center gap-0.5'>
+                  <User className='w-2 h-2 flex-shrink-0' />
+                  <span className='truncate font-medium'>{booking.traveler_first_name}</span>
+                </div>
+              )}
               <div className='flex items-center gap-0.5'>
                 <Calendar className='w-2 h-2 flex-shrink-0' />
                 <span className='truncate'>
@@ -805,11 +813,13 @@ export default function HostConversationView({
               </div>
               <div className='flex items-center gap-0.5'>
                 <Users className='w-2 h-2 flex-shrink-0' />
-                <span>{booking.number_of_adults}👤</span>
+                <span>
+                  {booking.number_of_adults}👤
+                  {booking.number_of_children > 0 && ` + ${booking.number_of_children} child${booking.number_of_children > 1 ? 'ren' : ''}`}
+                </span>
               </div>
             </div>
 
-            {/* Selected Services Section */}
             {booking.selected_services && booking.selected_services.length > 0 && (
               <div className='mb-1 bg-white/80 rounded-md p-1.5 border border-purple-200'>
                 <p className='text-[9px] font-bold text-[var(--brand-primary)] mb-1 flex items-center gap-1'>
@@ -817,12 +827,15 @@ export default function HostConversationView({
                   Selected Services ({booking.selected_services.length})
                 </p>
                 <div className='space-y-0.5'>
-                  {booking.selected_services.map((service, idx) => (
-                    <div key={idx} className='flex items-center gap-1 text-[9px] text-gray-700'>
-                      <div className='w-1 h-1 rounded-full bg-[var(--brand-primary)]' />
-                      <span className='flex-1 truncate'>{service}</span>
-                    </div>
-                  ))}
+                  {booking.selected_services.map((serviceId, idx) => {
+                    const service = getServiceById(serviceId);
+                    return (
+                      <div key={idx} className='flex items-center gap-1 text-[9px] text-gray-700'>
+                        <div className='w-1 h-1 rounded-full bg-[var(--brand-primary)]' />
+                        <span className='flex-1 truncate'>{service ? service.label : serviceId}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
