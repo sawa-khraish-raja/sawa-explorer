@@ -3,6 +3,8 @@ import { X } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
+import { isAIFeatureEnabled } from '@/features/admin/config/aiFlags';
+
 import ChatPanel from './ChatPanel';
 
 
@@ -11,10 +13,10 @@ export default function ChatLauncher() {
   const [unreadCount] = useState(0);
   const location = useLocation();
 
-  //  Hide in Messages page
   const shouldHide = location.pathname.startsWith('/Messages');
+  const isAssistantEnabled = isAIFeatureEnabled('SAWA_ASSISTANT');
 
-  if (shouldHide) {
+  if (shouldHide || !isAssistantEnabled) {
     return null;
   }
 
