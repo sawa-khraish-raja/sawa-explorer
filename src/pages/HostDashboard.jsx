@@ -65,9 +65,18 @@ export default function HostDashboard() {
   });
 
   const { user, userLoading } = UseAppContext();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
-    if (!userLoading && (!user || !user.host_approved)) {
+    if (!userLoading && user) {
+      const timer = setTimeout(() => {
+        if (!user.host_approved) {
+          navigate(createPageUrl('Home'));
+        }
+        setIsCheckingAuth(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    } else if (!userLoading && !user) {
       navigate(createPageUrl('Home'));
     }
   }, [user, userLoading, navigate]);
@@ -381,7 +390,7 @@ export default function HostDashboard() {
     );
   }
 
-  if (userLoading) {
+  if (userLoading || isCheckingAuth) {
     return (
       <div className='flex justify-center items-center min-h-screen'>
         <Loader2 className='w-8 h-8 animate-spin text-purple-600' />
