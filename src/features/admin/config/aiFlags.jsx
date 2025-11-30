@@ -21,7 +21,7 @@ export const AI_FLAGS = {
   CHAT_TEXT_TO_SPEECH: true, // تحويل النص لصوت داخل الشات
 
   //  المسموح - المساعد و Trip Planner
-  SAWA_ASSISTANT: true, // المساعد الذكي
+  SAWA_ASSISTANT: false, // المساعد الذكي
   AI_TRIP_PLANNER: true, // مخطط الرحلات
 
   //  ممنوع - كل ما عدا ذلك

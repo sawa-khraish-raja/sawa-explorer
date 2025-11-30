@@ -582,22 +582,19 @@ const AppContent = memo(({ children }) => {
                       </div>
                     </div>
                     <div className='hidden sm:block min-w-0'>
-                      <span className='text-xl sm:text-2xl font-bold bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-secondary)] bg-clip-text text-transparent truncate'>
-                        SAWA
-                      </span>
                       {isHost && (
-                        <span className='mx-2 text-xs sm:text-sm font-medium text-gray-600'>
-                          • Host
+                        <span className='text-xs sm:text-sm font-medium text-gray-600'>
+                          Host
                         </span>
                       )}
                       {isOfficeOnly && (
-                        <span className='mx-2 text-xs sm:text-sm font-medium text-gray-600'>
-                          • Office Manager
+                        <span className='text-xs sm:text-sm font-medium text-gray-600'>
+                          Office Manager
                         </span>
                       )}
                       {hasAdminRole && (
-                        <span className='mx-2 text-xs sm:text-sm font-medium text-red-600'>
-                          • Admin
+                        <span className='text-xs sm:text-sm font-medium text-red-600'>
+                          Admin
                         </span>
                       )}
                     </div>
@@ -827,9 +824,6 @@ const AppContent = memo(({ children }) => {
                     className='w-10 h-10 rounded-lg'
                     loading='eager'
                   />
-                  <span className='text-xl font-bold bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-secondary)] bg-clip-text text-transparent'>
-                    SAWA
-                  </span>
                 </Link>
               </div>
 
