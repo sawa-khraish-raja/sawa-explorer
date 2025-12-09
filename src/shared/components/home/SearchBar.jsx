@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { MapPin, Search, Loader2, X } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useTranslation } from '@/shared/i18n/LanguageContext';
 import { Button } from '@/shared/components/ui/button';
@@ -22,8 +22,9 @@ import { showError } from '@/shared/utils/notifications';
 export default function SearchBar() {
   const { t, language } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(searchParams.get('search') === 'open');
   const [isSearching, setIsSearching] = useState(false);
   const [destination, setDestination] = useState('');
   const [checkIn, setCheckIn] = useState('');
@@ -33,6 +34,42 @@ export default function SearchBar() {
 
   const today = new Date().toISOString().split('T')[0];
   const scrollPositionRef = useRef(0);
+
+  const openSearchModal = () => {
+    setIsOpen(true);
+    const params = new URLSearchParams(searchParams);
+    params.set('search', 'open');
+    setSearchParams(params);
+  };
+
+  const closeSearchModal = () => {
+    setIsOpen(false);
+    setSearchParams({});
+  };
+
+  const updateUrlParams = (key, value) => {
+    const params = new URLSearchParams(searchParams);
+    if (value) {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    setSearchParams(params);
+  };
+
+  useEffect(() => {
+    const destinationParam = searchParams.get('destination');
+    const checkInParam = searchParams.get('checkIn');
+    const checkOutParam = searchParams.get('checkOut');
+    const adultsParam = searchParams.get('adults');
+    const childrenParam = searchParams.get('children');
+
+    if (destinationParam) setDestination(destinationParam);
+    if (checkInParam) setCheckIn(checkInParam);
+    if (checkOutParam) setCheckOut(checkOutParam);
+    if (adultsParam) setAdults(parseInt(adultsParam, 10) || 1);
+    if (childrenParam) setChildren(parseInt(childrenParam, 10) || 0);
+  }, []);
 
   //  Cache cities query (using Firestore)
   const { data: cities = [], isLoading: isLoadingCities } = useQuery({
@@ -240,7 +277,7 @@ export default function SearchBar() {
       {/*  Search Trigger Button */}
       <div className='w-full max-w-3xl mx-auto px-4 sm:px-6'>
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={openSearchModal}
           className='w-full bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl px-4 py-3 sm:px-5 sm:py-3.5 hover:shadow-3xl transition-all duration-300 flex items-center justify-between group border border-gray-200/50'
         >
           <div className='flex-1 text-left min-w-0'>
@@ -271,7 +308,7 @@ export default function SearchBar() {
       {isOpen && (
         <div
           className='fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm'
-          onClick={() => !isSearching && setIsOpen(false)}
+          onClick={() => !isSearching && closeSearchModal()}
         >
           <div
             className='fixed inset-0 bg-white overflow-y-auto'
@@ -280,7 +317,7 @@ export default function SearchBar() {
             {/*  Header */}
             <div className='sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 z-10 safe-area-top'>
               <button
-                onClick={() => !isSearching && setIsOpen(false)}
+                onClick={() => !isSearching && closeSearchModal()}
                 disabled={isSearching}
                 className='w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors flex-shrink-0 disabled:opacity-50'
               >
@@ -306,6 +343,11 @@ export default function SearchBar() {
                           setCheckOut(search.checkOut);
                           setAdults(search.adults);
                           setChildren(search.children);
+                          updateUrlParams('destination', search.destination);
+                          updateUrlParams('checkIn', search.checkIn);
+                          updateUrlParams('checkOut', search.checkOut);
+                          updateUrlParams('adults', search.adults.toString());
+                          updateUrlParams('children', search.children.toString());
                         }}
                         className='w-full p-3 bg-purple-50 hover:bg-purple-100 rounded-xl border border-purple-200 text-left transition-colors'
                       >
@@ -357,6 +399,7 @@ export default function SearchBar() {
                   value={destination}
                   onValueChange={(value) => {
                     setDestination(value);
+                    updateUrlParams('destination', value);
                   }}
                   disabled={isLoadingCities || isSearching}
                 >
@@ -403,6 +446,7 @@ export default function SearchBar() {
                   value={checkIn}
                   onChange={(date) => {
                     setCheckIn(date);
+                    updateUrlParams('checkIn', date);
                   }}
                   minDate={today}
                   placeholder={t('search.add_date')}
@@ -414,6 +458,7 @@ export default function SearchBar() {
                   value={checkOut}
                   onChange={(date) => {
                     setCheckOut(date);
+                    updateUrlParams('checkOut', date);
                   }}
                   minDate={checkIn || today}
                   placeholder={t('search.add_date')}
@@ -431,8 +476,14 @@ export default function SearchBar() {
                   <GuestSelector
                     adults={adults}
                     children={children}
-                    onAdultsChange={setAdults}
-                    onChildrenChange={setChildren}
+                    onAdultsChange={(value) => {
+                      setAdults(value);
+                      updateUrlParams('adults', value.toString());
+                    }}
+                    onChildrenChange={(value) => {
+                      setChildren(value);
+                      updateUrlParams('children', value.toString());
+                    }}
                     language={language}
                   />
                 </div>
@@ -449,6 +500,13 @@ export default function SearchBar() {
                     setCheckOut('');
                     setAdults(1);
                     setChildren(0);
+                    const params = new URLSearchParams(searchParams);
+                    params.delete('destination');
+                    params.delete('checkIn');
+                    params.delete('checkOut');
+                    params.delete('adults');
+                    params.delete('children');
+                    setSearchParams(params);
                   }
                 }}
                 disabled={isSearching}

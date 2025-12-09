@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Calendar, Users, Send, Loader2, Plus, Minus, Package, AlertCircle } from 'lucide-react';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { Button } from '@/shared/components/ui/button';
@@ -19,6 +19,7 @@ import SimpleDatePicker from './SimpleDatePicker';
 
 export default function SimpleBookingForm({ city, onSuccess }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [adults, setAdults] = useState(1);
@@ -27,6 +28,36 @@ export default function SimpleBookingForm({ city, onSuccess }) {
   const [notes, setNotes] = useState('');
   const { user, userLoading } = UseAppContext();
   const requiresLogin = !user && !userLoading;
+
+  useEffect(() => {
+    const startParam = searchParams.get('start');
+    const endParam = searchParams.get('end');
+    const adultsParam = searchParams.get('adults');
+    const childrenParam = searchParams.get('children');
+
+    if (startParam) {
+      console.log('[SimpleBookingForm] Setting start date from URL:', startParam);
+      setStartDate(startParam);
+    }
+    if (endParam) {
+      console.log('[SimpleBookingForm] Setting end date from URL:', endParam);
+      setEndDate(endParam);
+    }
+    if (adultsParam) {
+      const adultsValue = parseInt(adultsParam, 10);
+      if (!isNaN(adultsValue) && adultsValue > 0) {
+        console.log('[SimpleBookingForm] Setting adults from URL:', adultsValue);
+        setAdults(adultsValue);
+      }
+    }
+    if (childrenParam) {
+      const childrenValue = parseInt(childrenParam, 10);
+      if (!isNaN(childrenValue) && childrenValue >= 0) {
+        console.log('[SimpleBookingForm] Setting children from URL:', childrenValue);
+        setChildren(childrenValue);
+      }
+    }
+  }, [searchParams]);
 
   // Query to check for available hosts in this city
   const { data: cityHosts = [] } = useQuery({
