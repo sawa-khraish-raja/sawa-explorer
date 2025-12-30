@@ -11,6 +11,13 @@ import {
   Eye,
   Star,
   CheckCircle,
+  Plane,
+  Users,
+  Calendar,
+  Map,
+  Package,
+  Home,
+  ShieldAlert,
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
@@ -18,6 +25,7 @@ import { toast } from 'sonner';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
+import { Checkbox } from '@/shared/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
@@ -27,6 +35,17 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { uploadImage } from '@/utils/storage';
 
 import AdminLayout from '@/features/admin/components/AdminLayout';
+import { SAWA_SERVICES } from '@/features/admin/config/sawaServices';
+
+const SERVICE_ICONS = {
+  Plane,
+  Users,
+  Calendar,
+  Map,
+  Package,
+  Home,
+  ShieldAlert,
+};
 
 const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityMutation }) => {
   const initialFormData = useMemo(
@@ -47,6 +66,7 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
       population: null,
       page_slug: '',
       coordinates: { lat: null, lng: null },
+      services: [],
     }),
     []
   );
@@ -63,12 +83,33 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
         coordinates: city.coordinates ? { ...city.coordinates } : { lat: null, lng: null },
         gallery_images: city.gallery_images || [],
         highlights: city.highlights || [],
+        services: city.services || [],
       });
     } else {
       setFormData(initialFormData);
     }
     setActiveTab('general');
   }, [city, isOpen, initialFormData]);
+
+  const handleToggleService = (serviceId) => {
+    setFormData((prev) => {
+      const currentServices = prev.services || [];
+      if (currentServices.includes(serviceId)) {
+        return { ...prev, services: currentServices.filter((id) => id !== serviceId) };
+      } else {
+        return { ...prev, services: [...currentServices, serviceId] };
+      }
+    });
+  };
+
+  const handleSelectAllServices = () => {
+    const allServiceIds = SAWA_SERVICES.map((s) => s.id);
+    setFormData((prev) => ({ ...prev, services: allServiceIds }));
+  };
+
+  const handleClearAllServices = () => {
+    setFormData((prev) => ({ ...prev, services: [] }));
+  };
 
   const handleImageUpload = async (e, type = 'card') => {
     const file = e.target.files?.[0];
@@ -171,9 +212,10 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className='grid w-full grid-cols-3'>
+          <TabsList className='grid w-full grid-cols-4'>
             <TabsTrigger value='general'>General</TabsTrigger>
             <TabsTrigger value='media'>Media</TabsTrigger>
+            <TabsTrigger value='services'>Services</TabsTrigger>
             <TabsTrigger value='details'>Details</TabsTrigger>
           </TabsList>
 
@@ -345,6 +387,80 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
                   </label>
                 </div>
               </div>
+            </div>
+          </TabsContent>
+
+          {/* SERVICES TAB */}
+          <TabsContent value='services' className='space-y-4'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <Label className='text-base font-semibold'>Available Services</Label>
+                <p className='text-sm text-gray-500'>
+                  Select which services are available in this city
+                </p>
+              </div>
+              <div className='flex gap-2'>
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  onClick={handleSelectAllServices}
+                >
+                  Select All
+                </Button>
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  onClick={handleClearAllServices}
+                >
+                  Clear All
+                </Button>
+              </div>
+            </div>
+
+            <div className='grid grid-cols-1 gap-3 mt-4'>
+              {SAWA_SERVICES.map((service) => {
+                const IconComponent = SERVICE_ICONS[service.icon];
+                const isSelected = (formData.services || []).includes(service.id);
+                return (
+                  <div
+                    key={service.id}
+                    className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                      isSelected
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => handleToggleService(service.id)}
+                  >
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => handleToggleService(service.id)}
+                      className='pointer-events-none'
+                    />
+                    <div className={`p-2 rounded-lg ${isSelected ? 'bg-purple-100' : 'bg-gray-100'}`}>
+                      {IconComponent && (
+                        <IconComponent
+                          className={`w-5 h-5 ${isSelected ? 'text-purple-600' : 'text-gray-600'}`}
+                        />
+                      )}
+                    </div>
+                    <div className='flex-1'>
+                      <p className={`font-medium ${isSelected ? 'text-purple-900' : 'text-gray-900'}`}>
+                        {service.label}
+                      </p>
+                      <p className='text-sm text-gray-500'>{service.description}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className='bg-amber-50 border border-amber-200 rounded-lg p-4 mt-4'>
+              <p className='text-sm text-amber-800'>
+                <strong>Note:</strong> Only selected services will be shown to users when booking in this city.
+                If no services are selected, all services will be available.
+              </p>
             </div>
           </TabsContent>
 

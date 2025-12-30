@@ -177,7 +177,7 @@ export default function BookingPageTemplate({ city }) {
           <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
             {/* Left: Booking Form */}
             <div className='lg:col-span-2 space-y-6'>
-              <SimpleBookingForm city={city} />
+              <SimpleBookingForm city={{ ...city, ...cityData }} />
 
               {/* Gallery */}
               {cityData?.gallery_images && cityData.gallery_images.length > 0 && (
