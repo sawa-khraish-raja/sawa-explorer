@@ -525,6 +525,8 @@ export default function AdminCities() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cities'] });
+      queryClient.removeQueries({ queryKey: ['destinationCities'] });
+      queryClient.removeQueries({ queryKey: ['allDestinations'] });
       toast.success('City created successfully');
       setIsDialogOpen(false);
       setSelectedCity(null);
@@ -542,6 +544,8 @@ export default function AdminCities() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cities'] });
+      queryClient.removeQueries({ queryKey: ['destinationCities'] });
+      queryClient.removeQueries({ queryKey: ['allDestinations'] });
       toast.success('City updated successfully');
       setIsDialogOpen(false);
       setSelectedCity(null);
@@ -559,6 +563,8 @@ export default function AdminCities() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cities'] });
+      queryClient.removeQueries({ queryKey: ['destinationCities'] });
+      queryClient.removeQueries({ queryKey: ['allDestinations'] });
       toast.success('City deleted successfully');
     },
     onError: (error) => {

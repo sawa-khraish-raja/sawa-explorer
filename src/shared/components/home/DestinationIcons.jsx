@@ -69,6 +69,7 @@ export default function DestinationIcons() {
               <div className='relative aspect-[4/3] overflow-hidden'>
                 <img
                   src={
+                    city?.card_image ||
                     city?.image_url ||
                     city?.cover_images?.[0] ||
                     'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'
