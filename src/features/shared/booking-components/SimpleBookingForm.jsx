@@ -361,7 +361,13 @@ export default function SimpleBookingForm({ city, onSuccess }) {
         </CardHeader>
         <CardContent>
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-            {SAWA_SERVICES.map((service) => (
+            {SAWA_SERVICES.filter((service) => {
+              const cityServices = city?.services;
+              if (!cityServices || cityServices.length === 0) {
+                return true;
+              }
+              return cityServices.includes(service.id);
+            }).map((service) => (
               <ServiceCard
                 key={service.id}
                 service={service}
