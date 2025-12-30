@@ -50,7 +50,7 @@ export default function DestinationIcons() {
       {Array.isArray(cities) &&
         cities.map((city, index) => {
           // Create page slug from city name if not available
-          const pageSlug = city.page_slug || `Booking${city.name.replace(/\s+/g, '')}`;
+          const pageSlug = city.page_slug || city.name.trim().toLowerCase().replace(/\s+/g, '-').replace(/^-+|-+$/g, '');
 
           return (
             <article
