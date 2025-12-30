@@ -14,7 +14,6 @@ import AdminCancellations from './AdminCancellations';
 import AdminCities from './AdminCities';
 import AdminDashboard from './AdminDashboard';
 import AdminEvents from './AdminEvents';
-import AdminForumModeration from './AdminForumModeration';
 import AdminHeroSlides from './AdminHeroSlides';
 import AdminHostRequests from './AdminHostRequests';
 import AdminHosts from './AdminHosts';
@@ -40,8 +39,6 @@ import CustomerSupport from './CustomerSupport';
 import DesignAudit from './DesignAudit';
 import Destinations from './Destinations';
 import DevTools from './DevTools';
-import ForumHome from './ForumHome';
-import ForumPostDetail from './ForumPostDetail';
 import HeroPerformanceAudit from './HeroPerformanceAudit';
 import HeroVideoReport from './HeroVideoReport';
 import Home from './Home';
@@ -216,12 +213,6 @@ const PAGES = {
   ProductionReport: ProductionReport,
 
   Destinations: Destinations,
-
-  ForumHome: ForumHome,
-
-  ForumPostDetail: ForumPostDetail,
-
-  AdminForumModeration: AdminForumModeration,
 
   PerformanceReport: PerformanceReport,
 
@@ -414,12 +405,6 @@ function PagesContent() {
         <Route path='/ProductionReport' element={<ProductionReport />} />
 
         <Route path='/Destinations' element={<Destinations />} />
-
-        <Route path='/ForumHome' element={<ForumHome />} />
-
-        <Route path='/ForumPostDetail' element={<ForumPostDetail />} />
-
-        <Route path='/AdminForumModeration' element={<AdminForumModeration />} />
 
         <Route path='/PerformanceReport' element={<PerformanceReport />} />
 

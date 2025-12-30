@@ -144,12 +144,6 @@ export default function AdminLayout({ children }) {
       path: 'AdminHeroSlides',
     },
     {
-      id: 'forum',
-      name: 'Forum Moderation',
-      icon: MessageSquare,
-      path: 'AdminForumModeration',
-    },
-    {
       id: 'adventure_posts',
       name: 'Adventure Posts',
       icon: Image,

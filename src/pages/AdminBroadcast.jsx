@@ -95,14 +95,6 @@ export default function AdminBroadcast() {
       link: '/Home',
       color: 'from-blue-500 to-indigo-500',
     },
-    {
-      type: 'community',
-      icon: Users,
-      title: '🌍 Join Our Community',
-      message: 'Connect with travelers and hosts in our new community forum!',
-      link: '/ForumHome',
-      color: 'from-green-500 to-teal-500',
-    },
   ];
 
   const handleTemplateSelect = (template) => {

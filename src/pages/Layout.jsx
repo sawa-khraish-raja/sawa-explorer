@@ -123,17 +123,6 @@ const DesktopNav = memo(
           >
             {t('nav.adventures')}
           </Link>
-          <Link
-            to={createPageUrl('ForumHome')}
-            className={cn(
-              'px-4 py-2.5 text-[15px] font-medium rounded-full transition-all duration-150',
-              isActivePage('ForumHome')
-                ? 'text-gray-900'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-            )}
-          >
-            Community
-          </Link>
         </>
       );
     }
@@ -162,17 +151,6 @@ const DesktopNav = memo(
             )}
           >
             Destinations
-          </Link>
-          <Link
-            to={createPageUrl('ForumHome')}
-            className={cn(
-              'px-4 py-2.5 text-[15px] font-medium rounded-full transition-all duration-150',
-              isActivePage('ForumHome')
-                ? 'text-gray-900'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-            )}
-          >
-            Community
           </Link>
           <Link
             to={createPageUrl('About')}
@@ -212,17 +190,6 @@ const DesktopNav = memo(
           )}
         >
           Destinations
-        </Link>
-        <Link
-          to={createPageUrl('ForumHome')}
-          className={cn(
-            'px-4 py-2.5 text-[15px] font-medium rounded-full transition-all duration-150',
-            isActivePage('ForumHome')
-              ? 'text-gray-900'
-              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-          )}
-        >
-          Community
         </Link>
         <Link
           to={createPageUrl('About')}
@@ -932,16 +899,6 @@ const AppContent = memo(({ children }) => {
 
                         <DropdownMenuItem asChild>
                           <Link
-                            to={createPageUrl('ForumHome')}
-                            className='cursor-pointer flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg'
-                          >
-                            <Users className='w-4 h-4' />
-                            <span className='text-sm font-medium'>Community</span>
-                          </Link>
-                        </DropdownMenuItem>
-
-                        <DropdownMenuItem asChild>
-                          <Link
                             to={createPageUrl('About')}
                             className='cursor-pointer flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg'
                           >
@@ -1005,18 +962,6 @@ const AppContent = memo(({ children }) => {
                         align='end'
                         className='w-56 bg-white shadow-xl border border-gray-200 rounded-2xl p-2 mt-2'
                       >
-                        <DropdownMenuItem asChild>
-                          <Link
-                            to={createPageUrl('ForumHome')}
-                            className='cursor-pointer flex items-center gap-3 px-4 py-3 hover:bg-gray-50 rounded-lg'
-                          >
-                            <Users className='w-5 h-5 text-gray-700' />
-                            <span className='text-sm font-medium'>Community</span>
-                          </Link>
-                        </DropdownMenuItem>
-
-                        <DropdownMenuSeparator className='my-2' />
-
                         <DropdownMenuItem
                           onClick={openLoginModal}
                           className='cursor-pointer flex items-center gap-3 px-4 py-3 hover:bg-[var(--brand-bg-accent-light)] rounded-lg'
