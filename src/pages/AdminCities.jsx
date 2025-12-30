@@ -9,7 +9,6 @@ import {
   X,
   Loader2,
   Eye,
-  Star,
   CheckCircle,
   Plane,
   Users,
@@ -56,7 +55,6 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
       card_image: '',
       gallery_images: [],
       is_active: true,
-      is_featured: false,
       timezone: '',
       currency: 'USD',
       languages: [],
@@ -258,53 +256,28 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
               />
             </div>
 
-            <div className='grid grid-cols-2 gap-4'>
-              <div
-                className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                  formData.is_active
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-red-300 bg-red-50'
-                }`}
-                onClick={() =>
-                  setFormData((prev) => ({ ...prev, is_active: !prev.is_active }))
-                }
-              >
-                <div>
-                  <Label className='font-semibold cursor-pointer'>Active</Label>
-                  <p className='text-xs text-gray-500'>
-                    {formData.is_active ? 'Visible to users' : 'Hidden from users'}
-                  </p>
-                </div>
-                <Switch
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) =>
-                    setFormData((prev) => ({ ...prev, is_active: checked }))
-                  }
-                />
+            <div
+              className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                formData.is_active
+                  ? 'border-green-500 bg-green-50'
+                  : 'border-red-300 bg-red-50'
+              }`}
+              onClick={() =>
+                setFormData((prev) => ({ ...prev, is_active: !prev.is_active }))
+              }
+            >
+              <div>
+                <Label className='font-semibold cursor-pointer'>Active</Label>
+                <p className='text-xs text-gray-500'>
+                  {formData.is_active ? 'Visible to users' : 'Hidden from users'}
+                </p>
               </div>
-              <div
-                className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                  formData.is_featured
-                    ? 'border-purple-500 bg-purple-50'
-                    : 'border-gray-200 bg-gray-50'
-                }`}
-                onClick={() =>
-                  setFormData((prev) => ({ ...prev, is_featured: !prev.is_featured }))
+              <Switch
+                checked={formData.is_active}
+                onCheckedChange={(checked) =>
+                  setFormData((prev) => ({ ...prev, is_active: checked }))
                 }
-              >
-                <div>
-                  <Label className='font-semibold cursor-pointer'>Featured</Label>
-                  <p className='text-xs text-gray-500'>
-                    {formData.is_featured ? 'Highlighted city' : 'Regular city'}
-                  </p>
-                </div>
-                <Switch
-                  checked={formData.is_featured}
-                  onCheckedChange={(checked) =>
-                    setFormData((prev) => ({ ...prev, is_featured: checked }))
-                  }
-                />
-              </div>
+              />
             </div>
           </TabsContent>
 
@@ -762,12 +735,7 @@ export default function AdminCities() {
                   ) : (
                     <div className='w-full h-full bg-gradient-to-br from-purple-500 to-pink-500' />
                   )}
-                  <div className='absolute top-2 right-2 flex gap-2'>
-                    {city.is_featured && (
-                      <Badge className='bg-amber-500'>
-                        <Star className='w-3 h-3 mr-1' /> Featured
-                      </Badge>
-                    )}
+                  <div className='absolute top-2 right-2'>
                     {city.is_active ? (
                       <Badge className='bg-green-500'>
                         <Eye className='w-3 h-3 mr-1' /> Active

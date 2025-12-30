@@ -1,12 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { MapPin, ArrowRight, Loader2, Globe, Star, Compass } from 'lucide-react';
+import { MapPin, ArrowRight, Loader2, Globe, Compass } from 'lucide-react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
-import { cn } from '@/shared/utils';
 import { createPageUrl } from '@/utils';
 import { queryDocuments } from '@/utils/firestore';
 
@@ -45,9 +43,6 @@ export default function Destinations() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Use 'popular' field for featured cities
-  const featuredCities = cities.filter((city) => city.popular === true);
-  const regularCities = cities.filter((city) => city.popular !== true);
 
   return (
     <div className='min-h-screen bg-white'>
@@ -90,37 +85,11 @@ export default function Destinations() {
               <p className='text-gray-600'>Check back soon for new amazing places to explore!</p>
             </div>
           ) : (
-            <>
-              {featuredCities.length > 0 && (
-                <div className='mb-16'>
-                  <div className='flex items-center gap-3 mb-8'>
-                    <Star className='w-6 h-6 text-amber-500' />
-                    <h2 className='text-3xl font-bold text-gray-900'>Featured Destinations</h2>
-                  </div>
-                  <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-                    {featuredCities.map((city, idx) => (
-                      <CityCard key={city.id} city={city} featured index={idx} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {regularCities.length > 0 && (
-                <div>
-                  {featuredCities.length > 0 && (
-                    <div className='flex items-center gap-3 mb-8'>
-                      <MapPin className='w-6 h-6 text-[#9933CC]' />
-                      <h2 className='text-3xl font-bold text-gray-900'>All Destinations</h2>
-                    </div>
-                  )}
-                  <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
-                    {regularCities.map((city, idx) => (
-                      <CityCard key={city.id} city={city} index={idx + featuredCities.length} />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+              {cities.map((city, idx) => (
+                <CityCard key={city.id} city={city} index={idx} />
+              ))}
+            </div>
           )}
         </div>
       </section>
@@ -161,7 +130,7 @@ export default function Destinations() {
   );
 }
 
-function CityCard({ city, featured = false, index = 0 }) {
+function CityCard({ city, index = 0 }) {
   const navigate = useNavigate();
 
   const cityTaglines = {
@@ -179,10 +148,7 @@ function CityCard({ city, featured = false, index = 0 }) {
   return (
     <Card
       onClick={() => navigate(createPageUrl(pageSlug))}
-      className={cn(
-        'group cursor-pointer h-full overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 border-[#CCCCFF] hover:border-[#9933CC]',
-        featured && 'md:col-span-1'
-      )}
+      className='group cursor-pointer h-full overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 border-[#CCCCFF] hover:border-[#9933CC]'
     >
       <div className='relative aspect-[4/3] overflow-hidden'>
         <img
@@ -204,15 +170,6 @@ function CityCard({ city, featured = false, index = 0 }) {
           }}
         />
         <div className='absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent' />
-
-        {featured && (
-          <div className='absolute top-4 right-4'>
-            <Badge className='bg-amber-500 text-white border-0 flex items-center gap-1'>
-              <Star className='w-3 h-3' />
-              Featured
-            </Badge>
-          </div>
-        )}
 
         <div className='absolute bottom-0 left-0 right-0 p-6'>
           <div className='flex items-center gap-2 mb-2'>
