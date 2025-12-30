@@ -9,7 +9,6 @@ import {
   X,
   Loader2,
   Eye,
-  Star,
   CheckCircle,
   Plane,
   Users,
@@ -56,7 +55,6 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
       card_image: '',
       gallery_images: [],
       is_active: true,
-      is_featured: false,
       timezone: '',
       currency: 'USD',
       languages: [],
@@ -64,7 +62,6 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
       best_time_to_visit: '',
       average_temp: '',
       population: null,
-      page_slug: '',
       coordinates: { lat: null, lng: null },
       services: [],
     }),
@@ -189,7 +186,6 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
       name: formData.name.trim(),
       country: formData.country.trim(),
       description: formData.description?.trim() || '',
-      page_slug: formData.page_slug?.trim() || '',
       population: formData.population ? Number(formData.population) : null,
       coordinates: {
         lat: formData.coordinates.lat ? Number(formData.coordinates.lat) : null,
@@ -260,40 +256,28 @@ const CityFormDialog = ({ city, isOpen, onClose, createCityMutation, updateCityM
               />
             </div>
 
-            <div>
-              <Label>Page Slug (URL)</Label>
-              <Input
-                value={formData.page_slug}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    page_slug: e.target.value,
-                  }))
+            <div
+              className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                formData.is_active
+                  ? 'border-green-500 bg-green-50'
+                  : 'border-red-300 bg-red-50'
+              }`}
+              onClick={() =>
+                setFormData((prev) => ({ ...prev, is_active: !prev.is_active }))
+              }
+            >
+              <div>
+                <Label className='font-semibold cursor-pointer'>Active</Label>
+                <p className='text-xs text-gray-500'>
+                  {formData.is_active ? 'Visible to users' : 'Hidden from users'}
+                </p>
+              </div>
+              <Switch
+                checked={formData.is_active}
+                onCheckedChange={(checked) =>
+                  setFormData((prev) => ({ ...prev, is_active: checked }))
                 }
-                placeholder='e.g., BookingDamascus'
               />
-              <p className='text-xs text-gray-500 mt-1'>This will be the URL: /BookingDamascus</p>
-            </div>
-
-            <div className='grid grid-cols-2 gap-4'>
-              <div className='flex items-center justify-between'>
-                <Label>Active</Label>
-                <Switch
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) =>
-                    setFormData((prev) => ({ ...prev, is_active: checked }))
-                  }
-                />
-              </div>
-              <div className='flex items-center justify-between'>
-                <Label>Featured</Label>
-                <Switch
-                  checked={formData.is_featured}
-                  onCheckedChange={(checked) =>
-                    setFormData((prev) => ({ ...prev, is_featured: checked }))
-                  }
-                />
-              </div>
             </div>
           </TabsContent>
 
@@ -751,12 +735,7 @@ export default function AdminCities() {
                   ) : (
                     <div className='w-full h-full bg-gradient-to-br from-purple-500 to-pink-500' />
                   )}
-                  <div className='absolute top-2 right-2 flex gap-2'>
-                    {city.is_featured && (
-                      <Badge className='bg-amber-500'>
-                        <Star className='w-3 h-3 mr-1' /> Featured
-                      </Badge>
-                    )}
+                  <div className='absolute top-2 right-2'>
                     {city.is_active ? (
                       <Badge className='bg-green-500'>
                         <Eye className='w-3 h-3 mr-1' /> Active
