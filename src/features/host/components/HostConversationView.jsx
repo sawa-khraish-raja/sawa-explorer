@@ -233,6 +233,7 @@ export default function HostConversationView({
       queryClient.invalidateQueries({
         queryKey: ['hostConversations', currentUser?.email],
       });
+      queryClient.invalidateQueries({ queryKey: ['bookingOffers'] });
       setShowOfferDialog(false);
       setShowRentalOfferDialog(false);
       setOfferPrice('');

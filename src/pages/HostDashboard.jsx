@@ -14,6 +14,7 @@ import {
   Send,
   X,
   Package,
+  Archive,
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -105,6 +106,12 @@ export default function HostDashboard() {
         host_email: user.email,
         host_name: user.full_name || user.email,
         traveler_email: booking.traveler_email,
+        traveler_first_name: booking.traveler_first_name || booking.traveler_email?.split('@')[0],
+        city_name: booking.city_name || booking.city,
+        start_date: booking.start_date,
+        end_date: booking.end_date,
+        number_of_adults: booking.number_of_adults,
+        number_of_children: booking.number_of_children,
         price: basePrice,
         price_total: totalPrice,
         price_breakdown: {
@@ -164,10 +171,10 @@ export default function HostDashboard() {
       return { offerId, booking };
     },
     onSuccess: async (data) => {
-      // Invalidate all relevant queries to update UI immediately
       queryClient.invalidateQueries({ queryKey: ['availableBookings'] });
       queryClient.invalidateQueries({ queryKey: ['myOffers'] });
       queryClient.invalidateQueries({ queryKey: ['myBookings'] });
+      queryClient.invalidateQueries({ queryKey: ['bookingOffers'] });
       toast.success('Offer sent successfully! Opening chat...');
       setShowOfferDialog(false);
       setSelectedBooking(null);
@@ -259,45 +266,67 @@ export default function HostDashboard() {
       if (!user?.email) return [];
 
       try {
-        console.log(' Fetching my bookings (where I sent offers)');
-
-        // Get all offers made by this host
         const myOffers = await queryDocuments('offers', [['host_email', '==', user.email]]);
-        console.log('My offers:', myOffers.length);
 
         if (myOffers.length === 0) {
           return [];
         }
 
-        // Get the booking IDs
-        const bookingIds = [...new Set(myOffers.map((o) => o.booking_id))];
+        const bookingsWithOffers = await Promise.all(
+          myOffers.map(async (offer) => {
+            let booking = null;
+            let bookingFetchFailed = false;
 
-        // Get bookings for each offer (fetch individually since we can't query by ID list)
-        const myBookings = [];
-        for (const bookingId of bookingIds) {
-          try {
-            const booking = await getDocument('bookings', bookingId);
-            if (booking) {
-              myBookings.push(booking);
+            try {
+              booking = await getDocument('bookings', offer.booking_id);
+            } catch (error) {
+              bookingFetchFailed = true;
             }
-          } catch (error) {
-            console.warn(`Could not fetch booking ${bookingId}:`, error.message);
-          }
-        }
 
-        // Add offer details to bookings
-        const bookingsWithOffers = myBookings.map((booking) => {
-          // Find the offer for this booking
-          const offer = myOffers.find((o) => o.booking_id === booking.id);
-          return {
-            ...booking,
-            offer_id: offer?.id,
-            offer_status: offer?.status,
-            offer_price: offer?.price_total,
-          };
-        });
+            let derivedOfferStatus = offer.status;
+            let isBookingConfirmed = false;
+            let isMyOfferAccepted = false;
 
-        console.log(' My bookings:', bookingsWithOffers.length);
+            if (booking) {
+              isBookingConfirmed = booking.status === 'confirmed' || booking.state === 'confirmed';
+              isMyOfferAccepted = booking.accepted_offer_id === offer.id;
+
+              if (isBookingConfirmed && !isMyOfferAccepted && offer.status === 'pending') {
+                derivedOfferStatus = 'not_selected';
+              }
+            } else if (bookingFetchFailed) {
+              if (offer.status === 'accepted') {
+                isBookingConfirmed = true;
+                isMyOfferAccepted = true;
+                derivedOfferStatus = 'accepted';
+              } else if (offer.status === 'pending') {
+                derivedOfferStatus = 'not_selected';
+              }
+            }
+
+            return {
+              id: offer.booking_id,
+              city_name: booking?.city_name || booking?.city || offer.city_name,
+              traveler_first_name: booking?.traveler_first_name || offer.traveler_first_name,
+              traveler_email: booking?.traveler_email || offer.traveler_email,
+              start_date: booking?.start_date || offer.start_date,
+              end_date: booking?.end_date || offer.end_date,
+              number_of_adults: booking?.number_of_adults || offer.number_of_adults || 1,
+              number_of_children: booking?.number_of_children || offer.number_of_children || 0,
+              selected_services: booking?.selected_services || [],
+              notes: booking?.notes || '',
+              status: isBookingConfirmed ? 'confirmed' : (booking?.status || 'pending'),
+              state: isBookingConfirmed ? 'confirmed' : (booking?.state || 'pending'),
+              created_date: booking?.created_date || offer.created_date,
+              updated_date: booking?.updated_date || offer.updated_date,
+              total_price: booking?.total_price,
+              offer_id: offer.id,
+              offer_status: derivedOfferStatus,
+              offer_price: offer.price_total,
+            };
+          })
+        );
+
         return bookingsWithOffers.sort(
           (a, b) => new Date(b.created_date) - new Date(a.created_date)
         );
@@ -307,8 +336,8 @@ export default function HostDashboard() {
       }
     },
     enabled: !!user?.email,
-    staleTime: 30 * 1000, // 30 seconds - shorter to show updates faster
-    refetchOnMount: true, // Refetch when component mounts
+    staleTime: 30 * 1000,
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
   });
 
@@ -364,6 +393,85 @@ export default function HostDashboard() {
     refetchOnMount: true, // Refetch when component mounts
     refetchOnWindowFocus: false,
   });
+
+  const { data: closedOffers = [], isLoading: isLoadingClosed } = useQuery({
+    queryKey: ['closedOffers', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+
+      try {
+        const myOffers = await queryDocuments('offers', [['host_email', '==', user.email]]);
+
+        const closedWithBookings = await Promise.all(
+          myOffers.map(async (offer) => {
+            if (offer.status === 'accepted') return null;
+            if (offer.status === 'declined') return null;
+
+            let bookingDetails = null;
+            let bookingFetchFailed = false;
+            try {
+              bookingDetails = await getDocument('bookings', offer.booking_id);
+            } catch (err) {
+              bookingFetchFailed = true;
+            }
+
+            const isExplicitlyClosed = offer.status === 'not_selected' || offer.closed_reason === 'another_host_selected';
+
+            const isBookingConfirmed = bookingDetails?.status === 'confirmed' || bookingDetails?.state === 'confirmed';
+            const isMyOfferAccepted = bookingDetails?.accepted_offer_id === offer.id;
+            const isDerivedClosed = isBookingConfirmed && !isMyOfferAccepted;
+
+            const isLikelyClosed = bookingFetchFailed && offer.status === 'pending';
+
+            if (!isExplicitlyClosed && !isDerivedClosed && !isLikelyClosed) return null;
+
+            return {
+              id: offer.id,
+              offer_id: offer.id,
+              booking_id: offer.booking_id,
+              offer_status: 'not_selected',
+              offer_price: offer.price_total || offer.price,
+              city_name: bookingDetails?.city_name || bookingDetails?.city || offer.city_name || 'Unknown City',
+              traveler_first_name: bookingDetails?.traveler_first_name || offer.traveler_first_name || offer.traveler_email?.split('@')[0] || 'Traveler',
+              start_date: bookingDetails?.start_date || offer.start_date || offer.created_date,
+              end_date: bookingDetails?.end_date || offer.end_date || offer.created_date,
+              number_of_adults: bookingDetails?.number_of_adults || offer.number_of_adults || 1,
+              number_of_children: bookingDetails?.number_of_children || offer.number_of_children || 0,
+              selected_services: bookingDetails?.selected_services || [],
+              updated_date: offer.updated_date || offer.created_date,
+            };
+          })
+        );
+
+        const result = closedWithBookings
+          .filter(Boolean)
+          .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date));
+
+        console.log('[ClosedOffers] Final result:', result.length);
+        return result;
+      } catch (error) {
+        console.error('Error fetching closed offers:', error);
+        return [];
+      }
+    },
+    enabled: !!user?.email,
+    staleTime: 30 * 1000,
+    refetchOnMount: true,
+  });
+
+  const allClosedBookings = useMemo(() => {
+    const fromMyBookings = myBookings.filter((b) => b.offer_status === 'not_selected');
+
+    const closedOfferIds = new Set(closedOffers.map((o) => o.booking_id));
+    const uniqueFromMyBookings = fromMyBookings.filter((b) => !closedOfferIds.has(b.id));
+
+    const combined = [...closedOffers, ...uniqueFromMyBookings];
+    return combined.sort((a, b) => new Date(b.updated_date || b.created_date) - new Date(a.updated_date || a.created_date));
+  }, [closedOffers, myBookings]);
+
+  const activeBookings = useMemo(() => {
+    return myBookings.filter((b) => b.offer_status !== 'not_selected');
+  }, [myBookings]);
 
   const stats = useMemo(() => {
     const confirmed = myBookings.filter(
@@ -547,11 +655,15 @@ export default function HostDashboard() {
               </TabsTrigger>
               <TabsTrigger value='bookings' className='flex items-center gap-2 flex-1'>
                 <Calendar className='w-4 h-4' />
-                My Bookings ({myBookings.length})
+                My Bookings ({activeBookings.length})
               </TabsTrigger>
               <TabsTrigger value='rejected' className='flex items-center gap-2 flex-1'>
                 <X className='w-4 h-4' />
                 Rejected ({rejectedBookings.length})
+              </TabsTrigger>
+              <TabsTrigger value='closed' className='flex items-center gap-2 flex-1'>
+                <Archive className='w-4 h-4' />
+                Closed ({allClosedBookings.length})
               </TabsTrigger>
               <TabsTrigger value='profile' className='flex items-center gap-2 flex-1'>
                 <User className='w-4 h-4' />
@@ -759,7 +871,7 @@ export default function HostDashboard() {
                 <div className='flex justify-center py-12'>
                   <Loader2 className='w-8 h-8 animate-spin text-purple-600' />
                 </div>
-              ) : myBookings.length === 0 ? (
+              ) : activeBookings.length === 0 ? (
                 <Card>
                   <CardContent className='py-12 text-center'>
                     <Calendar className='w-12 h-12 mx-auto mb-4 text-gray-300' />
@@ -769,94 +881,152 @@ export default function HostDashboard() {
                 </Card>
               ) : (
                 <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
-                  {myBookings.map((booking) => (
-                    <Card key={booking.id} className='hover:shadow-lg transition-shadow'>
-                      <CardHeader className='pb-3'>
-                        <div className='flex items-start justify-between'>
-                          <div>
-                            <CardTitle className='text-lg'>{booking.city_name || booking.city}</CardTitle>
-                            {booking.traveler_first_name && (
-                              <p className='text-sm font-medium text-gray-700 mt-1'>
-                                Traveler: {booking.traveler_first_name}
-                              </p>
-                            )}
-                            <p className='text-sm text-gray-500 mt-1'>
-                              {format(new Date(booking.start_date), 'MMM d')} -{' '}
-                              {format(new Date(booking.end_date), 'MMM d, yyyy')}
-                            </p>
-                          </div>
-                          <Badge
-                            className={cn(
-                              booking.status === 'confirmed' || booking.state === 'confirmed'
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-blue-100 text-blue-700'
-                            )}
-                          >
-                            {booking.status === 'confirmed' || booking.state === 'confirmed'
-                              ? 'Confirmed'
-                              : 'Pending'}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className='space-y-3'>
-                        <div className='flex items-center gap-2 text-sm text-gray-600'>
-                          <Users className='w-4 h-4' />
-                          <span>
-                            {booking.number_of_adults}{' '}
-                            {booking.number_of_adults === 1 ? 'Adult' : 'Adults'}
-                            {booking.number_of_children > 0 &&
-                              ` + ${booking.number_of_children} ${
-                                booking.number_of_children === 1 ? 'Child' : 'Children'
-                              }`}
-                          </span>
-                        </div>
+                  {activeBookings.map((booking) => {
+                    const isNotSelected = booking.offer_status === 'not_selected';
+                    const isConfirmed = booking.status === 'confirmed' || booking.state === 'confirmed';
+                    const isAccepted = booking.offer_status === 'accepted';
 
-                        {booking.selected_services && booking.selected_services.length > 0 && (
-                          <div className='bg-purple-50 p-2 rounded-lg border border-purple-200'>
-                            <div className='flex items-center gap-2 mb-1'>
-                              <Package className='w-3 h-3 text-purple-600' />
-                              <p className='text-xs font-semibold text-purple-900'>Services</p>
+                    return (
+                      <Card
+                        key={booking.id}
+                        className={cn(
+                          'transition-shadow',
+                          isNotSelected
+                            ? 'bg-gray-50 border-gray-300 opacity-75'
+                            : 'hover:shadow-lg'
+                        )}
+                      >
+                        <CardHeader className='pb-3'>
+                          <div className='flex items-start justify-between'>
+                            <div>
+                              <CardTitle className={cn(
+                                'text-lg',
+                                isNotSelected && 'text-gray-500'
+                              )}>
+                                {booking.city_name || booking.city}
+                              </CardTitle>
+                              {booking.traveler_first_name && (
+                                <p className={cn(
+                                  'text-sm font-medium mt-1',
+                                  isNotSelected ? 'text-gray-400' : 'text-gray-700'
+                                )}>
+                                  Traveler: {booking.traveler_first_name}
+                                </p>
+                              )}
+                              {booking.start_date && booking.end_date && (
+                                <p className={cn(
+                                  'text-sm mt-1',
+                                  isNotSelected ? 'text-gray-400' : 'text-gray-500'
+                                )}>
+                                  {format(new Date(booking.start_date), 'MMM d')} -{' '}
+                                  {format(new Date(booking.end_date), 'MMM d, yyyy')}
+                                </p>
+                              )}
                             </div>
-                            <BookingServicesDisplay
-                              serviceIds={booking.selected_services}
-                              language='en'
-                            />
+                            <Badge
+                              className={cn(
+                                isNotSelected
+                                  ? 'bg-gray-200 text-gray-600'
+                                  : isConfirmed || isAccepted
+                                    ? 'bg-green-100 text-green-700'
+                                    : 'bg-blue-100 text-blue-700'
+                              )}
+                            >
+                              {isNotSelected
+                                ? 'Booking Taken'
+                                : isConfirmed || isAccepted
+                                  ? 'Confirmed'
+                                  : 'Pending'}
+                            </Badge>
                           </div>
-                        )}
+                        </CardHeader>
+                        <CardContent className='space-y-3'>
+                          {isNotSelected && (
+                            <div className='bg-gray-100 p-3 rounded-lg border border-gray-200'>
+                              <p className='text-sm text-gray-600'>
+                                The traveler accepted an offer from another host.
+                              </p>
+                            </div>
+                          )}
 
-                        {booking.total_price && (
-                          <div className='flex items-center gap-2 text-sm font-semibold text-green-600'>
-                            <DollarSign className='w-4 h-4' />
-                            <span>${booking.total_price.toFixed(2)}</span>
+                          <div className={cn(
+                            'flex items-center gap-2 text-sm',
+                            isNotSelected ? 'text-gray-400' : 'text-gray-600'
+                          )}>
+                            <Users className='w-4 h-4' />
+                            <span>
+                              {booking.number_of_adults}{' '}
+                              {booking.number_of_adults === 1 ? 'Adult' : 'Adults'}
+                              {booking.number_of_children > 0 &&
+                                ` + ${booking.number_of_children} ${
+                                  booking.number_of_children === 1 ? 'Child' : 'Children'
+                                }`}
+                            </span>
                           </div>
-                        )}
 
-                        <Button
-                          onClick={async () => {
-                            try {
-                              const conversation = await getOrCreateConversation({
-                                id: booking.id,
-                                traveler_email: booking.traveler_email,
-                                host_email: user.email,
-                                city_name: booking.city_name || booking.city,
-                              });
-                              navigate(
-                                createPageUrl(`Messages?conversation_id=${conversation.id}`)
-                              );
-                            } catch (error) {
-                              console.error('Error opening chat:', error);
-                              toast.error('Failed to open chat. Please try again.');
-                            }
-                          }}
-                          variant='outline'
-                          className='w-full'
-                        >
-                          <MessageSquare className='w-4 h-4 mr-2' />
-                          View Messages
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
+                          {booking.selected_services && booking.selected_services.length > 0 && (
+                            <div className={cn(
+                              'p-2 rounded-lg border',
+                              isNotSelected
+                                ? 'bg-gray-100 border-gray-200'
+                                : 'bg-purple-50 border-purple-200'
+                            )}>
+                              <div className='flex items-center gap-2 mb-1'>
+                                <Package className={cn(
+                                  'w-3 h-3',
+                                  isNotSelected ? 'text-gray-400' : 'text-purple-600'
+                                )} />
+                                <p className={cn(
+                                  'text-xs font-semibold',
+                                  isNotSelected ? 'text-gray-500' : 'text-purple-900'
+                                )}>Services</p>
+                              </div>
+                              <BookingServicesDisplay
+                                serviceIds={booking.selected_services}
+                                language='en'
+                              />
+                            </div>
+                          )}
+
+                          {booking.total_price && (
+                            <div className={cn(
+                              'flex items-center gap-2 text-sm font-semibold',
+                              isNotSelected ? 'text-gray-400' : 'text-green-600'
+                            )}>
+                              <DollarSign className='w-4 h-4' />
+                              <span>${booking.total_price.toFixed(2)}</span>
+                            </div>
+                          )}
+
+                          {!isNotSelected && (
+                            <Button
+                              onClick={async () => {
+                                try {
+                                  const conversation = await getOrCreateConversation({
+                                    id: booking.id,
+                                    traveler_email: booking.traveler_email,
+                                    host_email: user.email,
+                                    city_name: booking.city_name || booking.city,
+                                  });
+                                  navigate(
+                                    createPageUrl(`Messages?conversation_id=${conversation.id}`)
+                                  );
+                                } catch (error) {
+                                  console.error('Error opening chat:', error);
+                                  toast.error('Failed to open chat. Please try again.');
+                                }
+                              }}
+                              variant='outline'
+                              className='w-full'
+                            >
+                              <MessageSquare className='w-4 h-4 mr-2' />
+                              View Messages
+                            </Button>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
             </TabsContent>
@@ -953,6 +1123,110 @@ export default function HostDashboard() {
                       </CardContent>
                     </Card>
                   ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value='closed'>
+              {isLoadingClosed ? (
+                <div className='flex justify-center py-12'>
+                  <Loader2 className='w-8 h-8 animate-spin text-purple-600' />
+                </div>
+              ) : allClosedBookings.length === 0 ? (
+                <Card>
+                  <CardContent className='py-12 text-center'>
+                    <Archive className='w-12 h-12 mx-auto mb-4 text-gray-300' />
+                    <h3 className='text-lg font-semibold text-gray-700 mb-2'>No Closed Requests</h3>
+                    <p className='text-gray-500'>
+                      Requests where another host was selected or you didn't respond will appear here
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+                  {allClosedBookings.map((booking) => {
+                    const isNotSelected = booking.offer_status === 'not_selected';
+                    const isMissed = !isNotSelected;
+
+                    return (
+                      <Card
+                        key={booking.id}
+                        className='bg-gray-50 border-gray-300 opacity-75'
+                      >
+                        <CardHeader className='pb-3'>
+                          <div className='flex items-start justify-between'>
+                            <div>
+                              <CardTitle className='text-lg text-gray-500'>
+                                {booking.city_name || booking.city}
+                              </CardTitle>
+                              {booking.traveler_first_name && (
+                                <p className='text-sm font-medium text-gray-400 mt-1'>
+                                  Traveler: {booking.traveler_first_name}
+                                </p>
+                              )}
+                              {booking.start_date && booking.end_date && (
+                                <p className='text-sm text-gray-400 mt-1'>
+                                  {format(new Date(booking.start_date), 'MMM d')} -{' '}
+                                  {format(new Date(booking.end_date), 'MMM d, yyyy')}
+                                </p>
+                              )}
+                            </div>
+                            <Badge
+                              className={cn(
+                                isNotSelected
+                                  ? 'bg-gray-200 text-gray-600'
+                                  : 'bg-orange-100 text-orange-600'
+                              )}
+                            >
+                              {isNotSelected ? 'Not Selected' : 'Missed'}
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent className='space-y-3'>
+                          <div className='bg-gray-100 p-3 rounded-lg border border-gray-200'>
+                            <p className='text-sm text-gray-600'>
+                              {isNotSelected
+                                ? 'The traveler accepted an offer from another host.'
+                                : 'This booking was confirmed before you responded.'}
+                            </p>
+                          </div>
+
+                          <div className='flex items-center gap-2 text-sm text-gray-400'>
+                            <Users className='w-4 h-4' />
+                            <span>
+                              {booking.number_of_adults}{' '}
+                              {booking.number_of_adults === 1 ? 'Adult' : 'Adults'}
+                              {booking.number_of_children > 0 &&
+                                ` + ${booking.number_of_children} ${
+                                  booking.number_of_children === 1 ? 'Child' : 'Children'
+                                }`}
+                            </span>
+                          </div>
+
+                          {booking.selected_services && booking.selected_services.length > 0 && (
+                            <div className='bg-gray-100 p-2 rounded-lg border border-gray-200'>
+                              <div className='flex items-center gap-2 mb-1'>
+                                <Package className='w-3 h-3 text-gray-400' />
+                                <p className='text-xs font-semibold text-gray-500'>Services</p>
+                              </div>
+                              <BookingServicesDisplay
+                                serviceIds={booking.selected_services}
+                                language='en'
+                              />
+                            </div>
+                          )}
+
+                          {isNotSelected && booking.offer_price && (
+                            <div className='flex items-center gap-2 text-sm text-gray-400'>
+                              <DollarSign className='w-4 h-4' />
+                              <span className='line-through'>${booking.offer_price.toFixed(2)}</span>
+                              <span className='text-xs'>(Your offer)</span>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
             </TabsContent>

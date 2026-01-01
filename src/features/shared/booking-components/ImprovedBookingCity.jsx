@@ -127,11 +127,13 @@ export default function ImprovedBookingCity({ cityName }) {
   const createBookingMutation = useMutation({
     mutationFn: async (bookingData) => {
       const firstName = user?.full_name ? user.full_name.split(' ')[0] : 'Traveler';
+      const targetHostEmails = hosts.map((h) => h.email).filter(Boolean);
 
       const bookingId = await addDocument('bookings', {
         traveler_email: user.email,
         traveler_first_name: firstName,
         city: bookingData.city,
+        city_name: bookingData.city,
         start_date: bookingData.start_date,
         end_date: bookingData.end_date,
         number_of_adults: bookingData.number_of_adults,
@@ -141,6 +143,7 @@ export default function ImprovedBookingCity({ cityName }) {
         notes: bookingData.notes,
         state: 'open',
         status: 'pending',
+        target_hosts: targetHostEmails,
         created_date: new Date().toISOString(),
       });
 
