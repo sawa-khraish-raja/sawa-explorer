@@ -543,7 +543,7 @@ export default function SearchBar() {
             </div>
 
             {/*  Bottom Action Bar */}
-            <div className='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex items-center justify-between z-20 shadow-lg'>
+            <div className='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 pt-4 pb-6 flex items-center justify-between z-20 shadow-lg' style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom, 1.5rem))' }}>
               <button
                 onClick={() => {
                   if (!isSearching) {
