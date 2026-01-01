@@ -501,7 +501,7 @@ const AppContent = memo(({ children }) => {
         {!isInConversation && (
           <header
             className={cn(
-              'fixed top-0 left-0 right-0 z-50 transition-all duration-200 hidden lg:block',
+              'fixed top-0 left-0 right-0 z-[10000] transition-all duration-200 hidden lg:block',
               scrolled ? 'bg-white shadow-md' : 'bg-white'
             )}
           >
@@ -768,7 +768,7 @@ const AppContent = memo(({ children }) => {
         )}
 
         {!isInConversation && (
-          <header className='lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm safe-area-top'>
+          <header className='lg:hidden fixed top-0 left-0 right-0 z-[10000] bg-white border-b border-gray-200 shadow-sm safe-area-top'>
             <div className='flex items-center justify-between h-16 px-3'>
               <div className='flex items-center gap-1'>
                 {shouldShowBackButton() && (
