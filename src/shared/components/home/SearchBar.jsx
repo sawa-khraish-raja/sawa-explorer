@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { MapPin, Search, Loader2, X } from 'lucide-react';
+import { MapPin, Search, Loader2, X, Home } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 
 import { useTranslation } from '@/shared/i18n/LanguageContext';
 import { Button } from '@/shared/components/ui/button';
@@ -22,6 +22,7 @@ import { showError } from '@/shared/utils/notifications';
 export default function SearchBar() {
   const { t, language } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [isOpen, setIsOpen] = useState(searchParams.get('search') === 'open');
@@ -44,7 +45,18 @@ export default function SearchBar() {
 
   const closeSearchModal = () => {
     setIsOpen(false);
-    setSearchParams({});
+    const params = new URLSearchParams(searchParams);
+    params.delete('search');
+    setSearchParams(params);
+  };
+
+  const handleGoHome = () => {
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    setIsOpen(false);
+    navigate('/');
   };
 
   const updateUrlParams = (key, value) => {
@@ -223,6 +235,38 @@ export default function SearchBar() {
     }
   };
 
+  //  Close modal when navigating away or clicking outside
+  const prevPathnameRef = useRef(location.pathname);
+  useEffect(() => {
+    if (prevPathnameRef.current !== location.pathname) {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      setIsOpen(false);
+      prevPathnameRef.current = location.pathname;
+    }
+  }, [location.pathname]);
+
+  //  Close modal when clicking on header navigation
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleHeaderClick = (e) => {
+      const header = e.target.closest('header');
+      if (header && (e.target.closest('a') || e.target.closest('button[aria-label="Go back"]'))) {
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('click', handleHeaderClick, true);
+    return () => document.removeEventListener('click', handleHeaderClick, true);
+  }, [isOpen]);
+
   //  Prevent body scroll when modal open
   useEffect(() => {
     if (isOpen) {
@@ -323,7 +367,15 @@ export default function SearchBar() {
               >
                 <X className='w-5 h-5 text-gray-900' />
               </button>
-              <h2 className='text-lg font-bold text-gray-900 flex-1'>{t('search.where')}</h2>
+              <h2 className='text-lg font-bold text-gray-900 flex-1'>{language === 'ar' ? 'خطط لرحلتك' : 'Plan your trip'}</h2>
+              <button
+                onClick={handleGoHome}
+                disabled={isSearching}
+                className='w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors flex-shrink-0 disabled:opacity-50'
+                aria-label='Go to Home'
+              >
+                <Home className='w-5 h-5 text-gray-700' />
+              </button>
             </div>
 
             <div className='p-4 space-y-5 pb-32'>
@@ -491,7 +543,7 @@ export default function SearchBar() {
             </div>
 
             {/*  Bottom Action Bar */}
-            <div className='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 flex items-center justify-between safe-area-bottom z-20 shadow-lg'>
+            <div className='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex items-center justify-between z-20 shadow-lg'>
               <button
                 onClick={() => {
                   if (!isSearching) {
@@ -510,24 +562,25 @@ export default function SearchBar() {
                   }
                 }}
                 disabled={isSearching}
-                className='text-sm font-semibold text-gray-600 hover:text-gray-900 underline disabled:opacity-50'
+                className='text-sm font-semibold text-gray-600 hover:text-gray-900 underline disabled:opacity-50 flex-shrink-0'
               >
                 {t('search.clear_all')}
               </button>
               <Button
                 onClick={handleSearch}
                 disabled={!destination || !checkIn || !checkOut || isSearching}
-                className='bg-gradient-to-r from-[#9933CC] to-[#330066] hover:from-[#7B2CBF] hover:to-[#1a0033] text-white rounded-xl px-8 h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed'
+                className='bg-gradient-to-r from-[#9933CC] to-[#330066] hover:from-[#7B2CBF] hover:to-[#1a0033] text-white rounded-xl px-6 sm:px-8 h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0'
               >
                 {isSearching ? (
                   <>
                     <Loader2 className='w-5 h-5 mr-2 animate-spin' />
-                    {language === 'ar' ? 'جارٍ البحث...' : 'Searching...'}
+                    <span className='hidden sm:inline'>{language === 'ar' ? 'جارٍ البحث...' : 'Searching...'}</span>
+                    <span className='sm:hidden'>{language === 'ar' ? 'بحث...' : 'Wait...'}</span>
                   </>
                 ) : (
                   <>
-                    <Search className='w-5 h-5 mr-2' />
-                    {t('search.search')}
+                    <Search className='w-5 h-5 sm:mr-2' />
+                    <span className='hidden sm:inline'>{t('search.search')}</span>
                   </>
                 )}
               </Button>
