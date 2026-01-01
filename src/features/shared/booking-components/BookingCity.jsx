@@ -224,10 +224,13 @@ export default function BookingCity({ cityName }) {
 
   const createBookingMutation = useMutation({
     mutationFn: async (bookingData) => {
+      const targetHostEmails = hosts.map((h) => h.email).filter(Boolean);
+
       const bookingId = await addDocument('bookings', {
         user_id: user.uid,
         traveler_email: user.email,
         city: bookingData.city,
+        city_name: bookingData.city,
         start_date: bookingData.start_date,
         end_date: bookingData.end_date,
         number_of_adults: bookingData.number_of_adults,
@@ -237,11 +240,11 @@ export default function BookingCity({ cityName }) {
         notes: bookingData.notes,
         state: 'open',
         status: 'pending',
+        target_hosts: targetHostEmails,
         created_date: new Date().toISOString(),
       });
 
-      // Note: Host notification would be handled by a Cloud Function trigger in production
-      console.log('Booking created:', bookingId);
+      console.log('Booking created:', bookingId, 'Target hosts:', targetHostEmails.length);
 
       return { id: bookingId, ...bookingData };
     },

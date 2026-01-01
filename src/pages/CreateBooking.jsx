@@ -59,11 +59,13 @@ export default function CreateBooking() {
 
   const createBookingMutation = useMutation({
     mutationFn: async (bookingPayload) => {
-      console.log('📦 Creating booking:', bookingPayload);
+      console.log('Creating booking:', bookingPayload);
 
       const firstName =
         bookingPayload.traveler_first_name ||
         (user?.full_name ? user.full_name.split(' ')[0] : 'Traveler');
+
+      const targetHostEmails = (cityHosts || []).map((h) => h.email).filter(Boolean);
 
       const bookingId = await addDocument('bookings', {
         traveler_email: bookingPayload.traveler_email,
@@ -78,11 +80,12 @@ export default function CreateBooking() {
         notes: bookingPayload.notes,
         preferred_host_id: bookingPayload.preferred_host_id || null,
         status: 'pending',
+        target_hosts: targetHostEmails,
         created_date: new Date().toISOString(),
         updated_date: new Date().toISOString(),
       });
 
-      console.log(' Booking created with ID:', bookingId);
+      console.log('Booking created with ID:', bookingId);
       return { id: bookingId, ...bookingPayload, traveler_first_name: firstName };
     },
     onSuccess: async (newBooking) => {

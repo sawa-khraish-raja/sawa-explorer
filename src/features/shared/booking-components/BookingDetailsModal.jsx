@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import {
   Calendar,
@@ -23,8 +23,11 @@ import {
   Receipt,
   Info,
   Briefcase,
+  Check,
+  X,
+  Loader2,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -35,7 +38,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/compo
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { cn } from '@/shared/utils';
 import { createPageUrl } from '@/utils';
-import { queryDocuments, getDocument } from '@/utils/firestore';
+import { queryDocuments, getDocument, updateDocument, deleteDocument } from '@/utils/firestore';
+
+import { NotificationHelpers } from '@/features/shared/notifications/notificationHelpers';
 
 import { BookingID, UserID } from '@/shared/components/BookingID';
 import { normalizeText } from '@/shared/utils/textHelpers';
@@ -44,38 +49,207 @@ import { getUserDisplayName } from '@/shared/utils/userHelpers';
 import BookingServicesDisplay from './BookingServicesDisplay';
 
 export default function BookingDetailsModal({
-  booking,
+  booking: bookingProp,
   open,
   onOpenChange,
 }) {
   const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const bookingRef = useRef(bookingProp);
+
+  useEffect(() => {
+    if (bookingProp && open) {
+      bookingRef.current = bookingProp;
+    }
+  }, [bookingProp, open]);
+
+  const booking = open ? (bookingProp || bookingRef.current) : bookingRef.current;
 
   const isAdventureBooking = !!booking?.adventure_id;
+
+  const acceptOfferMutation = useMutation({
+    mutationFn: async (offer) => {
+      const currentBooking = await getDocument('bookings', booking.id);
+      if (currentBooking?.status === 'confirmed' || currentBooking?.accepted_offer_id) {
+        throw new Error('This booking already has an accepted offer');
+      }
+
+      const totalPrice = offer.price_breakdown?.total || offer.price_total || offer.price || 0;
+
+      await updateDocument('offers', offer.id, {
+        status: 'accepted',
+        updated_date: new Date().toISOString(),
+      });
+      const updatedOffer = { ...offer, status: 'accepted' };
+
+      await updateDocument('bookings', booking.id, {
+        status: 'confirmed',
+        host_email: offer.host_email,
+        host_name: offer.host_name,
+        accepted_offer_id: offer.id,
+        total_price: totalPrice,
+        updated_date: new Date().toISOString(),
+      });
+      const updatedBooking = {
+        ...booking,
+        status: 'confirmed',
+        host_email: offer.host_email,
+        host_name: offer.host_name,
+        accepted_offer_id: offer.id,
+        total_price: totalPrice,
+      };
+
+      await NotificationHelpers.onOfferAccepted(updatedOffer, updatedBooking);
+      await NotificationHelpers.onBookingConfirmed(updatedBooking);
+
+      const winningHostEmail = offer.host_email;
+      const bookingId = booking.id;
+
+      try {
+        const allConversations = await queryDocuments('conversations', [
+          ['booking_id', '==', bookingId],
+        ]);
+
+        const conversationsToDelete = allConversations.filter(
+          (c) => c.host_emails && !c.host_emails.includes(winningHostEmail)
+        );
+
+        for (const convo of conversationsToDelete) {
+          try {
+            const messagesToDelete = await queryDocuments('messages', [
+              ['conversation_id', '==', convo.id],
+            ]);
+            for (const msg of messagesToDelete) {
+              await deleteDocument('messages', msg.id);
+            }
+            await deleteDocument('conversations', convo.id);
+          } catch (deleteErr) {
+            console.warn('Could not delete conversation:', deleteErr.message);
+          }
+        }
+      } catch (convErr) {
+        console.warn('Could not clean up conversations:', convErr.message);
+      }
+
+      try {
+        const allOffers = await queryDocuments('offers', [['booking_id', '==', bookingId]]);
+
+        const otherOffers = allOffers.filter(
+          (o) => o.id !== offer.id && o.status === 'pending'
+        );
+
+        for (const otherOffer of otherOffers) {
+          try {
+            await updateDocument('offers', otherOffer.id, {
+              status: 'not_selected',
+              closed_reason: 'another_host_selected',
+              updated_date: new Date().toISOString(),
+            });
+
+            await NotificationHelpers.createNotification({
+              recipient_email: otherOffer.host_email,
+              type: 'booking_taken',
+              title: 'Booking No Longer Available',
+              message: `The traveler has accepted another host's offer for their ${updatedBooking.city_name || updatedBooking.city || ''} trip.`,
+              booking_id: updatedBooking.id,
+              read: false,
+            });
+          } catch (offerErr) {
+            console.warn('Could not update other offer:', offerErr.message);
+          }
+        }
+      } catch (offersErr) {
+        console.warn('Could not clean up other offers:', offersErr.message);
+      }
+
+      return { acceptedOffer: updatedOffer, updatedBooking };
+    },
+    onSuccess: () => {
+      toast.success('Offer accepted! Your booking is confirmed.');
+
+      queryClient.invalidateQueries({ queryKey: ['bookingOffers'] });
+      queryClient.invalidateQueries({ queryKey: ['travelerBookings'] });
+      queryClient.invalidateQueries({ queryKey: ['myOffers'] });
+      queryClient.invalidateQueries({ queryKey: ['myBookings'] });
+      queryClient.invalidateQueries({ queryKey: ['hostBookings'] });
+      queryClient.invalidateQueries({ queryKey: ['hostConversations'] });
+      queryClient.invalidateQueries({ queryKey: ['hostOffers'] });
+      queryClient.invalidateQueries({ queryKey: ['availableBookings'] });
+      queryClient.invalidateQueries({ queryKey: ['rejectedBookings'] });
+      queryClient.invalidateQueries({ queryKey: ['closedOffers'] });
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to accept offer');
+    },
+  });
+
+  const declineOfferMutation = useMutation({
+    mutationFn: async (offerId) => {
+      await updateDocument('offers', offerId, {
+        status: 'declined',
+        declined_date: new Date().toISOString(),
+      });
+      if (booking?.id) {
+        const currentBooking = await getDocument('bookings', booking.id);
+        const hostResponses = currentBooking?.host_responses || {};
+        const offer = await getDocument('offers', offerId);
+        if (offer?.host_email) {
+          hostResponses[offer.host_email] = {
+            ...hostResponses[offer.host_email],
+            action: 'declined_by_traveler',
+            declined_by_traveler_date: new Date().toISOString(),
+          };
+          await updateDocument('bookings', booking.id, { host_responses: hostResponses });
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bookingOffers'] });
+      queryClient.invalidateQueries({ queryKey: ['travelerBookings'] });
+      queryClient.invalidateQueries({ queryKey: ['myOffers'] });
+      toast.success('Offer declined');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to decline offer');
+    },
+  });
 
   // FIXED: Disable all queries when modal is closed
   const queryEnabled = open && !!booking?.id;
 
   // Fetch related data (Hooks must be called unconditionally at the top level)
-  const { data: offers = [] } = useQuery({
-    queryKey: ['bookingOffers', booking?.id],
+  const { data: offers = [], isLoading: offersLoading } = useQuery({
+    queryKey: ['bookingOffers', booking?.id, booking?.traveler_email],
     queryFn: async () => {
-      if (!booking?.id || isAdventureBooking) return []; // No offers for adventures
-      return queryDocuments('offers', [['booking_id', '==', booking.id]]);
+      if (!booking?.id || !booking?.traveler_email || isAdventureBooking) return [];
+      const result = await queryDocuments('offers', [
+        ['booking_id', '==', booking.id],
+        ['traveler_email', '==', booking.traveler_email],
+      ]);
+      return result;
     },
-    enabled: queryEnabled && !isAdventureBooking,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: queryEnabled && !isAdventureBooking && !!booking?.traveler_email,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
   // Get all conversations for this booking
   const { data: conversations = [] } = useQuery({
-    queryKey: ['bookingConversations', booking?.id],
+    queryKey: ['bookingConversations', booking?.id, booking?.traveler_email],
     queryFn: async () => {
-      if (!booking?.id) return [];
-      return queryDocuments('conversations', [['booking_id', '==', booking.id]]);
+      if (!booking?.id || !booking?.traveler_email) return [];
+      return queryDocuments('conversations', [
+        ['booking_id', '==', booking.id],
+        ['traveler_email', '==', booking.traveler_email],
+      ]);
     },
-    enabled: queryEnabled,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: queryEnabled && !!booking?.traveler_email,
+    staleTime: 30 * 1000,
+    refetchOnMount: 'always',
   });
 
   const { data: traveler } = useQuery({
@@ -114,8 +288,9 @@ export default function BookingDetailsModal({
       );
       return (await Promise.all(hostUserPromises)).filter(Boolean);
     },
-    enabled: queryEnabled && offers.length > 0 && !isAdventureBooking, // Disabled for adventure bookings
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    enabled: queryEnabled && offers.length > 0 && !isAdventureBooking,
+    staleTime: 30 * 1000,
+    refetchOnMount: 'always',
   });
 
   // Fetch adventure data if adventure booking
@@ -130,16 +305,53 @@ export default function BookingDetailsModal({
   });
 
   const { data: cancellationRequest } = useQuery({
-    queryKey: ['cancellationRequest', booking?.id],
+    queryKey: ['cancellationRequest', booking?.id, booking?.traveler_email],
     queryFn: async () => {
-      if (!booking?.id) return null;
-      const requests = await queryDocuments('cancellation_requests', [
-        ['booking_id', '==', booking.id],
-      ]);
-      return requests[0] || null;
+      if (!booking?.id || !booking?.traveler_email) return null;
+      try {
+        const requests = await queryDocuments('cancellation_requests', [
+          ['booking_id', '==', booking.id],
+          ['traveler_email', '==', booking.traveler_email],
+        ]);
+        return requests[0] || null;
+      } catch {
+        return null;
+      }
     },
-    enabled: queryEnabled && ['cancelled', 'pending'].includes(booking?.status),
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    enabled: queryEnabled && booking?.status === 'cancelled' && !!booking?.traveler_email,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const allHostEmails = useMemo(() => {
+    const emails = new Set();
+    if (Array.isArray(booking?.target_hosts)) {
+      booking.target_hosts.forEach((email) => emails.add(email));
+    }
+    offers.forEach((o) => o.host_email && emails.add(o.host_email));
+    conversations.forEach((c) => {
+      if (Array.isArray(c.host_emails)) {
+        c.host_emails.forEach((e) => emails.add(e));
+      }
+    });
+    const hostResponses = booking?.host_responses || {};
+    Object.keys(hostResponses).forEach((email) => emails.add(email));
+    return Array.from(emails);
+  }, [booking?.target_hosts, offers, conversations, booking?.host_responses]);
+
+  const { data: allHostsData = [], isLoading: hostsDataLoading } = useQuery({
+    queryKey: ['bookingHostsData', allHostEmails],
+    queryFn: async () => {
+      if (allHostEmails.length === 0) return [];
+      const hostPromises = allHostEmails.map((email) =>
+        queryDocuments('users', [['email', '==', email]])
+          .then((res) => res[0])
+          .catch(() => ({ email, first_name: email.split('@')[0] }))
+      );
+      return (await Promise.all(hostPromises)).filter(Boolean);
+    },
+    enabled: queryEnabled && !isAdventureBooking && allHostEmails.length > 0,
+    staleTime: 30 * 1000,
+    refetchOnMount: 'always',
   });
 
   // Calculate derived data with useMemo BEFORE any conditional returns
@@ -148,9 +360,52 @@ export default function BookingDetailsModal({
     [offers, booking?.accepted_offer_id]
   );
 
-  const pendingOffers = useMemo(() => offers.filter((o) => o.status === 'pending'), [offers]);
+  const pendingOffers = useMemo(() => {
+    const confirmed = booking?.status === 'confirmed' || booking?.state === 'confirmed' || !!acceptedOffer;
+    if (confirmed) return [];
+    return offers.filter((o) => o.status === 'pending');
+  }, [offers, booking?.status, booking?.state, acceptedOffer]);
 
   const declinedOffers = useMemo(() => offers.filter((o) => o.status === 'declined'), [offers]);
+
+  const allRelevantHosts = useMemo(() => {
+    const hostsMap = new Map();
+
+    allHostsData.forEach((host) => {
+      if (host.email) {
+        hostsMap.set(host.email, host);
+      }
+    });
+
+    allHostEmails.forEach((email) => {
+      if (!hostsMap.has(email)) {
+        hostsMap.set(email, {
+          email,
+          first_name: email.split('@')[0],
+        });
+      }
+    });
+
+    return Array.from(hostsMap.values());
+  }, [allHostsData, allHostEmails]);
+
+  const pendingHosts = useMemo(() => {
+    const offerHostEmails = offers.map((o) => o.host_email);
+    const hostResponses = booking?.host_responses || {};
+    return allRelevantHosts.filter((host) => {
+      const hasOffer = offerHostEmails.includes(host.email);
+      const hasResponse = hostResponses[host.email];
+      return !hasOffer && !hasResponse;
+    });
+  }, [allRelevantHosts, offers, booking?.host_responses]);
+
+  const declinedByHosts = useMemo(() => {
+    const hostResponses = booking?.host_responses || {};
+    return allRelevantHosts.filter((host) => {
+      const response = hostResponses[host.email];
+      return response?.action === 'rejected';
+    });
+  }, [allRelevantHosts, booking?.host_responses]);
 
   const isBookingConfirmed = useMemo(
     () => booking?.status === 'confirmed' || booking?.state === 'confirmed' || !!acceptedOffer,
@@ -286,10 +541,17 @@ export default function BookingDetailsModal({
                   </Badge>
                 )}
               </div>
-              <DialogTitle className='text-lg sm:text-2xl font-bold text-gray-900 mb-1 truncate'>
-                {isAdventureBooking && adventure ? adventure.title : normalizeText(booking.city)}
+              <DialogTitle className='text-lg sm:text-2xl font-bold text-gray-900 mb-1 truncate flex items-center gap-2'>
+                <MapPin className='w-5 h-5 sm:w-6 sm:h-6 text-purple-600 flex-shrink-0' />
+                {normalizeText(booking.city || booking.city_name)}
               </DialogTitle>
-              <p className='text-xs sm:text-sm text-gray-600'>
+              {isAdventureBooking && adventure && (
+                <p className='text-sm sm:text-base font-medium text-purple-700 mb-1 truncate'>
+                  {adventure.title}
+                </p>
+              )}
+              <p className='text-xs sm:text-sm text-gray-600 flex items-center gap-1'>
+                <Calendar className='w-3 h-3 sm:w-4 sm:h-4' />
                 {format(new Date(booking.start_date), 'MMM d, yyyy')} -{' '}
                 {format(new Date(booking.end_date), 'MMM d, yyyy')}
               </p>
@@ -560,16 +822,6 @@ export default function BookingDetailsModal({
                       <CardContent className='p-3 sm:p-4 space-y-2 sm:space-y-3 text-xs sm:text-sm'>
                         <div className='flex items-center justify-between'>
                           <span className='text-gray-600 flex items-center gap-1 sm:gap-2'>
-                            <MapPin className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-                            Destination:
-                          </span>
-                          <span className='font-semibold truncate ml-1'>
-                            {normalizeText(booking.city)}
-                          </span>
-                        </div>
-
-                        <div className='flex items-center justify-between'>
-                          <span className='text-gray-600 flex items-center gap-1 sm:gap-2'>
                             <Calendar className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
                             Check-in:
                           </span>
@@ -631,143 +883,6 @@ export default function BookingDetailsModal({
                         )}
                       </CardContent>
                     </Card>
-
-                    {/* Hosts Who Accepted */}
-                    {hostsWithConversations.length > 0 && (
-                      <Card className='md:col-span-2 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-purple-200'>
-                        <CardHeader className='p-3 sm:p-4'>
-                          <CardTitle className='text-xs sm:text-sm flex items-center gap-2'>
-                            <Users className='w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600' />
-                            Hosts Who Accepted Request ({hostsWithConversations.length})
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className='p-3 sm:p-4'>
-                          <div className='space-y-3'>
-                            {hostsWithConversations.map(({ email, user, offer, conversation }) => {
-                              const getOfferStatusBadge = () => {
-                                if (!offer) {
-                                  return (
-                                    <Badge className='bg-blue-500 text-white text-[8px] sm:text-[10px]'>
-                                      📩 No Offer Yet
-                                    </Badge>
-                                  );
-                                }
-
-                                switch (offer.status) {
-                                  case 'accepted':
-                                    return (
-                                      <Badge className='bg-green-600 text-white text-[8px] sm:text-[10px]'>
-                                        ✓ Offer Accepted
-                                      </Badge>
-                                    );
-                                  case 'pending':
-                                    return (
-                                      <Badge className='bg-orange-500 text-white text-[8px] sm:text-[10px]'>
-                                        ⏳ Offer Pending
-                                      </Badge>
-                                    );
-                                  case 'declined':
-                                    return (
-                                      <Badge className='bg-gray-400 text-white text-[8px] sm:text-[10px]'>
-                                        ✗ Offer Declined
-                                      </Badge>
-                                    );
-                                  default:
-                                    return (
-                                      <Badge className='bg-blue-500 text-white text-[8px] sm:text-[10px]'>
-                                        {offer.status}
-                                      </Badge>
-                                    );
-                                }
-                              };
-
-                              return (
-                                <div
-                                  key={email}
-                                  className={cn(
-                                    'bg-white rounded-lg p-3 flex items-center justify-between border-2 shadow-sm hover:shadow-md transition-all',
-                                    offer?.status === 'accepted' && 'border-green-300 bg-green-50',
-                                    offer?.status === 'pending' && 'border-orange-300 bg-orange-50',
-                                    offer?.status === 'declined' && 'border-gray-300 bg-gray-50',
-                                    !offer && 'border-blue-300 bg-blue-50'
-                                  )}
-                                >
-                                  <div className='flex items-center gap-3 flex-1 min-w-0'>
-                                    {user?.profile_photo ? (
-                                      <img
-                                        src={user.profile_photo}
-                                        alt={getUserDisplayName(user)}
-                                        className='w-10 h-10 rounded-full object-cover border-2 border-purple-300'
-                                      />
-                                    ) : (
-                                      <div className='w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold text-sm'>
-                                        {getUserDisplayName(user)?.charAt(0) ||
-                                          email.charAt(0).toUpperCase()}
-                                      </div>
-                                    )}
-
-                                    <div className='flex-1 min-w-0'>
-                                      <div className='flex items-center gap-2 flex-wrap'>
-                                        <p className='font-semibold text-gray-900 truncate text-sm'>
-                                          {getUserDisplayName(user) || email.split('@')[0]}
-                                        </p>
-                                        {getOfferStatusBadge()}
-                                      </div>
-                                      <div className='flex items-center gap-2'>
-                                        <p className='text-xs text-gray-600 truncate'>{email}</p>
-                                        {user?.rating && (
-                                          <div className='flex items-center gap-0.5'>
-                                            <Star className='w-3 h-3 fill-amber-500 text-amber-500' />
-                                            <span className='text-xs font-semibold text-amber-600'>
-                                              {user.rating.toFixed(1)}
-                                            </span>
-                                          </div>
-                                        )}
-                                      </div>
-                                      {offer && (
-                                        <p
-                                          className={cn(
-                                            'text-xs font-semibold mt-0.5',
-                                            offer.status === 'accepted' && 'text-green-700',
-                                            offer.status === 'pending' && 'text-orange-600',
-                                            offer.status === 'declined' && 'text-gray-500'
-                                          )}
-                                        >
-                                          Offered: ${(offer.price_total || offer.price)?.toFixed(2)}
-                                        </p>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  {conversation && conversation.id ? (
-                                    <Button
-                                      size='sm'
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        openChat(conversation.id);
-                                      }}
-                                      className='bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-1 flex-shrink-0 h-8 text-xs'
-                                    >
-                                      <MessageSquare className='w-3.5 h-3.5' />
-                                      <span className='hidden sm:inline'>Chat</span>
-                                    </Button>
-                                  ) : (
-                                    <Button
-                                      size='sm'
-                                      disabled
-                                      className='bg-gray-400 text-white flex items-center gap-1 flex-shrink-0 cursor-not-allowed h-8 text-xs'
-                                    >
-                                      <MessageSquare className='w-3.5 h-3.5' />
-                                      <span className='hidden sm:inline'>No Chat</span>
-                                    </Button>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
 
                     {/* Price Breakdown - Services Only */}
                     {booking.total_price && (
@@ -892,183 +1007,195 @@ export default function BookingDetailsModal({
 
             {/* TAB 2: Offers - ONLY FOR SERVICE BOOKINGS */}
             {!isAdventureBooking && (
-              <TabsContent value='offers' className='space-y-3 sm:space-y-4'>
-                {offers.length === 0 ? (
-                  <Card className='text-center py-8'>
-                    <CardContent className='p-3 sm:p-4'>
-                      <Receipt className='w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 text-gray-300' />
-                      <p className='text-sm sm:text-base text-gray-600'>No offers yet</p>
-                      <p className='text-xs sm:text-sm text-gray-500 mt-1'>
-                        Waiting for hosts to submit offers
-                      </p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className='space-y-3'>
-                    {/* Accepted Offer */}
-                    {acceptedOffer && (
-                      <Card className='bg-green-50 border-2 border-green-200'>
-                        <CardHeader className='p-3 sm:p-4'>
-                          <div className='flex items-center justify-between'>
-                            <CardTitle className='text-xs sm:text-sm flex items-center gap-2 text-green-700'>
-                              <CheckCircle2 className='w-4 h-4 sm:w-5 sm:h-5' />
-                              Accepted Offer
-                            </CardTitle>
-                            <Badge className='bg-green-600 text-white text-[10px]'>Active</Badge>
-                          </div>
-                        </CardHeader>
-                        <CardContent className='p-3 sm:p-4 space-y-3'>
-                          <div className='flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3'>
-                            {host?.profile_photo ? (
-                              <img
-                                src={host.profile_photo}
-                                alt={getUserDisplayName(host)}
-                                className='w-10 h-10 rounded-full object-cover border-2 border-green-300'
-                              />
-                            ) : (
-                              <div className='w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-bold text-sm'>
-                                {getUserDisplayName(host)?.charAt(0) || 'H'}
-                              </div>
-                            )}
-                            <div>
-                              <p className='font-semibold text-gray-900 text-sm'>
-                                {getUserDisplayName(host)}
-                              </p>
-                              <p className='text-xs text-gray-600'>{acceptedOffer.host_email}</p>
-                            </div>
-                          </div>
+              <TabsContent value='offers' className='space-y-4'>
+                {/* Loading State */}
+                {(offersLoading || hostsDataLoading) && (
+                  <div className='flex items-center justify-center py-8'>
+                    <Loader2 className='w-6 h-6 animate-spin text-purple-500 mr-2' />
+                    <span className='text-sm text-gray-500'>Loading hosts...</span>
+                  </div>
+                )}
 
-                          <div className='grid grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm'>
-                            <div>
-                              <span className='text-gray-600'>Price:</span>
-                              <p className='text-base sm:text-lg font-bold text-green-600'>
-                                ${(acceptedOffer.price_total || acceptedOffer.price)?.toFixed(2)}
-                              </p>
-                            </div>
-                            <div>
-                              <span className='text-gray-600'>Type:</span>
-                              <p className='font-semibold capitalize'>{acceptedOffer.offer_type}</p>
-                            </div>
-                          </div>
+                {/* Unified Hosts List */}
+                {!offersLoading && !hostsDataLoading && (
+                  <div className='space-y-2'>
+                    {/* Header */}
+                    <div className='flex items-center justify-between mb-4'>
+                      <h4 className='font-semibold text-sm flex items-center gap-2'>
+                        <Users className='w-4 h-4 text-purple-600' />
+                        Host Responses ({allRelevantHosts.length})
+                      </h4>
+                      {pendingOffers.length > 0 && (
+                        <Badge className='bg-orange-500 text-white'>
+                          {pendingOffers.length} offer{pendingOffers.length > 1 ? 's' : ''} to review
+                        </Badge>
+                      )}
+                    </div>
 
-                          {acceptedOffer.inclusions && (
-                            <div className='pt-2 border-t border-green-200'>
-                              <p className='text-xs font-semibold text-gray-700 mb-1'>
-                                Inclusions:
-                              </p>
-                              <p className='text-xs text-gray-600'>{acceptedOffer.inclusions}</p>
-                            </div>
-                          )}
-
-                          {acceptedOffer.message && (
-                            <div className='pt-2 border-t border-green-200'>
-                              <p className='text-xs font-semibold text-gray-700 mb-1'>Message:</p>
-                              <p className='text-xs text-gray-600 italic'>
-                                "{acceptedOffer.message}"
-                              </p>
-                            </div>
-                          )}
+                    {allRelevantHosts.length === 0 ? (
+                      <Card className='text-center py-8'>
+                        <CardContent className='p-4'>
+                          <Users className='w-10 h-10 mx-auto mb-3 text-gray-300' />
+                          <p className='text-sm text-gray-600'>Waiting for hosts to respond...</p>
+                          <p className='text-xs text-gray-400 mt-1'>Hosts in this city will see your request</p>
                         </CardContent>
                       </Card>
-                    )}
-
-                    {/* Pending Offers */}
-                    {pendingOffers.length > 0 && (
-                      <>
-                        <div className='flex items-center gap-2 mt-4'>
-                          <Clock className='w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-600' />
-                          <h4 className='font-semibold text-sm'>
-                            Pending Offers ({pendingOffers.length})
-                          </h4>
+                    ) : (
+                      <div className='space-y-3'>
+                        {/* Header Row */}
+                        <div className='flex items-center gap-6 px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-200'>
+                          <div className='w-10 flex-shrink-0'></div>
+                          <div className='flex-1 min-w-0'>Host</div>
+                          <div className='w-24 text-center flex-shrink-0'>Price</div>
+                          <div className='w-16 flex-shrink-0 text-center'>Chat</div>
+                          <div className='w-44 text-center flex-shrink-0'>Actions</div>
                         </div>
-                        {pendingOffers.map((offer) => (
-                          <Card key={offer.id} className='border-orange-200 bg-orange-50'>
-                            <CardContent className='p-3 sm:p-4 space-y-3'>
-                              <div className='flex justify-between items-start'>
-                                <div className='flex-1'>
-                                  <div className='flex items-center gap-2 mb-2'>
-                                    <p className='font-semibold text-gray-900 text-sm'>
-                                      {offer.host_email}
-                                    </p>
-                                    <Badge className='bg-orange-500 text-white text-[10px]'>
-                                      Pending
-                                    </Badge>
-                                  </div>
 
-                                  <div className='grid grid-cols-2 gap-2 text-sm'>
-                                    <div>
-                                      <span className='text-gray-600 text-xs'>Price:</span>
-                                      <p className='font-bold text-orange-600'>
-                                        ${(offer.price_total || offer.price)?.toFixed(2)}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <span className='text-gray-600 text-xs'>Type:</span>
-                                      <p className='font-semibold capitalize text-xs'>
-                                        {offer.offer_type}
-                                      </p>
-                                    </div>
-                                  </div>
+                        {allRelevantHosts.map((hostItem) => {
+                          const hostOffer = offers.find((o) => o.host_email === hostItem.email);
+                          const hostResponse = booking?.host_responses?.[hostItem.email];
+                          const hostConversation = conversations.find(
+                            (c) => c.host_emails && c.host_emails.includes(hostItem.email)
+                          );
+                          const isAccepted = hostOffer?.status === 'accepted' || acceptedOffer?.host_email === hostItem.email;
+                          const wasDeclinedByHost = hostResponse?.action === 'rejected';
+                          const wasDeclinedByTraveler = hostOffer?.status === 'declined';
+                          const wasNotSelected = hostOffer?.status === 'not_selected' ||
+                            (isBookingConfirmed && hostOffer && !isAccepted && hostOffer.status !== 'declined');
+                          const hasPendingOffer = hostOffer?.status === 'pending' && !isBookingConfirmed;
+                          const isAwaiting = !hostOffer && !wasDeclinedByHost;
+                          const didNotRespond = isAwaiting && isBookingConfirmed;
 
-                                  {offer.inclusions && (
-                                    <div className='mt-2 pt-2 border-t border-orange-200'>
-                                      <p className='text-xs text-gray-700'>{offer.inclusions}</p>
-                                    </div>
-                                  )}
+                          const isAccepting = acceptOfferMutation.isPending && acceptOfferMutation.variables?.id === hostOffer?.id;
+                          const isDeclining = declineOfferMutation.isPending && declineOfferMutation.variables === hostOffer?.id;
+                          const totalPrice = hostOffer?.price_breakdown?.total || hostOffer?.price_total || hostOffer?.price;
 
-                                  {offer.message && (
-                                    <div className='mt-2 pt-2 border-t border-orange-200'>
-                                      <p className='text-xs text-gray-600 italic'>
-                                        "{offer.message}"
-                                      </p>
+                          let rowStyle = 'bg-gray-50 border-gray-200';
+                          let statusBadge = null;
+
+                          if (isAccepted) {
+                            rowStyle = 'bg-green-50 border-green-300';
+                            statusBadge = <Badge className='bg-green-600 text-white text-[10px]'>Accepted</Badge>;
+                          } else if (hasPendingOffer) {
+                            rowStyle = 'bg-orange-50 border-orange-200';
+                          } else if (wasNotSelected) {
+                            rowStyle = 'bg-gray-50 border-gray-200 opacity-60';
+                            statusBadge = <Badge variant='outline' className='text-gray-500 border-gray-300 text-[10px]'>Not Selected</Badge>;
+                          } else if (wasDeclinedByHost) {
+                            rowStyle = 'bg-gray-50 border-gray-200 opacity-50';
+                            statusBadge = <Badge variant='outline' className='text-gray-500 border-gray-300 text-[10px]'>Declined</Badge>;
+                          } else if (wasDeclinedByTraveler) {
+                            rowStyle = 'bg-gray-50 border-gray-200 opacity-50';
+                            statusBadge = <Badge variant='outline' className='text-red-500 border-red-300 text-[10px]'>You Declined</Badge>;
+                          } else if (didNotRespond) {
+                            rowStyle = 'bg-gray-50 border-gray-200 opacity-50';
+                            statusBadge = <Badge variant='outline' className='text-gray-400 border-gray-200 text-[10px]'>No Response</Badge>;
+                          } else if (isAwaiting) {
+                            rowStyle = 'bg-blue-50 border-blue-200';
+                            statusBadge = <Badge className='bg-blue-100 text-blue-700 text-[10px]'>Awaiting</Badge>;
+                          }
+
+                          return (
+                            <div
+                              key={hostItem.email}
+                              className={`flex items-center gap-6 p-4 rounded-lg border ${rowStyle} transition-colors`}
+                            >
+                              {/* Avatar */}
+                              {hostItem.profile_photo ? (
+                                <img
+                                  src={hostItem.profile_photo}
+                                  alt={getUserDisplayName(hostItem)}
+                                  className='w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm flex-shrink-0'
+                                />
+                              ) : (
+                                <div className='w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0'>
+                                  {getUserDisplayName(hostItem)?.charAt(0) || 'H'}
+                                </div>
+                              )}
+
+                              {/* Host Info */}
+                              <div className='flex-1 min-w-0'>
+                                <div className='flex items-center gap-2'>
+                                  <p className='font-semibold text-gray-900 text-sm truncate'>
+                                    {getUserDisplayName(hostItem)}
+                                  </p>
+                                  {hostItem.rating && (
+                                    <div className='flex items-center gap-0.5 text-xs text-amber-600'>
+                                      <Star className='w-3 h-3 fill-current' />
+                                      {hostItem.rating.toFixed(1)}
                                     </div>
                                   )}
                                 </div>
+                                <p className='text-xs text-gray-500 truncate'>
+                                  {hasPendingOffer ? (hostOffer.inclusions || 'Offer received') :
+                                   isAccepted ? 'Your host for this trip' :
+                                   wasNotSelected ? 'You selected another host' :
+                                   didNotRespond ? 'Did not send an offer' :
+                                   isAwaiting ? 'Waiting for response...' : ''}
+                                </p>
                               </div>
 
-                              <div className='text-[10px] sm:text-xs text-gray-500 flex items-center gap-1'>
-                                <Clock className='w-3 h-3' />
-                                Sent {format(new Date(offer.created_date), 'MMM d, yyyy HH:mm')}
+                              {/* Price Column */}
+                              <div className='w-24 text-center flex-shrink-0'>
+                                {(hasPendingOffer || isAccepted || wasNotSelected) && totalPrice ? (
+                                  <p className={`font-bold text-lg ${
+                                    isAccepted ? 'text-green-600' :
+                                    wasNotSelected ? 'text-gray-400 line-through' :
+                                    'text-green-600'
+                                  }`}>
+                                    ${totalPrice?.toFixed(2)}
+                                  </p>
+                                ) : (
+                                  <span className='text-xs text-gray-400'>-</span>
+                                )}
                               </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </>
-                    )}
 
-                    {/* Declined Offers */}
-                    {declinedOffers.length > 0 && (
-                      <>
-                        <div className='flex items-center gap-2 mt-4'>
-                          <XCircle className='w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400' />
-                          <h4 className='font-semibold text-sm text-gray-600'>
-                            Declined Offers ({declinedOffers.length})
-                          </h4>
-                        </div>
-                        {declinedOffers.map((offer) => (
-                          <Card key={offer.id} className='border-gray-200 bg-gray-50 opacity-60'>
-                            <CardContent className='p-3 sm:p-4'>
-                              <div className='flex justify-between items-center'>
-                                <div>
-                                  <p className='font-semibold text-gray-600 text-sm'>
-                                    {offer.host_email}
-                                  </p>
-                                  <p className='text-xs text-gray-500'>
-                                    ${(offer.price_total || offer.price)?.toFixed(2)} •{' '}
-                                    {offer.offer_type}
-                                  </p>
-                                </div>
-                                <Badge
-                                  variant='outline'
-                                  className='text-gray-500 border-gray-300 text-[10px]'
-                                >
-                                  Declined
-                                </Badge>
+                              {/* Chat Column */}
+                              <div className='w-16 flex-shrink-0 flex justify-center'>
+                                {hostConversation?.id && !wasNotSelected ? (
+                                  <Button
+                                    size='sm'
+                                    variant='outline'
+                                    className='h-8 w-8 p-0 border-purple-200 text-purple-600 hover:bg-purple-50'
+                                    onClick={() => openChat(hostConversation.id)}
+                                  >
+                                    <MessageSquare className='w-4 h-4' />
+                                  </Button>
+                                ) : (
+                                  <span className='text-xs text-gray-300'>-</span>
+                                )}
                               </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </>
+
+                              {/* Status/Actions Column */}
+                              <div className='w-44 flex justify-center flex-shrink-0'>
+                                {hasPendingOffer && !isAccepted ? (
+                                  <div className='flex gap-3'>
+                                    <Button
+                                      size='sm'
+                                      variant='outline'
+                                      className='h-8 px-4 border-red-300 text-red-600 hover:bg-red-50 text-sm font-medium'
+                                      onClick={() => declineOfferMutation.mutate(hostOffer.id)}
+                                      disabled={isDeclining || isAccepting}
+                                    >
+                                      {isDeclining ? <Loader2 className='w-3 h-3 animate-spin' /> : 'Reject'}
+                                    </Button>
+                                    <Button
+                                      size='sm'
+                                      className='h-8 px-4 bg-green-600 hover:bg-green-700 text-white text-sm font-medium'
+                                      onClick={() => acceptOfferMutation.mutate(hostOffer)}
+                                      disabled={isDeclining || isAccepting}
+                                    >
+                                      {isAccepting ? <Loader2 className='w-3 h-3 animate-spin' /> : 'Accept'}
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  statusBadge
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
                 )}

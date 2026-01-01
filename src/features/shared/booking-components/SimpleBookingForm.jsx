@@ -116,6 +116,8 @@ export default function SimpleBookingForm({ city, onSuccess }) {
         notes: notes || '',
       });
 
+      const targetHostEmails = (cityHosts || []).map((h) => h.email).filter(Boolean);
+
       const bookingId = await addDocument('bookings', {
         user_id: user.id,
         user_email: user.email,
@@ -130,6 +132,7 @@ export default function SimpleBookingForm({ city, onSuccess }) {
         selected_services: selectedServices,
         notes: notes || '',
         status: 'pending',
+        target_hosts: targetHostEmails,
         created_date: new Date().toISOString(),
         updated_date: new Date().toISOString(),
       });

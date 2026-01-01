@@ -585,6 +585,7 @@ export default function ConversationView({ conversationId, currentUser, onBack }
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['offers'] });
       queryClient.invalidateQueries({ queryKey: ['messages'] });
+      queryClient.invalidateQueries({ queryKey: ['bookingOffers'] });
       toast.success('Offer sent successfully!');
       setShowOfferDialog(false);
       setOfferPrice('');
