@@ -52,8 +52,9 @@ export default function BookingDetailsModal({
   booking: bookingProp,
   open,
   onOpenChange,
+  defaultTab = 'overview',
 }) {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -64,6 +65,12 @@ export default function BookingDetailsModal({
       bookingRef.current = bookingProp;
     }
   }, [bookingProp, open]);
+
+  useEffect(() => {
+    if (open && defaultTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [open, defaultTab]);
 
   const booking = open ? (bookingProp || bookingRef.current) : bookingRef.current;
 
@@ -150,10 +157,12 @@ export default function BookingDetailsModal({
 
             await NotificationHelpers.createNotification({
               recipient_email: otherOffer.host_email,
+              recipient_type: 'host',
               type: 'booking_taken',
               title: 'Booking No Longer Available',
               message: `The traveler has accepted another host's offer for their ${updatedBooking.city_name || updatedBooking.city || ''} trip.`,
-              booking_id: updatedBooking.id,
+              link: `/HostDashboard`,
+              related_booking_id: updatedBooking.id,
               read: false,
             });
           } catch (offerErr) {
@@ -1133,6 +1142,28 @@ export default function BookingDetailsModal({
                                    didNotRespond ? 'Did not send an offer' :
                                    isAwaiting ? 'Waiting for response...' : ''}
                                 </p>
+                                {hostOffer && (
+                                  <div className='flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] text-gray-400 mt-0.5'>
+                                    {hostOffer.created_date && (
+                                      <span className='flex items-center gap-1'>
+                                        <Clock className='w-2.5 h-2.5' />
+                                        Sent: {format(new Date(hostOffer.created_date), 'MMM d, h:mm a')}
+                                      </span>
+                                    )}
+                                    {isAccepted && (hostOffer.accepted_at || hostOffer.updated_date) && (
+                                      <span className='flex items-center gap-1 text-green-500'>
+                                        <CheckCircle2 className='w-2.5 h-2.5' />
+                                        Accepted: {format(new Date(hostOffer.accepted_at || hostOffer.updated_date), 'MMM d, h:mm a')}
+                                      </span>
+                                    )}
+                                    {wasDeclinedByTraveler && (hostOffer.declined_date || hostOffer.updated_date) && (
+                                      <span className='flex items-center gap-1 text-red-400'>
+                                        <XCircle className='w-2.5 h-2.5' />
+                                        Declined: {format(new Date(hostOffer.declined_date || hostOffer.updated_date), 'MMM d, h:mm a')}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                               </div>
 
                               {/* Price Column */}

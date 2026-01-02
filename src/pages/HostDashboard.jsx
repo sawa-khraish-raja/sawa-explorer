@@ -152,11 +152,13 @@ export default function HostDashboard() {
       // Create notification for traveler
       const notificationData = {
         recipient_email: booking.traveler_email,
+        recipient_type: 'traveler',
         type: 'offer_received',
         title: 'New Offer Received',
         message: `You received an offer for your booking in ${booking.city_name || booking.city}`,
-        booking_id: booking.id,
-        offer_id: offerId,
+        link: `/MyOffers?booking=${booking.id}&tab=offers`,
+        related_booking_id: booking.id,
+        related_offer_id: offerId,
         read: false,
         created_date: new Date().toISOString(),
       };
@@ -698,7 +700,7 @@ export default function HostDashboard() {
                               </p>
                             )}
                             <p className='text-sm text-gray-500 mt-1'>
-                              {format(new Date(booking.created_date), 'MMM d, yyyy')}
+                              Request created: {format(new Date(booking.created_date), 'MMM d, yyyy h:mm a')}
                             </p>
                           </div>
                           <Badge className='bg-orange-100 text-orange-700'>New Request</Badge>
@@ -920,6 +922,14 @@ export default function HostDashboard() {
                                 )}>
                                   {format(new Date(booking.start_date), 'MMM d')} -{' '}
                                   {format(new Date(booking.end_date), 'MMM d, yyyy')}
+                                </p>
+                              )}
+                              {booking.created_date && (
+                                <p className={cn(
+                                  'text-xs mt-1',
+                                  isNotSelected ? 'text-gray-400' : 'text-gray-400'
+                                )}>
+                                  Created: {format(new Date(booking.created_date), 'MMM d, yyyy h:mm a')}
                                 </p>
                               )}
                             </div>

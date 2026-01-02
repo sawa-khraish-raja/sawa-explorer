@@ -44,6 +44,7 @@ import OfferCard from '../chat/OfferCard';
 import { format } from 'date-fns';
 import {
   notifyNewMessage,
+  createNotification,
 } from '@/features/shared/notifications/notificationHelpers';
 import { MessageValidator } from '../chat/MessageValidator';
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
@@ -226,7 +227,7 @@ export default function HostConversationView({
       });
       return newOffer;
     },
-    onSuccess: (_newOffer) => {
+    onSuccess: async (newOffer) => {
       queryClient.invalidateQueries({
         queryKey: ['hostConversation', conversationId],
       });
@@ -248,6 +249,25 @@ export default function HostConversationView({
         type: 'success',
       });
       setTimeout(scrollToBottom, 100);
+
+      if (conversation?.traveler_email && booking?.id) {
+        try {
+          const hostName = currentUser?.full_name || currentUser?.first_name || currentUser?.email?.split('@')[0] || 'A host';
+          const cityName = booking?.city_name || booking?.city || '';
+          await createNotification({
+            recipient_email: conversation.traveler_email,
+            recipient_type: 'traveler',
+            type: 'offer_received',
+            title: 'New Offer Received',
+            message: `${hostName} sent you an offer for your trip to ${cityName}. Check it out!`,
+            link: `/MyOffers?booking=${booking.id}&tab=offers`,
+            related_booking_id: booking.id,
+            related_offer_id: newOffer?.id,
+          });
+        } catch (error) {
+          console.error('Failed to send offer notification to traveler:', error);
+        }
+      }
     },
     onError: (error) => {
       console.error('Error sending offer:', error);
@@ -723,11 +743,24 @@ export default function HostConversationView({
                 variant='ghost'
                 size='icon'
                 onClick={onBack}
-                className='lg:hidden flex-shrink-0'
+                className='flex-shrink-0'
               >
                 <ArrowLeft className='w-5 h-5' />
               </Button>
             )}
+
+            <button
+              onClick={() => {
+                window.location.href = '/HostDashboard';
+              }}
+              className='flex-shrink-0'
+            >
+              <img
+                src='https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68e8bf2aebfc9660599d11a9/e62457e5e_WhatsAppImage2025-10-16at235513_248ceca9.jpg'
+                alt='SAWA'
+                className='w-8 h-8 rounded-lg'
+              />
+            </button>
 
             {traveler?.profile_photo ? (
               <img

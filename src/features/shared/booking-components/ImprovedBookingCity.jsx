@@ -159,7 +159,8 @@ export default function ImprovedBookingCity({ cityName }) {
             type: 'booking_request',
             title: 'New Booking Request',
             message: `${booking.traveler_first_name} requested a booking in ${booking.city}`,
-            booking_id: booking.id,
+            link: `/HostDashboard?booking=${booking.id}`,
+            related_booking_id: booking.id,
             read: false,
             created_date: new Date().toISOString(),
           };

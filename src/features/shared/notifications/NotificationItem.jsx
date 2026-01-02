@@ -17,6 +17,7 @@ import { cn } from '@/shared/utils';
 const NOTIFICATION_ICONS = {
   booking_request: Briefcase,
   booking_accepted: CheckCircle,
+  booking_taken: XCircle,
   offer_received: Bell,
   offer_accepted: CheckCircle,
   message_received: MessageSquare,
@@ -26,11 +27,13 @@ const NOTIFICATION_ICONS = {
   review_received: Star,
   reel_liked: Star,
   host_assigned_to_office: Briefcase,
+  adventure_booking: Briefcase,
 };
 
 const NOTIFICATION_COLORS = {
   booking_request: 'text-blue-600 bg-blue-50',
   booking_accepted: 'text-green-600 bg-green-50',
+  booking_taken: 'text-orange-600 bg-orange-50',
   offer_received: 'text-purple-600 bg-purple-50',
   offer_accepted: 'text-green-600 bg-green-50',
   message_received: 'text-indigo-600 bg-indigo-50',
@@ -40,6 +43,7 @@ const NOTIFICATION_COLORS = {
   review_received: 'text-amber-600 bg-amber-50',
   reel_liked: 'text-pink-600 bg-pink-50',
   host_assigned_to_office: 'text-blue-600 bg-blue-50',
+  adventure_booking: 'text-purple-600 bg-purple-50',
 };
 
 export default function NotificationItem({ notification, onClick, onDelete }) {

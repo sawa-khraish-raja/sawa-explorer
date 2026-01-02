@@ -83,9 +83,9 @@ export const NOTIFICATION_TEMPLATES = {
   }),
 
   OFFER_RECEIVED: (bookingId, hostName, city) => ({
-    title: '🎉 New Offer Received',
+    title: 'New Offer Received',
     message: `${hostName} sent you an offer for your trip to ${city}. Check it out!`,
-    link: `/MyOffers?booking=${bookingId}`,
+    link: `/MyOffers?booking=${bookingId}&tab=offers`,
     type: 'offer_received',
   }),
 
