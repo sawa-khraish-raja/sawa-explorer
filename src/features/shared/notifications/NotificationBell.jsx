@@ -98,9 +98,22 @@ export default function NotificationBell({ className }) {
       markAsReadMutation.mutate(notification.id);
     }
 
-    if (notification.link) {
-      navigate(notification.link);
+    let targetLink = notification.link;
+    const bookingId = notification.related_booking_id || notification.booking_id;
+
+    if (!targetLink && bookingId) {
+      if (notification.type === 'booking_request') {
+        targetLink = `/HostDashboard?booking=${bookingId}`;
+      } else if (notification.type === 'offer_received') {
+        targetLink = `/MyOffers?booking=${bookingId}&tab=offers`;
+      } else {
+        targetLink = `/MyOffers?booking=${bookingId}`;
+      }
+    }
+
+    if (targetLink) {
       setIsOpen(false);
+      window.location.href = targetLink;
     }
   };
 
