@@ -7,7 +7,6 @@ import {
   User,
   Briefcase,
   Shield,
-  Bell,
   Trash2,
   AlertTriangle,
 } from 'lucide-react';
@@ -26,7 +25,6 @@ import { queryDocuments, updateDocument } from '@/utils/firestore';
 import { uploadImage } from '@/utils/storage';
 
 import { UseAppContext } from '@/shared/context/AppContext';
-import NotificationSettings from '@/features/shared/notifications/NotificationSettings';
 import DeleteAccountDialog from '@/features/traveler/components/DeleteAccountDialog';
 
 export default function UserProfile() {
@@ -233,7 +231,7 @@ export default function UserProfile() {
       <section className='py-8 sm:py-12'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-6'>
-            <TabsList className='grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 bg-white p-2 rounded-xl shadow-md border border-gray-100'>
+            <TabsList className='grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 bg-white p-2 rounded-xl shadow-md border border-gray-100'>
               <TabsTrigger
                 value='profile'
                 className='flex items-center gap-2 data-[state=active]:bg-[#E6E6FF] data-[state=active]:text-[#330066] rounded-lg'
@@ -256,13 +254,6 @@ export default function UserProfile() {
               >
                 <Shield className='w-4 h-4' />
                 Security
-              </TabsTrigger>
-              <TabsTrigger
-                value='notifications'
-                className='flex items-center gap-2 data-[state=active]:bg-[#E6E6FF] data-[state=active]:text-[#330066] rounded-lg'
-              >
-                <Bell className='w-4 h-4' />
-                Notifications
               </TabsTrigger>
               <TabsTrigger
                 value='account'
@@ -529,16 +520,6 @@ export default function UserProfile() {
                     </div>
                   </CardContent>
                 </Card>
-              </motion.div>
-            </TabsContent>
-
-            <TabsContent value='notifications'>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-              >
-                <NotificationSettings />
               </motion.div>
             </TabsContent>
 
