@@ -146,7 +146,8 @@ export default function SimpleBookingForm({ city, onSuccess }) {
             type: 'booking_request',
             title: 'New Booking Request',
             message: `${firstName} requested a booking in ${city.name}`,
-            booking_id: bookingId,
+            link: `/HostDashboard?booking=${bookingId}`,
+            related_booking_id: bookingId,
             read: false,
             created_date: new Date().toISOString(),
           };
