@@ -108,7 +108,8 @@ export default function CreateBooking() {
             type: 'booking_request',
             title: 'New Booking Request',
             message: `${newBooking.traveler_first_name} requested a booking in ${newBooking.city}`,
-            booking_id: newBooking.id,
+            link: `/HostDashboard?booking=${newBooking.id}`,
+            related_booking_id: newBooking.id,
             read: false,
             created_date: new Date().toISOString(),
           };

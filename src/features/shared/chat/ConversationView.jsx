@@ -564,11 +564,13 @@ export default function ConversationView({ conversationId, currentUser, onBack }
       // Create notification for traveler
       const notificationData = {
         recipient_email: booking.traveler_email,
+        recipient_type: 'traveler',
         type: 'offer_received',
         title: `New ${offerType} offer for ${booking.city_name || booking.city}`,
         message: `You received a ${offerType} offer for $${offerData.price_total.toFixed(2)}`,
-        booking_id: booking.id,
-        offer_id: offerId,
+        link: `/MyOffers?booking=${booking.id}&tab=offers`,
+        related_booking_id: booking.id,
+        related_offer_id: offerId,
         read: false,
         created_date: new Date().toISOString(),
       };
@@ -639,11 +641,13 @@ export default function ConversationView({ conversationId, currentUser, onBack }
       // Create notification for host
       const hostNotificationData = {
         recipient_email: offer.host_email,
+        recipient_type: 'host',
         type: 'offer_accepted',
         title: 'Offer Accepted!',
         message: `Your offer for ${booking.city_name || booking.city} has been accepted`,
-        booking_id: booking.id,
-        offer_id: offerId,
+        link: `/HostDashboard?booking=${booking.id}`,
+        related_booking_id: booking.id,
+        related_offer_id: offerId,
         read: false,
         created_date: new Date().toISOString(),
       };
@@ -982,6 +986,19 @@ export default function ConversationView({ conversationId, currentUser, onBack }
               >
                 <ArrowLeft className={cn('w-5 h-5 text-gray-700', isRTL && 'rotate-180')} />
               </Button>
+
+              <button
+                onClick={() => {
+                  window.location.href = '/Home';
+                }}
+                className='flex-shrink-0'
+              >
+                <img
+                  src='https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68e8bf2aebfc9660599d11a9/e62457e5e_WhatsAppImage2025-10-16at235513_248ceca9.jpg'
+                  alt='SAWA'
+                  className='w-8 h-8 rounded-lg'
+                />
+              </button>
 
               {otherUser && (
                 <div className='flex items-center gap-3 flex-1 min-w-0'>

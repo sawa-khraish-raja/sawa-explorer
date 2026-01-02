@@ -70,11 +70,17 @@ const DesktopNav = memo(
     t,
     location,
     officeDashboardBaseUrl,
+    isInConversation,
   }) => {
+    const handleNavClick = (e, url) => {
+      e.preventDefault();
+      window.location.href = url;
+    };
     if (isOfficeOnly) {
       return (
         <Link
           to={createPageUrl('OfficeDashboard')}
+          onClick={(e) => handleNavClick(e, createPageUrl('OfficeDashboard'))}
           className={cn(
             'px-4 py-2.5 text-[15px] font-medium rounded-full transition-all duration-150',
             location.pathname.startsWith(officeDashboardBaseUrl)
@@ -92,6 +98,7 @@ const DesktopNav = memo(
         <>
           <Link
             to={createPageUrl('HostDashboard')}
+            onClick={(e) => handleNavClick(e, createPageUrl('HostDashboard'))}
             className={cn(
               'px-4 py-2.5 text-[15px] font-medium rounded-full transition-all duration-150',
               isActivePage('HostDashboard')
@@ -103,6 +110,7 @@ const DesktopNav = memo(
           </Link>
           <Link
             to={createPageUrl('HostAdventures')}
+            onClick={(e) => handleNavClick(e, createPageUrl('HostAdventures'))}
             className={cn(
               'px-4 py-2.5 text-[15px] font-medium rounded-full transition-all duration-150',
               isActivePage('HostAdventures')
@@ -114,6 +122,7 @@ const DesktopNav = memo(
           </Link>
           <Link
             to={createPageUrl('Adventures')}
+            onClick={(e) => handleNavClick(e, createPageUrl('Adventures'))}
             className={cn(
               'px-4 py-2.5 text-[15px] font-medium rounded-full transition-all duration-150',
               isActivePage('Adventures')
@@ -132,6 +141,7 @@ const DesktopNav = memo(
         <>
           <Link
             to={createPageUrl('Home')}
+            onClick={(e) => handleNavClick(e, createPageUrl('Home'))}
             className={cn(
               'px-4 py-2.5 text-[15px] font-medium rounded-full transition-all duration-150',
               isActivePage('Home')
@@ -143,6 +153,7 @@ const DesktopNav = memo(
           </Link>
           <Link
             to={createPageUrl('Destinations')}
+            onClick={(e) => handleNavClick(e, createPageUrl('Destinations'))}
             className={cn(
               'px-4 py-2.5 text-[15px] font-medium rounded-full transition-all duration-150',
               isActivePage('Destinations')
@@ -154,6 +165,7 @@ const DesktopNav = memo(
           </Link>
           <Link
             to={createPageUrl('About')}
+            onClick={(e) => handleNavClick(e, createPageUrl('About'))}
             className={cn(
               'px-4 py-2.5 text-[15px] font-medium rounded-full transition-all duration-150',
               isActivePage('About')
@@ -171,6 +183,7 @@ const DesktopNav = memo(
       <>
         <Link
           to={createPageUrl('Home')}
+          onClick={(e) => handleNavClick(e, createPageUrl('Home'))}
           className={cn(
             'px-4 py-2.5 text-[15px] font-medium rounded-full transition-all duration-150',
             isActivePage('Home')
@@ -182,6 +195,7 @@ const DesktopNav = memo(
         </Link>
         <Link
           to={createPageUrl('Destinations')}
+          onClick={(e) => handleNavClick(e, createPageUrl('Destinations'))}
           className={cn(
             'px-4 py-2.5 text-[15px] font-medium rounded-full transition-all duration-150',
             isActivePage('Destinations')
@@ -193,6 +207,7 @@ const DesktopNav = memo(
         </Link>
         <Link
           to={createPageUrl('About')}
+          onClick={(e) => handleNavClick(e, createPageUrl('About'))}
           className={cn(
             'px-4 py-2.5 text-[15px] font-medium rounded-full transition-all duration-150',
             isActivePage('About')
@@ -579,6 +594,7 @@ const AppContent = memo(({ children }) => {
                     location={location}
                     officeDashboardBaseUrl={officeDashboardBaseUrl}
                     adminDashboardBaseUrl={adminDashboardBaseUrl}
+                    isInConversation={isInConversation}
                   />
                 </nav>
 
@@ -800,53 +816,57 @@ const AppContent = memo(({ children }) => {
                 ) : user ? (
                   <>
                     {isHost && !hasAdminRole && (
-                      <Link to={createPageUrl('HostDashboard')}>
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          className='rounded-full w-10 h-10 hover:bg-blue-50 transition-colors'
-                          aria-label='Host Dashboard'
-                        >
-                          <LayoutDashboard className='w-5 h-5 text-blue-600' />
-                        </Button>
-                      </Link>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className='rounded-full w-10 h-10 hover:bg-blue-50 transition-colors'
+                        aria-label='Host Dashboard'
+                        onClick={() => {
+                          window.location.href = createPageUrl('HostDashboard');
+                        }}
+                      >
+                        <LayoutDashboard className='w-5 h-5 text-blue-600' />
+                      </Button>
                     )}
 
                     {isOfficeOnly && (
-                      <Link to={createPageUrl('OfficeDashboard')}>
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          className='rounded-full w-10 h-10 hover:bg-indigo-50 transition-colors'
-                          aria-label='Office Dashboard'
-                        >
-                          <LayoutDashboard className='w-5 h-5 text-indigo-600' />
-                        </Button>
-                      </Link>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className='rounded-full w-10 h-10 hover:bg-indigo-50 transition-colors'
+                        aria-label='Office Dashboard'
+                        onClick={() => {
+                          window.location.href = createPageUrl('OfficeDashboard');
+                        }}
+                      >
+                        <LayoutDashboard className='w-5 h-5 text-indigo-600' />
+                      </Button>
                     )}
 
-                    <Link to={createPageUrl('Destinations')}>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='rounded-full w-10 h-10 hover:bg-gray-100 transition-colors'
+                      aria-label='Destinations'
+                      onClick={() => {
+                        window.location.href = createPageUrl('Destinations');
+                      }}
+                    >
+                      <MapPin className='w-5 h-5 text-gray-700' />
+                    </Button>
+
+                    {!isHost && !isOfficeOnly && !isMarketing && (
                       <Button
                         variant='ghost'
                         size='icon'
                         className='rounded-full w-10 h-10 hover:bg-gray-100 transition-colors'
-                        aria-label='Destinations'
+                        aria-label='My Trips'
+                        onClick={() => {
+                          window.location.href = createPageUrl('MyOffers');
+                        }}
                       >
-                        <MapPin className='w-5 h-5 text-gray-700' />
+                        <Briefcase className='w-5 h-5 text-gray-700' />
                       </Button>
-                    </Link>
-
-                    {!isHost && !isOfficeOnly && !isMarketing && (
-                      <Link to={createPageUrl('MyOffers')}>
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          className='rounded-full w-10 h-10 hover:bg-gray-100 transition-colors'
-                          aria-label='My Trips'
-                        >
-                          <Briefcase className='w-5 h-5 text-gray-700' />
-                        </Button>
-                      </Link>
                     )}
 
                     <MessagesBadge />

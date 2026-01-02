@@ -26,7 +26,7 @@ import {
   MapPin,
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -59,6 +59,7 @@ import { getUserDisplayName } from '@/shared/utils/userHelpers';
 export default function MyOffers() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -70,6 +71,7 @@ export default function MyOffers() {
   // Only one modal open at a time
   const [selectedBookingForDetails, setSelectedBookingForDetails] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [modalDefaultTab, setModalDefaultTab] = useState('overview');
 
   // Filters State
   const [filters, setFilters] = useState({
@@ -229,6 +231,21 @@ export default function MyOffers() {
       navigate(createPageUrl('Home'));
     }
   }, [user, isLoadingUser, navigate, t]);
+
+  useEffect(() => {
+    const bookingId = searchParams.get('booking');
+    const tab = searchParams.get('tab');
+
+    if (bookingId && bookings.length > 0 && !showDetailsModal) {
+      const booking = bookings.find((b) => b.id === bookingId);
+      if (booking) {
+        setSelectedBookingForDetails(booking);
+        setModalDefaultTab(tab || 'offers');
+        setShowDetailsModal(true);
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [searchParams, bookings, showDetailsModal, setSearchParams]);
 
   // Simplified accept offer flow (using Firestore)
   const acceptOfferMutation = useMutation({
@@ -743,6 +760,12 @@ export default function MyOffers() {
                               </span>
                             </div>
                           </div>
+                          {booking.created_date && (
+                            <div className='flex items-center gap-1 text-[10px] text-gray-500'>
+                              <Clock className='w-3 h-3 flex-shrink-0' />
+                              <span>Created: {format(new Date(booking.created_date), 'MMM d, yyyy h:mm a')}</span>
+                            </div>
+                          )}
 
                           {booking.total_price && (
                             <div className='flex items-center justify-between pt-2 border-t border-gray-100 mt-auto'>
@@ -897,8 +920,10 @@ export default function MyOffers() {
           setShowDetailsModal(isOpen);
           if (!isOpen) {
             setSelectedBookingForDetails(null);
+            setModalDefaultTab('overview');
           }
         }}
+        defaultTab={modalDefaultTab}
         viewerType='traveler'
       />
 
