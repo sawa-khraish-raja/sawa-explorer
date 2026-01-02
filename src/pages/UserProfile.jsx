@@ -76,17 +76,19 @@ export default function UserProfile() {
   }, [activeTab, location.search, navigate]);
 
   const updateProfileMutation = useMutation({
-    mutationFn: async ({ updatedAuthData, hostProfileUpdateData }) => {
-      // Update the user document in Firestore
-      await updateDocument('users', user.uid, {
+    mutationFn: async ({ updatedAuthData, hostProfileUpdateData, userId, userEmail }) => {
+      if (!userId) {
+        throw new Error('User ID is required to update profile');
+      }
+
+      await updateDocument('users', userId, {
         ...updatedAuthData,
         updated_date: new Date().toISOString(),
       });
 
-      // Update host profile if user is a host
-      if (user?.host_approved && hostProfileUpdateData) {
+      if (hostProfileUpdateData && userEmail) {
         const hostProfiles = await queryDocuments('host_profiles', [
-          ['user_email', '==', user.email],
+          ['user_email', '==', userEmail],
         ]);
         if (hostProfiles && hostProfiles.length > 0) {
           const hostProfileId = hostProfiles[0].id;
@@ -139,7 +141,7 @@ export default function UserProfile() {
       let photoUrl = profileImage;
       if (newProfileImageFile) {
         // Upload to Firebase Storage
-        photoUrl = await uploadImage(newProfileImageFile, 'profile-photos');
+        photoUrl = await uploadImage(newProfileImageFile, 'uploads');
       }
 
       const updatedAuthData = {
@@ -155,7 +157,12 @@ export default function UserProfile() {
         };
       }
 
-      updateProfileMutation.mutate({ updatedAuthData, hostProfileUpdateData });
+      updateProfileMutation.mutate({
+        updatedAuthData,
+        hostProfileUpdateData,
+        userId: user?.id,
+        userEmail: user?.email,
+      });
     } catch (e) {
       console.error('Image upload failed:', e);
       toast.error('Image upload failed.');
@@ -231,10 +238,10 @@ export default function UserProfile() {
       <section className='py-8 sm:py-12'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-6'>
-            <TabsList className='grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 bg-white p-2 rounded-xl shadow-md border border-gray-100'>
+            <TabsList className='flex flex-wrap w-full gap-2 bg-white p-2 rounded-xl shadow-md border border-gray-100'>
               <TabsTrigger
                 value='profile'
-                className='flex items-center gap-2 data-[state=active]:bg-[#E6E6FF] data-[state=active]:text-[#330066] rounded-lg'
+                className='flex-1 flex items-center justify-center gap-2 data-[state=active]:bg-[#E6E6FF] data-[state=active]:text-[#330066] rounded-lg'
               >
                 <User className='w-4 h-4' />
                 Profile
@@ -242,7 +249,7 @@ export default function UserProfile() {
               {isHost && (
                 <TabsTrigger
                   value='host'
-                  className='flex items-center gap-2 data-[state=active]:bg-[#E6E6FF] data-[state=active]:text-[#330066] rounded-lg'
+                  className='flex-1 flex items-center justify-center gap-2 data-[state=active]:bg-[#E6E6FF] data-[state=active]:text-[#330066] rounded-lg'
                 >
                   <Briefcase className='w-4 h-4' />
                   Host Settings
@@ -250,14 +257,14 @@ export default function UserProfile() {
               )}
               <TabsTrigger
                 value='security'
-                className='flex items-center gap-2 data-[state=active]:bg-[#E6E6FF] data-[state=active]:text-[#330066] rounded-lg'
+                className='flex-1 flex items-center justify-center gap-2 data-[state=active]:bg-[#E6E6FF] data-[state=active]:text-[#330066] rounded-lg'
               >
                 <Shield className='w-4 h-4' />
                 Security
               </TabsTrigger>
               <TabsTrigger
                 value='account'
-                className='flex items-center gap-2 data-[state=active]:bg-[#E6E6FF] data-[state=active]:text-[#330066] rounded-lg'
+                className='flex-1 flex items-center justify-center gap-2 data-[state=active]:bg-[#E6E6FF] data-[state=active]:text-[#330066] rounded-lg'
               >
                 <Trash2 className='w-4 h-4' />
                 Delete Account

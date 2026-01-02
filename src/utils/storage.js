@@ -13,61 +13,55 @@ export const uploadImage = async (file, path = 'uploads') => {
     throw new Error('No file provided for upload');
   }
 
-  // Validate file type
+  if (!(file instanceof File) && !(file instanceof Blob)) {
+    throw new Error('Invalid file object provided');
+  }
+
+  const fileType = file.type || '';
+  const fileName = file.name || `upload_${Date.now()}`;
+
   const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-  if (!validTypes.includes(file.type)) {
+  if (!fileType || !validTypes.includes(fileType)) {
     throw new Error('Invalid file type. Only JPEG, PNG, WebP, and GIF images are allowed.');
   }
 
-  // Validate file size (max 5MB)
-  const maxSize = 5 * 1024 * 1024; // 5MB
+  const maxSize = 5 * 1024 * 1024;
   if (file.size > maxSize) {
     throw new Error('File size exceeds 5MB limit');
   }
 
   try {
-    // Generate unique filename
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 9);
-    const extension = file.name.split('.').pop();
+    const nameParts = fileName.split('.');
+    const extension = nameParts.length > 1 ? nameParts.pop() : 'jpg';
     const filename = `${timestamp}_${randomString}.${extension}`;
 
-    // Create storage reference
     const storageRef = ref(storage, `${path}/${filename}`);
 
-    // Upload file with metadata
     const metadata = {
-      contentType: file.type,
+      contentType: fileType,
       customMetadata: {
-        originalName: file.name,
+        originalName: fileName,
         uploadedAt: new Date().toISOString(),
       },
     };
 
-    // Check auth before upload
     const { auth } = await import('@/config/firebase');
     const currentUser = auth.currentUser;
 
-    // Get auth token to verify it exists
-    if (currentUser) {
-      try {
-        const token = await currentUser.getIdToken();
-        console.log('🎟️ Auth token exists:', !!token, 'Length:', token?.length);
-      } catch (error) {
-        console.error('Failed to get auth token:', error);
-      }
-    } else {
+    if (!currentUser) {
       throw new Error('Not authenticated - please log in first');
     }
 
-    // Upload the file
-    console.log('⬆️ Starting upload to:', storageRef.fullPath);
+    try {
+      await currentUser.getIdToken(true);
+    } catch (error) {
+      throw new Error('Authentication error - please log in again');
+    }
+
     const snapshot = await uploadBytes(storageRef, file, metadata);
-
-    // Get the download URL
     const downloadURL = await getDownloadURL(snapshot.ref);
-
-    console.log(' Image uploaded successfully:', downloadURL);
 
     return downloadURL;
   } catch (error) {
@@ -102,40 +96,40 @@ export const uploadVideo = async (file, path = 'videos') => {
     throw new Error('No file provided for upload');
   }
 
-  // Validate file type
+  if (!(file instanceof File) && !(file instanceof Blob)) {
+    throw new Error('Invalid file object provided');
+  }
+
+  const fileType = file.type || '';
+  const fileName = file.name || `upload_${Date.now()}`;
+
   const validTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
-  if (!validTypes.includes(file.type)) {
+  if (!fileType || !validTypes.includes(fileType)) {
     throw new Error('Invalid file type. Only MP4, WebM, OGG, and MOV videos are allowed.');
   }
 
-  // Validate file size (max 50MB)
-  const maxSize = 50 * 1024 * 1024; // 50MB
+  const maxSize = 50 * 1024 * 1024;
   if (file.size > maxSize) {
     throw new Error('File size exceeds 50MB limit');
   }
 
   try {
-    // Generate unique filename
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 9);
-    const extension = file.name.split('.').pop();
+    const nameParts = fileName.split('.');
+    const extension = nameParts.length > 1 ? nameParts.pop() : 'mp4';
     const filename = `${timestamp}_${randomString}.${extension}`;
 
-    // Create storage reference
     const storageRef = ref(storage, `${path}/${filename}`);
 
-    // Upload file with metadata
     const metadata = {
-      contentType: file.type,
+      contentType: fileType,
       customMetadata: {
-        originalName: file.name,
+        originalName: fileName,
         uploadedAt: new Date().toISOString(),
       },
     };
 
-    console.log('📤 Uploading video to Firebase Storage:', `${path}/${filename}`);
-
-    // Check auth before upload
     const { auth } = await import('@/config/firebase');
     const currentUser = auth.currentUser;
 
@@ -143,13 +137,8 @@ export const uploadVideo = async (file, path = 'videos') => {
       throw new Error('Not authenticated - please log in first');
     }
 
-    // Upload the file
     const snapshot = await uploadBytes(storageRef, file, metadata);
-
-    // Get the download URL
     const downloadURL = await getDownloadURL(snapshot.ref);
-
-    console.log(' Video uploaded successfully:', downloadURL);
 
     return downloadURL;
   } catch (error) {
